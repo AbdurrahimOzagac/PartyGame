@@ -1,0 +1,785 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Shooter Party — proposal deck</title>
+<style>
+:root{
+  --paper:#F4F7EE; --ink:#1B2340; --txt:#3E475E; --mut:#6F778C; --faint:#A9B0BF; --line:#E4E9DD; --track:#E8ECE3;
+  --o:#FF6B1F; --c:#1FA9EA; --g:#43B832; --p:#8F55F5; --y:#FFC423;
+  --to:#FFF0E6; --tc:#E3F2FB; --tg:#E7F5E1; --tp:#F1E9FF; --ty:#FFF6DA;
+  --disp:"Arial Rounded MT Bold", Arial, sans-serif; --sans:Arial, Helvetica, sans-serif;
+  --sh:0 18px 36px -24px rgba(40,60,30,.28);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#888}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden;font-family:var(--sans);color:var(--ink);margin:0 0 40px;background:var(--paper)}
+.notes{display:none}
+.z{position:absolute;z-index:3}
+.bg{position:absolute;inset:0;z-index:0}
+.bg img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* chrome */
+.brand{position:absolute;z-index:4;left:136px;top:47px;font:400 22px/1 var(--disp);color:var(--ink)}
+.course{position:absolute;z-index:4;right:96px;top:50px;font:700 16px/1 var(--sans);color:var(--mut)}
+.foot{position:absolute;z-index:4;left:96px;bottom:34px;font:400 15px/1 var(--sans);color:var(--mut)}
+.pg{position:absolute;z-index:4;right:96px;bottom:34px;font:700 15px/1 var(--sans);color:var(--mut)}
+.sec{position:absolute;z-index:4;left:96px;top:110px;font:700 17px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.ttl{position:absolute;z-index:3;left:96px;top:136px;width:1728px;font:400 60px/1.1 var(--disp);color:var(--ink)}
+.sub{position:absolute;z-index:3;left:96px;top:214px;width:1728px;font:700 27px/1.35 var(--sans);color:var(--ink)}
+.fn{position:absolute;z-index:3;left:96px;bottom:62px;width:1728px;font:400 17px/1.4 var(--sans);color:var(--mut)}
+
+/* type */
+.lab{font:700 16px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--o)}
+.k{font:700 14px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.b{font:400 22px/1.45 var(--sans);color:var(--txt)}
+.b b{color:var(--ink)}
+.h{font:400 30px/1.15 var(--disp);color:var(--ink)}
+.d{font-family:var(--disp);font-weight:400;line-height:1}
+.cap{font:400 17px/1.4 var(--sans);color:var(--mut)}
+
+/* surfaces */
+.card{position:absolute;z-index:1;background:#fff;border-radius:24px;border:2px solid var(--line);box-shadow:var(--sh)}
+.card.to{background:var(--to);border-color:#FBDCC8} .card.tc{background:var(--tc);border-color:#CDE7F7} .card.tg{background:var(--tg);border-color:#D2EBC7} .card.tp{background:var(--tp);border-color:#E0D2FB} .card.ty{background:var(--ty);border-color:#F6E3A6}
+.card.hot{background:var(--to);border:3px solid var(--o)}
+.pic{position:absolute;z-index:1;border-radius:24px;overflow:hidden;box-shadow:var(--sh)}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.bar{position:absolute;z-index:3;height:16px;border-radius:999px;background:var(--track);overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;display:block;border-radius:999px;background:var(--bf,var(--ink))}
+.chip{position:absolute;z-index:3;display:flex;align-items:center;justify-content:center;border-radius:999px;font:700 14px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase}
+.dot{position:absolute;z-index:3;border-radius:50%}
+.hl{position:absolute;z-index:2;height:2px;border-radius:2px;background:var(--line)}
+svg.ov{position:absolute;z-index:2;left:0;top:0;overflow:visible}
+</style></head>
+<body>
+
+<!-- ===================== 1 COVER ===================== -->
+<section class="slide" data-section="Introduction" data-nochrome>
+  <div class="bg"><img src="img/sp_cover.png"></div>
+  <div class="card" style="left:96px;top:66px;width:900px;height:460px;border:none"></div>
+  <div class="z lab" style="left:144px;top:116px">Game proposal · CMP406 GameTech · Fall 2026</div>
+  <div class="z d" style="left:140px;top:152px;font-size:108px;color:var(--ink)">Shooter <span style="color:var(--g)">Party</span></div>
+  <div class="chip" style="left:144px;top:296px;width:180px;height:38px;background:var(--o);color:#fff">Working title</div>
+  <div class="z" style="left:344px;top:305px;font:700 18px/1 var(--sans);color:var(--mut)">October 2026</div>
+  <div class="z" style="left:144px;top:362px;width:820px;font:700 27px/1.38 var(--sans);color:var(--ink)">A LAN party game for 2–4 players. Shoot, push and blast your friends through short mini-games; one shared scoreboard decides the winner.</div>
+  <div id="team"></div>
+  <aside class="notes">Shooter Party is a working title. It is a LAN party game for two to four players: shoot, push and blast your friends through short mini-games, and one shared scoreboard decides the winner. The four of us are at the bottom, with the roles we propose. The illustrations in this deck were made for our pitch; the 3D images are AI concept renders. None of them show gameplay.</aside>
+</section>
+
+<!-- ===================== 2 GAME DESCRIPTION ===================== -->
+<section class="slide" data-section="Introduction" data-label="01 · The game" data-col="o">
+  <div class="ttl">Game description</div>
+  <div class="sub">Every round is a new mini-game, and <span style="color:var(--o)">placement turns into points.</span></div>
+  <div class="z b" style="left:96px;top:282px;width:1728px;font-size:24px">Shooter Party is a party game for 2–4 friends in one room, each at their own PC. One player hosts and the others join over the local network. Everyone controls a small shooting cube. The mini-games change what a shot does: one pushes, one damages, one lifts you with a blast. After the last mini-game, the player with the most points wins.</div>
+  <div id="flow"></div>
+  <div class="card" style="left:96px;top:650px;width:1000px;height:340px"></div>
+  <div class="z lab" style="left:136px;top:680px;color:var(--c)">Session settings</div>
+  <div id="settings"></div>
+  <div class="card" style="left:1124px;top:650px;width:700px;height:340px"></div>
+  <div class="z lab" style="left:1164px;top:680px">Placement points · proposed</div>
+  <div id="pts"></div>
+  <div class="z cap" style="left:1164px;top:942px">Only points carry over between mini-games.</div>
+  <aside class="notes">Plain-language summary. Two to four friends, each on a PC, in one room; one hosts. Every round is a new mini-game, and the shot does something different in each. A session runs lobby, pick, play, place, standings, and repeats. The host sets the rules: the session ends after a set number of mini-games or when someone reaches a target score; the playlist is random or custom, mini-games can be left out or repeated; and a mini-game can run rounds of its own, like Hole Grab losing one hole each round. Placement points 4, 3, 2, 1 are a proposal.</aside>
+</section>
+
+<!-- ===================== 3 CORE MECHANICS ===================== -->
+<section class="slide" data-section="Gameplay" data-label="02 · Gameplay mechanics" data-col="c">
+  <div class="ttl">Core mechanics</div>
+  <div class="sub">One shooting cube. <span style="color:var(--c)">Every mini-game changes what a shot does.</span></div>
+  <div class="pic" style="left:96px;top:284px;width:560px;height:250px"><img src="img/glossy_lineup.png" style="object-position:50% 50%"></div>
+  <div class="z b" style="left:700px;top:296px;width:1120px;font-size:25px"><b>The player.</b> A small character with a barrel that fires real projectiles: physics objects, not instant hits. It does not have to be a cube, but its proportions should stay close to 1:1:1. Four colours: orange, cyan, lime, purple.</div>
+  <div class="z cap" style="left:700px;top:500px">Concept render, AI-generated. Not gameplay.</div>
+  <div class="z lab" style="left:96px;top:566px;color:var(--ink)">One trigger, three effects</div>
+  <div id="effects"></div>
+  <div id="movecam"></div>
+  <aside class="notes">One shooting cube everywhere: a small character with a barrel that fires real physics projectiles. What a shot does depends on the mini-game. Damage lowers the target's health. Knockback pushes the target away from the direction of the shot. Blast explodes, and fired at the ground it lifts the shooter. WASD to move; jumping is on in some mini-games and off in others. The camera is a third-person shooter camera by default, and a mini-game can change it, like the 2.5D side view in Blast Parkour. Two mechanic ideas we want to try: shoot the ground to jump, and steer with recoil on ice.</aside>
+</section>
+
+<!-- ===================== 4 KNOCKBACK ARENA ===================== -->
+<section class="slide" data-section="Gameplay" data-label="Mini-game 01 · Working name" data-col="o">
+  <div class="ttl">Knockback Arena</div>
+  <div class="sub">Shoot the others off a flat floor. <span style="color:var(--o)">Every hit makes them lighter.</span></div>
+  <div class="pic" style="left:96px;top:284px;width:1100px;height:375px"><img src="img/sp_arena.png"></div>
+  <div class="chip" style="left:120px;top:304px;width:100px;height:34px;background:var(--o);color:#fff">MVP</div>
+  <div class="z cap" style="left:96px;top:672px">Illustration, not gameplay. Arena theme and size are not set.</div>
+  <div class="card" style="left:96px;top:716px;width:1100px;height:274px"></div>
+  <div class="z lab" style="left:136px;top:744px">Mass, not size: the same shot, a longer flight</div>
+  <div id="massstrip"></div>
+  <div id="kocards"></div>
+  <aside class="notes">Knockback Arena. A flat floor with open edges. Shooting is free with a fire-rate limit; shots are real thrown objects and do nothing to the shooter. A hit pushes the target from the shot's direction and lowers its mass, while its size stays the same. So the same shot pushes a weakened player further: at full mass a hit pushes a little; after a few hits it is a longer push; after many, one more shot sends it off the edge. Falling off means you are out. Our proposal: placement by order of elimination, last cube standing wins.</aside>
+</section>
+
+<!-- ===================== 5 BLAST PARKOUR ===================== -->
+<section class="slide" data-section="Gameplay" data-label="Mini-game 02 · Working name" data-col="p">
+  <div class="ttl">Blast Parkour</div>
+  <div class="sub">A 2.5D obstacle course: <span style="color:var(--p)">spit, blast and climb</span> while knocking the others into the void.</div>
+  <div class="pic" style="left:96px;top:284px;width:1100px;height:408px"><img src="img/sp_parkour.png"></div>
+  <div class="chip" style="left:120px;top:304px;width:160px;height:34px;background:var(--p);color:#fff">Stretch goal</div>
+  <div class="z cap" style="left:96px;top:704px;width:1100px">Illustration, not gameplay. Orange blasts the ground to jump; purple charges a strong shot; cyan has been knocked into the void.</div>
+  <div class="card ty" style="left:96px;top:800px;width:1100px;height:190px"></div>
+  <div class="z lab" style="left:136px;top:830px;color:#A57600">If hitting is too easy</div>
+  <div class="z b" style="left:136px;top:866px;width:1020px;font-size:23px">We make shots fall with gravity, so players have to read the arc to land a hit. We decide this in playtests.</div>
+  <div id="bpcards"></div>
+  <aside class="notes">Blast Parkour, a 2.5D obstacle course. It is built side-on, so there is nowhere to hide and everyone is always in someone's line of fire. Holding the button fires a strong explosion, but while charging you cannot move, so you are open to attack. A shot at the ground lifts you up, and the same blast can push a nearby rival off a ledge. Whoever drops below the course is out; the placement rule comes after the first tests. If hitting turns out too easy, shots fall with gravity. This one is our stretch goal for the final phase.</aside>
+</section>
+
+<!-- ===================== 6 ICE LOOP ===================== -->
+<section class="slide" data-section="Gameplay" data-label="Mini-game 03 · Working name" data-col="c">
+  <div class="ttl">Ice Loop</div>
+  <div class="sub">Most checkpoints before the timer runs out wins. <span style="color:var(--c)">The ice does not help.</span></div>
+  <div class="pic" style="left:96px;top:284px;width:1100px;height:619px"><img src="img/race1.png"></div>
+  <div class="chip" style="left:120px;top:846px;width:100px;height:34px;background:var(--c);color:#fff">MVP</div>
+  <div class="z cap" style="left:96px;top:916px;width:1100px">Concept render, AI-generated. Not gameplay. Ice is the theme of this one mini-game only.</div>
+  <div id="ilcards"></div>
+  <aside class="notes">Ice Loop. The goal is to pass the most checkpoints before the timer runs out. When the track ends it starts again, and every checkpoint you pass counts plus one; the count, not the lap, decides the placement. The ice is slippery: push rivals off it into the water and they restart from their last checkpoint. One idea we want to try: firing forward while sliding pushes you back, so a shot can also correct your line. Ice is the theme of this one mini-game, not of the whole game.</aside>
+</section>
+
+<!-- ===================== 7 HOLE GRAB ===================== -->
+<section class="slide" data-section="Gameplay" data-label="Mini-game 04 · Working name" data-col="g">
+  <div class="ttl">Hole Grab</div>
+  <div class="sub">Musical chairs with holes. <span style="color:var(--g)">No hole, and the bulldozer gets you.</span></div>
+  <div class="pic" style="left:96px;top:284px;width:1100px;height:408px"><img src="img/sp_holegrab.png"></div>
+  <div class="chip" style="left:120px;top:304px;width:100px;height:34px;background:var(--g);color:#fff">MVP</div>
+  <div class="z cap" style="left:96px;top:704px;width:1100px">Illustration, not gameplay. Each hole has the player's shape and a fixed barrel angle. Orange is already in a hole; the bulldozer moves in from the right.</div>
+  <div class="card" style="left:96px;top:790px;width:1100px;height:200px"></div>
+  <div class="z lab" style="left:136px;top:816px;color:var(--g)">Rounds inside the mini-game (4 players)</div>
+  <div id="hgrounds"></div>
+  <div id="hgcards"></div>
+  <aside class="notes">Hole Grab: musical chairs with holes. Holes open in the ground in the player's shape, with the barrel's angle marked, so you have to line up to drop in. Every round there is one hole fewer than players: four players and three holes, then three and two, then two and one. Whoever is left without a hole is crushed by the bulldozer. Shots push other players away from the holes, but a player already inside a hole cannot be pushed out.</aside>
+</section>
+
+<!-- ===================== 8 IDEAS IN PROGRESS ===================== -->
+<section class="slide" data-section="Gameplay" data-label="02 · Gameplay · Not yet committed" data-col="p">
+  <div class="ttl">Ideas in progress</div>
+  <div class="sub">The playlist is built to grow. <span style="color:var(--p)">These are next in line once the core four work.</span></div>
+  <div class="z lab" style="left:96px;top:286px;color:var(--ink)">More mini-games, in design</div>
+  <div id="ideas"></div>
+  <div class="z cap" style="left:96px;top:540px">Owner: Abdurrahim. Each one plugs into the same shared core as the first four.</div>
+  <div class="z lab" style="left:96px;top:596px;color:var(--ink)">Future features</div>
+  <div class="pic" style="left:96px;top:632px;width:560px;height:318px"><img src="img/arche_full.png"></div>
+  <div class="z cap" style="left:96px;top:958px">Character types. Concept render, AI-generated.</div>
+  <div class="card" style="left:690px;top:632px;width:640px;height:358px"></div>
+  <div class="z h" style="left:726px;top:660px">Character types</div>
+  <div class="z b" style="left:726px;top:704px;width:570px;font-size:20px">Players pick a type with its own strengths. Because mass drives knockback, weight is the natural first stat.</div>
+  <div id="types"></div>
+  <div class="card" style="left:1360px;top:632px;width:464px;height:358px"></div>
+  <div class="z h" style="left:1396px;top:660px">Rage meter</div>
+  <div class="bar" style="left:1396px;top:712px;width:392px;height:22px;--bf:var(--o)"><i style="width:58%"></i></div>
+  <div class="z b" style="left:1396px;top:756px;width:392px;font-size:21px">A meter that builds up across mini-games. Once it fills over a few rounds, the player can spend it in a later mini-game.</div>
+  <aside class="notes">Ideas that are not committed yet. Three more mini-games are in design, owned by Abdurrahim: a classic versus battle, a harder battle variant, and The Monster, where one player is the monster and the rest play against them, with rounds inside. Two future features: character types, where weight is the natural first stat because mass drives knockback, and a rage meter that builds up across mini-games and can be spent later.</aside>
+</section>
+
+<!-- ===================== 9 TECHNICAL DESIGN ===================== -->
+<section class="slide" data-section="Gameplay" data-label="02 · Gameplay & tech" data-col="c">
+  <div class="ttl">Technical design</div>
+  <div class="sub">One shared core; <span style="color:var(--c)">every mini-game plugs into it.</span></div>
+  <div id="arch"></div>
+  <aside class="notes">Architecture. The four mini-games, and the next one, sit on a shared core. Each implements the same small contract: set up with the players and the session settings, run, report placement. Below that is shared gameplay: the cube controller with WASD and jump, the third-person camera that a mini-game can override, the shot system whose effect each mini-game sets, the session and playlist with end rules and exclusions, the scoreboard, and the lobby and UI. Then the LAN layer, where one player hosts and the others are clients; Unity Netcode is our candidate, not a final choice. The engine is Unity with built-in rigidbody physics.</aside>
+</section>
+
+<!-- ===================== 10 NETWORK ===================== -->
+<section class="slide" data-section="Gameplay" data-label="02 · Gameplay & tech" data-col="c">
+  <div class="ttl">One shot in Knockback Arena, over the LAN</div>
+  <div class="sub">The host decides; <span style="color:var(--c)">every screen agrees.</span></div>
+  <div id="seq"></div>
+  <div class="card tc" style="left:96px;top:880px;width:1728px;height:112px"></div>
+  <div class="z b" style="left:136px;top:902px;width:1650px;font-size:21px"><b>Your own movement is predicted locally, so it feels instant.</b> Everything that decides a result runs on the host, so every screen agrees. <b style="color:var(--o)">Main risk:</b> keeping physics smooth on clients; LAN latency is low, and we tune the snapshot rate.</div>
+  <aside class="notes">One shot end to end. Client A sends fire input and aim direction. The host checks the fire-rate limit and spawns the projectile; the shooter is not affected. The physics step carries it to B. The host applies this mini-game's effect: B loses mass and is pushed from the shot's direction. The host sends the same snapshot, with positions, mass and scores, to every client, and clients interpolate between snapshots. Own movement is predicted locally for feel.</aside>
+</section>
+
+<!-- ===================== 11 MARKET ===================== -->
+<section class="slide" data-section="Market" data-label="03 · Market" data-col="o">
+  <div class="ttl">Market potential &amp; target audience</div>
+  <div class="sub">Social PC play is growing; <span style="color:var(--o)">LAN party games are rare.</span></div>
+  <div class="z b" style="left:96px;top:280px;width:1728px;font-size:23px">Our audience is groups of 2–4 friends who play together in one room, each on their own PC: students, LAN parties and game nights. They want short, readable rounds, a session they can shape themselves, and a game that works without an internet connection.</div>
+  <div id="kpis"></div>
+  <div class="card" style="left:96px;top:630px;width:1728px;height:200px"></div>
+  <div class="z lab" style="left:136px;top:654px;color:var(--ink)">Steam “Party Game” titles by multiplayer tag</div>
+  <div id="tagbars"></div>
+  <div class="card ty" style="left:96px;top:850px;width:1728px;height:140px"></div>
+  <div class="z lab" style="left:136px;top:874px;color:#A57600">Risk, stated plainly</div>
+  <div class="z b" style="left:136px;top:906px;width:1650px;font-size:21px">An estimated 65.9% of 2025 Steam releases earned under $1,000 [5], while 5,863 games passed $100K in 2025 (Valve) [6]. <b>LAN is our differentiator, not a demand driver.</b></div>
+  <aside class="notes">Market and audience. We aim at groups of two to four friends in one room, each on their own PC: students, LAN parties and game nights. PC is a 43.6 billion dollar market that grew 12 percent in 2025; games with co-op made an estimated 4.1 billion on Steam in the first half of 2025; most players play with others. Only about 8 percent of Steam party games list LAN. Revenue is very uneven, so LAN is how we stand out, not why people buy.</aside>
+</section>
+
+<!-- ===================== 12 COMPETITORS ===================== -->
+<section class="slide" data-section="Market" data-label="03 · Market" data-col="o">
+  <div class="ttl">Competitors</div>
+  <div class="sub">Five games we are measured against.</div>
+  <div id="comps"></div>
+  <div class="fn" style="bottom:56px">Screenshots: official Steam media, © publishers. “Owner est.” = third-party estimates via SteamDB, not sales. 17 Oct 2026 [7].</div>
+  <aside class="notes">Five comparables, each chosen for one reason. Party Animals and Gang Beasts share our audience and physics comedy. Fall Guys and Pummel Party share our session format of short rounds. Squarena is the closest mechanic: it weakens you by shrinking you, in 2D. Owner numbers are third-party estimates and we label them that way.</aside>
+</section>
+
+<!-- ===================== 13 MATRIX ===================== -->
+<section class="slide" data-section="Market" data-label="03 · Market" data-col="o">
+  <div class="ttl">Where we sit among them</div>
+  <div id="matrix"></div>
+  <div class="fn" style="bottom:56px">“Official LAN: No” = not advertised in the game's Steam features. “Partly”: Party Animals and Pummel Party have some weapons or items; Fall Guys' playlist eliminates rather than scores. Squarena weakens you by shrinking your size; we lower mass instead. Party Animals needs internet even on one screen [8].</div>
+  <aside class="notes">Positioning. Each competitor covers part of this table. Squarena weakens your body by shrinking it; we lower mass instead, and none ties knockback to lost mass. None advertises official LAN. The Shooter Party column is our plan, not shipped software.</aside>
+</section>
+
+<!-- ===================== 14 INNOVATION ===================== -->
+<section class="slide" data-section="Innovation" data-label="04 · Innovation" data-col="o">
+  <div class="ttl">Innovation &amp; creativity</div>
+  <div class="sub">No shipped game we found ties knockback to <span style="color:var(--o)">the mass you have lost.</span></div>
+  <div id="pillars"></div>
+  <div class="card to" style="left:96px;top:800px;width:1728px;height:190px"></div>
+  <div class="z" style="left:136px;top:836px;width:1650px;font:400 28px/1.42 var(--sans);color:var(--ink)">Most party games pick one: a playlist of unrelated mini-games, or one physics brawler. <b style="color:var(--o)">Shooter Party keeps one character and one shot across the whole session, and lets each mini-game bend what that shot means.</b></div>
+  <aside class="notes">Three things are new together. First, mass, not size: hits lower your mass while your size stays, so the same shot launches a weakened player further and everyone can see the danger build. Second, one trigger with many effects: the same shot pushes, damages or lifts you depending on the mini-game, so controls are learned once and each mini-game still feels new. Third, your session, your rules: random or custom playlists, excluded or repeated mini-games, and an end by rounds or by score, all on a LAN with no internet.</aside>
+</section>
+
+<!-- ===================== 15 PRIOR ART ===================== -->
+<section class="slide" data-section="Innovation" data-label="04 · Innovation" data-col="o">
+  <div class="ttl">Closest prior art</div>
+  <div class="sub">What exists already, and <span style="color:var(--o)">what we did not find.</span></div>
+  <div id="prior"></div>
+  <div class="fn" style="bottom:56px">Prior-art search of shipped games, Oct 2026 [9–10]. “Not found” means not found after searching.</div>
+  <aside class="notes">We name the relatives. Squarena weakens your body in 2D, and Morphies Law moves mass between robots. Smash Bros. raises knockback with a damage percentage counter, not with mass. Blasting yourself upward is classic rocket jumping, as in Quake and Team Fortress 2. Recoil movement exists in some games; we have not searched shoot-to-steer on ice yet. Lighter-means-launched-further, and mass knockback in a LAN party game, we did not find.</aside>
+</section>
+
+<!-- ===================== 16 PROTOTYPE ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-label="05 · Drafts &amp; prototypes" data-col="g">
+  <div class="ttl">Physics prototype</div>
+  <div class="sub">Does knockback <span style="color:var(--g)">read on screen?</span></div>
+  <div id="strip"></div>
+  <div id="proto"></div>
+  <aside class="notes">A real prototype: a deterministic physics test in Three.js. Over three shots the target flies further each time, and the rule is readable without any UI. What changed since: this early test showed lost mass as shrinking. Our rule now keeps the size and lowers only the mass, so the Unity test needs another way to show it, a HUD bar, a colour or an effect, still to be chosen.</aside>
+</section>
+
+<!-- ===================== 17 ART DIRECTION ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-label="05 · Drafts &amp; prototypes" data-col="g">
+  <div class="ttl">Art direction: glossy toy</div>
+  <div class="sub">Four looks compared before modelling; <span style="color:var(--g)">the glossy toy was chosen.</span></div>
+  <div id="art"></div>
+  <div class="card" style="left:1380px;top:284px;width:444px;height:706px"></div>
+  <div class="z lab" style="left:1416px;top:314px;color:var(--ink)">Chosen</div>
+  <div class="z b" style="left:1416px;top:348px;width:380px;font-size:21px">C, glossy toy. Every concept render in this deck uses it.</div>
+  <div class="z lab" style="left:1416px;top:460px;color:var(--ink)">Settings</div>
+  <div class="z b" style="left:1416px;top:494px;width:380px;font-size:21px">Arenas take bright party settings, such as grass, sky and water. Ice is the theme of one mini-game, not the whole game.</div>
+  <div class="z lab" style="left:1416px;top:690px;color:var(--ink)">Player colours</div>
+  <div id="sw"></div>
+  <div class="z cap" style="left:1416px;top:900px;width:380px">All AI-generated drafts. None is gameplay.</div>
+  <aside class="notes">Four AI-generated looks for the same character were compared before modelling: vinyl toy, building blocks, glossy toy and jelly. We chose the glossy toy. Arenas take bright party settings like grass, sky and water; ice is only the theme of Ice Loop. The four player colours stay the same whatever the arena.</aside>
+</section>
+
+<!-- ===================== 18 LOGO DRAFTS ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-label="05 · Drafts &amp; prototypes" data-col="g">
+  <div class="ttl">Logo drafts</div>
+  <div class="sub">Three uses of one mark. <span style="color:var(--g)">The name is a working title.</span></div>
+  <div id="logos"></div>
+  <aside class="notes">Three logo drafts for the working title Shooter Party. A is a wordmark for the title screen and the deck. B stacks the name under the shooting cube for square formats like a store capsule. C is a small icon for the taskbar and the build. None is final.</aside>
+</section>
+
+<!-- ===================== 19 LEVEL DRAFTS ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-label="05 · Drafts &amp; prototypes" data-col="g">
+  <div class="ttl">Level drafts, top-down</div>
+  <div class="sub"><span style="color:var(--o)">Knockback Arena</span> and <span style="color:var(--c)">Ice Loop.</span> Blast Parkour and Hole Grab come next, as blockouts in Unity.</div>
+  <div id="levels"></div>
+  <div class="fn" style="bottom:56px">Draft layouts. Dimensions, spawn points and checkpoint count are not set.</div>
+  <aside class="notes">Two level drafts, seen from above. Knockback Arena: one flat square platform with open edges and no walls; players spawn near the corners and the open edge is the knockout line. Ice Loop: a looping track with checkpoints; every checkpoint counts, lap after lap, and falling into the water puts you back at your last checkpoint. Blast Parkour and Hole Grab layouts come next, as blockouts in Unity.</aside>
+</section>
+
+<!-- ===================== 20 DEVELOPMENT PLAN ===================== -->
+<section class="slide" data-section="Plan" data-label="06 · Development plan" data-col="c">
+  <div class="ttl">Development plan</div>
+  <div class="sub">12 weeks, four presentations, <span style="color:var(--c)">one playable step each.</span></div>
+  <div class="z b" style="left:96px;top:276px;width:1728px;font-size:22px"><b>Proposed MVP:</b> the shared core plus three mini-games (Knockback Arena, Ice Loop, Hole Grab). Blast Parkour joins in the final phase if time allows; the ideas in progress come after the term. Course checkpoints are on Mondays.</div>
+  <div id="road"></div>
+  <div id="risks"></div>
+  <div id="owners"></div>
+  <aside class="notes">The plan. The proposed MVP is the shared core plus three mini-games: Knockback Arena, Ice Loop and Hole Grab. Blast Parkour joins in the final phase if time allows. Four Monday checkpoints: the proposal on 19 October; Demo 1 on 16 November with the shared core, LAN host and join and a playable Knockback Arena; Demo 2 on 14 December with Ice Loop, Hole Grab and a full session; the final on 11 January with tuning, polish and the promo video. Three risks: networked physics, handled by host authority; balance, handled by fire-rate limits and gravity shots if needed; and scope, handled by building the core first and adding mini-games in priority order. Scope and owners are a proposal to agree on as a team.</aside>
+</section>
+
+<!-- ===================== 21 GANTT DEMO 1 ===================== -->
+<section class="slide" data-section="Plan" data-label="06 · Development plan" data-col="c">
+  <div class="ttl">Gantt chart: <span style="color:var(--c)">demo 1</span> · 16 Nov</div>
+  <div id="gantt1"></div>
+  <aside class="notes">Weeks 1 to 4. Ezel sets up the project and the LAN layer with host authority. Kürşat builds the cube controller, the third-person camera and the Knockback Arena level. Abdurrahim builds the shot system and the mass and knockback rule. Ardıl builds the lobby UI and the character model in four colours. Week 4 ends with the Demo 1 build.</aside>
+</section>
+
+<!-- ===================== 22 GANTT DEMO 2 ===================== -->
+<section class="slide" data-section="Plan" data-label="06 · Development plan" data-col="o">
+  <div class="ttl">Gantt chart: <span style="color:var(--o)">demo 2</span> · 14 Dec</div>
+  <div id="gantt2"></div>
+  <aside class="notes">Weeks 5 to 8. Networked projectiles and hits; the session with playlist and end rules; the scoreboard and placement points; Ice Loop with ice physics and checkpoints; Hole Grab with holes, rounds and the bulldozer. Week 8 is the first full-session playtest and the Demo 2 build.</aside>
+</section>
+
+<!-- ===================== 23 GANTT FINAL ===================== -->
+<section class="slide" data-section="Plan" data-label="06 · Development plan" data-col="p">
+  <div class="ttl">Gantt chart: <span style="color:var(--p)">final</span> · 11 Jan</div>
+  <div id="gantt3"></div>
+  <div id="ownlegend"></div>
+  <aside class="notes">Weeks 9 to 12. Blast Parkour as the stretch goal, network fixes and balance tuning from playtests, VFX and sound, art and UI polish with party-theme arenas, a LAN stress test and the final build, and in the last week the promo video and final deck. The final date may still move; we would shift the last weeks with it.</aside>
+</section>
+
+<!-- ===================== 24 FINAL ===================== -->
+<section class="slide" data-section="Close" data-nochrome>
+  <div class="bg"><img src="img/sp_cover.png"></div>
+  <div class="card" style="left:96px;top:66px;width:1000px;height:900px;border:none"></div>
+  <div class="z lab" style="left:144px;top:116px;color:var(--mut)">Final standings</div>
+  <div class="z d" style="left:140px;top:154px;font-size:84px;color:var(--ink)">Shooter <span style="color:var(--g)">Party</span> in short</div>
+  <div id="takeaways"></div>
+  <div class="z d" style="left:142px;top:740px;font-size:100px;color:var(--o)">Questions?</div>
+  <div class="z" style="left:144px;top:900px;width:900px;font:400 20px/1.4 var(--sans);color:var(--mut)">Ezel Bayraktar · Abdurrahim Özağaç · Kürşat Hürkan Aydın · Ardıl Bilal Ülkü</div>
+  <aside class="notes">In short: two to four players, one LAN, no internet, your own playlist. One shooting cube, and every mini-game changes what a shot does. Every hit lowers your mass, so the next push sends you further. Questions.</aside>
+</section>
+
+<!-- ===================== 25 SOURCES ===================== -->
+<section class="slide" data-section="Close" data-label="Appendix" data-col="c">
+  <div class="ttl">Sources</div>
+  <div class="card" style="left:96px;top:236px;width:1728px;height:760px"></div>
+  <div id="src"></div>
+  <aside class="notes">Full research notes with all sources are in research/market-research.md.</aside>
+</section>
+
+<script>
+const H = (sel, html) => document.querySelector(sel).insertAdjacentHTML('beforeend', html);
+const COL = {o:'var(--o)', c:'var(--c)', g:'var(--g)', p:'var(--p)', n:'var(--ink)'};
+const TINT = {o:'var(--to)', c:'var(--tc)', g:'var(--tg)', p:'var(--tp)', n:'#E9ECF2'};
+const HEX = {o:'#FF6B1F', c:'#1FA9EA', g:'#43B832', p:'#8F55F5'};
+const DARK = {o:'#D0561A', c:'#1888BE', g:'#36942A', p:'#7344C6'};
+// flat cube with a barrel, matching the pitch illustrations
+const cubeSvg = (c, s, barrel = true) => `<svg width="${s * (barrel ? 1.3 : 1)}" height="${s}" viewBox="0 0 ${barrel ? 130 : 100} 100">${barrel ? `<rect x="86" y="44" width="38" height="18" rx="5" fill="${DARK[c]}"/>` : ''}<rect x="4" y="6" width="88" height="88" rx="20" fill="${HEX[c]}"/><rect x="34" y="34" width="9" height="24" rx="4.5" fill="#1B2340"/><rect x="56" y="34" width="9" height="24" rx="4.5" fill="#1B2340"/></svg>`;
+
+/* ---------- chrome ---------- */
+const slides = [...document.querySelectorAll('section.slide')];
+slides.forEach((s, i) => {
+  if (s.hasAttribute('data-nochrome')) return;
+  s.insertAdjacentHTML('beforeend', `<div class="z" style="left:96px;top:42px">${cubeSvg('o', 30, false)}</div>
+    <div class="brand">Shooter <span style="color:var(--o)">Party</span></div>
+    <div class="course">CMP406 GameTech · Fall 2026</div>
+    <div class="foot">Shooter Party · Game proposal</div>
+    <div class="pg">${String(i + 1).padStart(2, '0')} / ${slides.length}</div>
+    <div class="sec" style="color:${COL[s.dataset.col]}">${s.dataset.label}</div>`);
+});
+
+/* ---------- 1 team ---------- */
+[['o','Ezel Bayraktar','2220356197','Network, build'],['c','Abdurrahim Özağaç','2220356033','Shots, mini-game rules'],['g','Kürşat Hürkan Aydın','2230356008','Movement, levels'],['p','Ardıl Bilal Ülkü','2230356051','Art, UI, session']].forEach(([c, n, id, r], i) => {
+  const x = 96 + i * 440, y = 870;
+  H('#team', `<div class="card" style="left:${x}px;top:${y}px;width:416px;height:150px;border:none"></div>
+    <div class="z" style="left:${x + 24}px;top:${y + 26}px;width:28px;height:28px;border-radius:8px;background:${COL[c]}"></div>
+    <div class="z" style="left:${x + 66}px;top:${y + 28}px;width:330px;font:700 22px/1.2 var(--sans);color:var(--ink)">${n}</div>
+    <div class="z cap" style="left:${x + 66}px;top:${y + 62}px">${id}</div>
+    <div class="z" style="left:${x + 66}px;top:${y + 94}px;width:330px;font:700 17px/1.2 var(--sans);color:${COL[c]}">${r}</div>`);
+});
+
+/* ---------- 2 flow + settings + points ---------- */
+[['1','Lobby','Host sets the session rules. Others join over LAN.'],['2','Pick','The playlist picks the next mini-game. Everyone loads the same arena.'],['3','Play','Some mini-games have their own rounds inside.'],['4','Place','Final placement becomes points.'],['5','Standings','Scoreboard updates. Repeat until the session ends.']].forEach(([n, t, d], i) => {
+  const x = 96 + i * 357, y = 420, hot = i === 2;
+  H('#flow', `<div class="card ${hot ? 'hot' : ''}" style="left:${x}px;top:${y}px;width:316px;height:196px"></div>
+    <div class="dot" style="left:${x + 24}px;top:${y + 24}px;width:44px;height:44px;background:${hot ? 'var(--o)' : 'var(--to)'}"></div>
+    <div class="z d" style="left:${x + 24}px;top:${y + 24}px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;color:${hot ? '#fff' : 'var(--o)'}">${n}</div>
+    <div class="z h" style="left:${x + 82}px;top:${y + 32}px">${t}</div>
+    <div class="z" style="left:${x + 24}px;top:${y + 88}px;width:276px;font:400 21px/1.36 var(--sans);color:var(--txt)">${d}</div>`);
+  if (i < 4) H('#flow', `<svg class="ov" width="1920" height="1080"><path d="M${x + 324} ${y + 92} l10 7 l-10 7" fill="none" stroke="#A9B0BF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`);
+});
+[['End condition','After a set number of mini-games, or when a player reaches a target score.'],['Playlist','Random or custom. Unwanted mini-games can be excluded, and one mini-game can be played many times.'],['Inner rounds','A mini-game can run its own rounds, like Hole Grab losing one hole each round.']].forEach(([k, v], i) => {
+  const y = 728 + i * 84;
+  H('#settings', `${i ? `<div class="hl" style="left:136px;top:${y - 14}px;width:920px"></div>` : ''}
+    <div class="z k" style="left:136px;top:${y + 4}px;color:var(--ink)">${k}</div>
+    <div class="z" style="left:336px;top:${y}px;width:720px;font:400 20px/1.38 var(--sans);color:var(--txt)">${v}</div>`);
+});
+[['1st',4],['2nd',3],['3rd',2],['4th',1]].forEach(([p, v], i) => {
+  const y = 726 + i * 52;
+  H('#pts', `<div class="z d" style="left:1164px;top:${y}px;font-size:30px;color:${i === 0 ? 'var(--o)' : 'var(--ink)'}">${p}</div>
+    <div class="bar" style="left:1260px;top:${y + 6}px;width:400px;height:20px;--bf:${i === 0 ? 'var(--o)' : 'var(--c)'}"><i style="width:${v * 100}px"></i></div>
+    <div class="z d" style="left:1690px;top:${y}px;font-size:30px;color:var(--ink)">${v} <span style="font:700 14px/1 var(--sans);letter-spacing:.1em;color:var(--mut)">PTS</span></div>`);
+});
+
+/* ---------- 3 effects + movement/camera/ideas ---------- */
+const eyes = (x, y, s) => `<rect x="${x + s * .3}" y="${y + s * .3}" width="${s * .1}" height="${s * .26}" rx="${s * .05}" fill="#1B2340"/><rect x="${x + s * .56}" y="${y + s * .3}" width="${s * .1}" height="${s * .26}" rx="${s * .05}" fill="#1B2340"/>`;
+const fx = {
+  Damage: `<rect width="240" height="150" rx="16" fill="#FCE9E9"/><circle cx="46" cy="88" r="15" fill="#FF6B1F"/><rect x="118" y="34" width="76" height="20" rx="10" fill="#F5C7C7"/><rect x="118" y="34" width="40" height="20" rx="10" fill="#E5484D"/><rect x="120" y="62" width="72" height="72" rx="18" fill="#8F55F5"/>${eyes(120, 62, 72)}`,
+  Knockback: `<rect width="240" height="150" rx="16" fill="#E3F2FB"/><circle cx="38" cy="80" r="15" fill="#FF6B1F"/><rect x="74" y="44" width="72" height="72" rx="18" fill="#1FA9EA"/>${eyes(74, 44, 72)}<line x1="160" y1="80" x2="214" y2="80" stroke="#1B2340" stroke-width="6" stroke-linecap="round"/><path d="M222 80 l-16 -10 v20 z" fill="#1B2340"/>`,
+  Blast: `<rect width="240" height="150" rx="16" fill="#FFF4D6"/><rect y="122" width="240" height="28" fill="#7CC95A"/><circle cx="112" cy="122" r="26" fill="#FFD54A"/><circle cx="88" cy="114" r="14" fill="#FFB52E"/><circle cx="138" cy="112" r="14" fill="#FFB52E"/><rect x="78" y="26" width="68" height="68" rx="17" fill="#43B832"/>${eyes(78, 26, 68)}<line x1="190" y1="110" x2="190" y2="40" stroke="#1B2340" stroke-width="6" stroke-linecap="round"/><path d="M190 30 l-11 16 h22 z" fill="#1B2340"/>`
+};
+[['Damage','The shot lowers the target’s health.'],['Knockback','The target is pushed away from the direction the shot came from.'],['Blast','The shot explodes. Fired at the ground, it lifts the shooter up.']].forEach(([t, d], i) => {
+  const x = 96 + i * 584, y = 600;
+  H('#effects', `<div class="card" style="left:${x}px;top:${y}px;width:560px;height:210px"></div>
+    <svg class="ov" style="left:${x + 24}px;top:${y + 30}px" width="240" height="150" viewBox="0 0 240 150">${fx[t]}</svg>
+    <div class="z h" style="left:${x + 290}px;top:${y + 36}px">${t}</div>
+    <div class="z" style="left:${x + 290}px;top:${y + 80}px;width:244px;font:400 20px/1.4 var(--sans);color:var(--txt)">${d}</div>`);
+});
+[['Movement','c','','WASD to move. Jumping is allowed in some mini-games and not in others.'],['Camera','c','','A third-person shooter camera by default. A mini-game can change it, like the 2.5D side view in Blast Parkour.'],['Mechanic ideas we want to try','y','ty','<b>Shoot the ground to jump.</b> <b>Steer with recoil:</b> on ice, firing forward pushes you back.']].forEach(([k, c, t, d], i) => {
+  const x = 96 + i * 584, y = 836;
+  H('#movecam', `<div class="card ${t}" style="left:${x}px;top:${y}px;width:560px;height:154px"></div>
+    <div class="z lab" style="left:${x + 30}px;top:${y + 24}px;color:${c === 'y' ? '#A57600' : COL[c]}">${k}</div>
+    <div class="z b" style="left:${x + 30}px;top:${y + 56}px;width:500px;font-size:20px">${d}</div>`);
+});
+
+/* ---------- 4 knockback arena ---------- */
+[['#1FA9EA',90,'Full mass.','A hit pushes a little.'],['#7CC6EF',190,'After a few hits.','Same size, less mass, a longer push.'],['#BDE2F7',300,'Many hits.','One more shot sends it off the edge.']].forEach(([col, len, b, t], i) => {
+  const x = 136 + i * 350, y = 796;
+  H('#massstrip', `<div class="z" style="left:${x}px;top:${y}px;width:56px;height:56px;border-radius:14px;background:${col}"></div>
+    <svg class="ov" width="1920" height="1080"><line x1="${x + 70}" y1="${y + 28}" x2="${x + 70 + len - 14}" y2="${y + 28}" stroke="${i === 2 ? '#FF6B1F' : '#1B2340'}" stroke-width="5" stroke-linecap="round"/><path d="M${x + 70 + len} ${y + 28} l-16 -9 v18 z" fill="${i === 2 ? '#FF6B1F' : '#1B2340'}"/></svg>
+    <div class="z" style="left:${x}px;top:${y + 80}px;width:320px;font:400 20px/1.4 var(--sans);color:var(--txt)"><b style="color:var(--ink)">${b}</b> ${t}</div>`);
+});
+const sideCards = (sel, rows, top, gap, col) => {
+  const h = (990 - top - gap * (rows.length - 1)) / rows.length;
+  rows.forEach(([k, v], i) => {
+    const y = top + i * (h + gap);
+    H(sel, `<div class="card" style="left:1236px;top:${y}px;width:588px;height:${h}px"></div>
+      <div class="z lab" style="left:1270px;top:${y + 26}px;color:${col}">${k}</div>
+      <div class="z b" style="left:1270px;top:${y + 60}px;width:520px;font-size:${rows.length < 3 ? 25 : 22}px">${v}</div>`);
+  });
+};
+sideCards('#kocards', [['Shooting','Free, with a fire-rate limit. Shots are real thrown objects and have no effect on the shooter.'],['Getting hit','A force from the shot’s direction, and a drop in mass. Volume stays the same.'],['Out and placement','Falling off means you are out. Proposed: placement by order of elimination, last cube standing wins.']], 284, 20, 'var(--o)');
+sideCards('#bpcards', [['2.5D course','Built side-on, so there is nowhere to hide. Everyone is always in someone’s line of fire.'],['Charged blast','Hold to fire a strong explosion. While charging you cannot move, so you are open to attack.'],['Blast to climb','A shot at the ground lifts you up. The same blast can push a nearby rival off a ledge.'],['Fall = out','Whoever drops below the course is out. Placement rule: to be decided after the first tests.']], 284, 16, 'var(--p)');
+sideCards('#ilcards', [['Looped track','When the track ends it starts again, and every checkpoint you pass counts +1. The count, not the lap, decides the placement.'],['Push to win','The ice is slippery. Push rivals off it into the water and they restart from their last checkpoint.'],['Steer with recoil (idea)','Firing forward while sliding pushes you back, so a shot can also correct your line.']], 284, 20, 'var(--c)');
+sideCards('#hgcards', [['Player-shaped holes','Holes open in the ground in the player’s shape, with the barrel’s angle marked. You have to line up to drop in.'],['Shoot to push','Shots push other players away from the holes. A player already inside a hole cannot be pushed out.']], 284, 20, 'var(--g)');
+[['Round 1','4 players, 3 holes. One is crushed.'],['Round 2','3 players, 2 holes. One is crushed.'],['Round 3','2 players, 1 hole. The one inside wins.']].forEach(([t, d], i) => {
+  const x = 136 + i * 346;
+  H('#hgrounds', `<div class="card ${i === 2 ? 'tg' : ''}" style="left:${x}px;top:858px;width:326px;height:108px;box-shadow:none"></div>
+    <div class="z" style="left:${x + 20}px;top:874px;font:700 20px/1.2 var(--sans);color:var(--ink)">${t}</div>
+    <div class="z" style="left:${x + 20}px;top:904px;width:290px;font:400 18px/1.35 var(--sans);color:var(--txt)">${d}</div>`);
+});
+
+/* ---------- 8 ideas ---------- */
+[['Versus battle','A classic free-for-all shoot-out. Rules: to be designed.'],['Hard battle','A tougher battle variant. Rules: to be designed.'],['The Monster','One player is the monster and the rest play against them, with rounds inside. Rules: to be designed.']].forEach(([t, d], i) => {
+  const x = 96 + i * 584;
+  H('#ideas', `<div class="card" style="left:${x}px;top:320px;width:560px;height:204px"></div>
+    <div class="z h" style="left:${x + 30}px;top:346px">${t}</div>
+    <div class="z b" style="left:${x + 30}px;top:392px;width:500px;font-size:21px">${d}</div>`);
+});
+[['Heavy','p',3,1],['Balanced','o',2,2],['Light','g',1,3]].forEach(([t, c, m, s], i) => {
+  const y = 790 + i * 54;
+  H('#types', `<div class="z" style="left:726px;top:${y}px;font:700 20px/1.2 var(--sans);color:${COL[c]}">${t}</div>
+    <div class="z k" style="left:880px;top:${y + 3}px">Mass</div><div class="z k" style="left:1090px;top:${y + 3}px">Speed</div>`);
+  [[m, 960], [s, 1170]].forEach(([v, x0]) => { for (let k = 0; k < 3; k++) H('#types', `<div class="z" style="left:${x0 + k * 40}px;top:${y + 4}px;width:32px;height:14px;border-radius:7px;background:${k < v ? COL[c] : 'var(--track)'}"></div>`); });
+});
+H('#types', `<div class="z cap" style="left:726px;top:950px;width:580px">Example only. Pips are relative; stats are not designed.</div>`);
+
+/* ---------- 9 architecture ---------- */
+(() => {
+  const L = (y, t) => H('#arch', `<div class="z k" style="left:96px;top:${y}px">${t}</div>`);
+  const box = (x, y, w, h, bg, t, sub, tc, dashed) => H('#arch', `<div class="card" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${bg};box-shadow:none;${dashed ? 'border:2px dashed #C9CFC0;' : ''}"></div>
+    ${sub ? `<div class="z" style="left:${x}px;top:${y + 14}px;width:${w}px;text-align:center;font:400 24px/1.15 var(--disp);color:${tc}">${t}</div>
+      <div class="z cap" style="left:${x}px;top:${y + 50}px;width:${w}px;text-align:center;color:var(--txt)">${sub}</div>`
+    : `<div class="z" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;display:flex;align-items:center;justify-content:center;font:700 21px/1.15 var(--sans);color:${tc}">${t}</div>`}`);
+  L(282, 'Mini-games');
+  [['Knockback Arena','o'],['Blast Parkour','p'],['Ice Loop','c'],['Hole Grab','g'],['Next one','n']].forEach(([t, c], i) => box(96 + i * 350, 308, 330, 70, c === 'n' ? 'transparent' : TINT[c], t, '', c === 'n' ? 'var(--faint)' : COL[c], c === 'n'));
+  L(402, 'Contract');
+  box(96, 428, 1728, 64, 'var(--ty)', 'Setup(players, settings) → Run() → Results() : placement', '', '#8A6200');
+  L(516, 'Shared gameplay');
+  [['Cube controller','WASD, jump'],['TPS camera','per-game override'],['Shot system','effect set per game'],['Session & playlist','end rules, exclusions'],['Scoreboard','placement to points'],['Lobby & UI','join, settings, HUD']].forEach(([t, s], i) => box(96 + (i % 3) * 584, 542 + Math.floor(i / 3) * 112, 560, 96, '#fff', t.replace('&', '&amp;'), s, 'var(--ink)'));
+  L(780, 'Network');
+  box(96, 806, 1728, 64, 'var(--tp)', 'LAN · one player hosts, the others are clients · Unity Netcode (candidate)', '', 'var(--p)');
+  L(894, 'Engine');
+  box(96, 920, 1728, 64, '#fff', 'Unity · built-in rigidbody physics', '', 'var(--mut)');
+})();
+
+/* ---------- 10 network sequence ---------- */
+(() => {
+  const X = {a: 330, h: 960, b: 1590};
+  [['a','Client A','shooter','o'],['h','Host','runs the physics','n'],['b','Client B','target','c']].forEach(([k, t, s, c]) => {
+    const host = c === 'n';
+    H('#seq', `<div class="card" style="left:${X[k] - 170}px;top:282px;width:340px;height:92px"></div>
+      ${host ? '' : `<div class="z" style="left:${X[k] - 150}px;top:304px">${cubeSvg(c, 46)}</div>`}
+      <div class="z d" style="left:${X[k] - (host ? 170 : 74)}px;top:300px;width:${host ? 340 : 240}px;text-align:${host ? 'center' : 'left'};font-size:30px;color:${COL[c]}">${t}</div>
+      <div class="z cap" style="left:${X[k] - (host ? 170 : 74)}px;top:338px;width:${host ? 340 : 240}px;text-align:${host ? 'center' : 'left'}">${s}</div>
+      <div class="z" style="left:${X[k] - 1}px;top:374px;width:2px;height:484px;background:#C9CFC0"></div>`);
+  });
+  const arrow = (x1, x2, y, c) => `<svg class="ov" width="1920" height="1080"><line x1="${x1}" y1="${y}" x2="${x2 + (x2 > x1 ? -12 : 12)}" y2="${y}" stroke="${c}" stroke-width="4" stroke-linecap="round"/><path d="M${x2} ${y} l${x2 > x1 ? -16 : 16} -9 v18 z" fill="${c}"/></svg>`;
+  const num = (x, y, n, bg, fg) => `<div class="z d" style="left:${x - 19}px;top:${y - 19}px;width:38px;height:38px;border-radius:50%;background:${bg};color:${fg};border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:19px">${n}</div>`;
+  H('#seq', arrow(X.a, X.h, 424, '#FF6B1F') + num(X.a + 60, 424, 1, 'var(--o)', '#fff') + `<div class="z" style="left:${X.a + 92}px;top:386px;font:700 20px/1.2 var(--sans);color:var(--ink)">Fire input and aim direction</div>`);
+  H('#seq', `<div class="z" style="left:${X.h - 11}px;top:454px;width:22px;height:262px;border-radius:11px;background:var(--o)"></div>`);
+  [['2','Check the fire-rate limit and spawn the projectile. The shooter is not affected.'],['3','Physics step: the projectile reaches B.'],['4','Apply this mini-game’s effect: B loses mass and is pushed from the shot’s direction.']].forEach(([n, t], i) => {
+    const y = 484 + i * 86;
+    H('#seq', num(X.h + 52, y, n, '#fff', 'var(--ink)') + `<div class="z" style="left:${X.h + 84}px;top:${y - 13}px;width:560px;font:400 20px/1.3 var(--sans);color:var(--ink)">${t}</div>`);
+  });
+  H('#seq', arrow(X.h, X.a, 760, '#1FA9EA') + arrow(X.h, X.b, 760, '#1FA9EA') + num(X.h - 62, 760, 5, 'var(--c)', '#fff') + num(X.h + 62, 760, 5, 'var(--c)', '#fff') +
+    `<div class="z" style="left:${X.a + 40}px;top:722px;width:520px;font:700 20px/1.2 var(--sans);color:var(--ink)">Snapshot: positions, mass, scores</div>
+     <div class="z" style="left:${X.h + 102}px;top:722px;width:520px;font:700 20px/1.2 var(--sans);color:var(--ink)">The same snapshot to everyone</div>`);
+  H('#seq', num(X.a, 828, 6, '#fff', 'var(--ink)') + num(X.b, 828, 6, '#fff', 'var(--ink)') + `<div class="z" style="left:${X.a + 36}px;top:815px;width:560px;font:400 20px/1.3 var(--sans);color:var(--txt)">Clients interpolate between snapshots and draw.</div>`);
+})();
+
+/* ---------- 11 kpis + bars ---------- */
+[['$43.6B','PC games revenue in 2025, up 12% year on year.','Newzoo [1]','c'],['$4.1B','Steam revenue of games with co-op in H1 2025, an all-time high (estimate).','Alinea [2]','g'],['70%','of US players aged 8+ play with other people.','ESA 2026 [3]','p'],['≈8%','of ~3,490 Steam “Party Game” titles list LAN PvP.','Steam, Oct 2026 [4]','o']].forEach(([n, d, s, c], i) => {
+  const x = 96 + i * 438, y = 380;
+  H('#kpis', `<div class="card ${c === 'o' ? 'hot' : ''}" style="left:${x}px;top:${y}px;width:414px;height:226px"></div>
+    <div class="z d" style="left:${x + 28}px;top:${y + 26}px;font-size:70px;color:${COL[c]}">${n}</div>
+    <div class="z" style="left:${x + 28}px;top:${y + 110}px;width:360px;font:400 19px/1.36 var(--sans);color:var(--txt)">${d}</div>
+    <div class="z cap" style="left:${x + 28}px;top:${y + 184}px;font-size:15px">${s}</div>`);
+});
+[['Online PvP',1870,'c'],['Shared / split-screen PvP',1017,'p'],['LAN PvP',292,'o']].forEach(([t, v, c], i) => {
+  const y = 694 + i * 42;
+  H('#tagbars', `<div class="z" style="left:136px;top:${y}px;width:320px;font:700 19px/1.2 var(--sans);color:var(--ink)">${t}</div>
+    <div class="bar" style="left:470px;top:${y + 1}px;width:1170px;height:22px;--bf:${COL[c]}"><i style="width:${Math.round(v / 1870 * 1170)}px"></i></div>
+    <div class="z d" style="left:1664px;top:${y - 2}px;width:120px;text-align:right;font-size:26px;color:${COL[c]}">${v.toLocaleString('en-US')}</div>`);
+});
+H('#tagbars', `<div class="z cap" style="left:1300px;top:657px;width:484px;text-align:right;font-size:15px">Steam store search, 17 Oct 2026 [4]. Tags are user-applied.</div>`);
+
+/* ---------- 12 competitors ---------- */
+[['1260320_3.jpg','Audience','o','Party Animals','Recreate Games · 2023',[['Mechanic','Physics brawling: grab, punch, throw rivals out.'],['Multiplayer','Online and same-screen. No LAN listed.'],['Financials','Launch peak 104,174 players. Owner est. 2.5M–6.0M.']]],
+ ['285900_1.jpg','Physics','c','Gang Beasts','Boneloaf · 2017',[['Mechanic','Ragdoll brawling into stage hazards.'],['Multiplayer','Same-screen and online. No LAN listed.'],['Financials','85% positive. Owner est. 4.6M–5.8M.']]],
+ ['1097150_2.jpg','Format','g','Fall Guys','Mediatonic / Epic · 2020',[['Mechanic','Short race and survival rounds in a playlist.'],['Multiplayer','Online, cross-platform only.'],['Financials','Free-to-play. Legacy Steam peak 172,213. Metacritic 80.']]],
+ ['880940_1.jpg','Format','g','Pummel Party','Rebuilt Games · 2018',[['Mechanic','Board game with short competitive mini-games.'],['Multiplayer','4–8 online and local. No LAN listed.'],['Financials','$14.99. Peak 20,957. Owner est. 1.5M–7.6M.']]],
+ ['1858400_2.jpg','Mechanic','p','Squarena','Codeaclysm · 2022',[['Mechanic','Minimal 2D arena shooter: low health shrinks you; small bodies feel more recoil.'],['Multiplayer','Up to 6 local. No LAN listed.'],['Financials','$4.99. Sales not disclosed.']]]].forEach(([img, why, c, name, dev, rows], i) => {
+  const x = 96 + i * 350, w = 330;
+  H('#comps', `<div class="card" style="left:${x}px;top:284px;width:${w}px;height:700px"></div>
+    <div class="z" style="left:${x + 10}px;top:294px;width:${w - 20}px;height:176px;border-radius:18px;overflow:hidden;z-index:2"><img src="img/${img}" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div class="chip" style="left:${x + 22}px;top:306px;width:130px;height:32px;font-size:13px;background:${COL[c]};color:#fff">${why}</div>
+    <div class="z h" style="left:${x + 24}px;top:490px;font-size:26px">${name}</div>
+    <div class="z cap" style="left:${x + 24}px;top:526px;font-size:16px">${dev}</div>`);
+  rows.forEach(([k, v], j) => {
+    const y = 578 + j * 128;
+    H('#comps', `<div class="z k" style="left:${x + 24}px;top:${y}px;font-size:14px;color:${COL[c]}">${k}</div>
+      <div class="z" style="left:${x + 24}px;top:${y + 22}px;width:${w - 40}px;font:400 19px/1.34 var(--sans);color:var(--txt)">${v}</div>`);
+  });
+});
+
+/* ---------- 13 matrix ---------- */
+(() => {
+  const games = ['Party Animals','Gang Beasts','Fall Guys','Pummel Party','Squarena','Shooter Party'];
+  const feats = [['3D characters',['Y','Y','Y','Y','N','Y']],['Ranged attacks',['P','N','N','P','Y','Y']],['Hits weaken your body',['N','N','N','N','Y','Y']],['Less mass, further knockback',['N','N','N','N','N','Y']],['Several mini-games, one result',['N','N','P','Y','N','Y']],['Official LAN play',['N','N','N','N','N','Y']],['Plays with no internet',['N','Y','N','Y','Y','Y']]];
+  const mx = 700, mw = 187, t0 = 226, rh = 80;
+  H('#matrix', `<div class="card" style="left:96px;top:${t0}px;width:${mx + 5 * mw - 96 - 10}px;height:${70 + feats.length * rh + 14}px"></div>
+    <div class="card hot" style="left:${mx + 5 * mw}px;top:${t0 - 14}px;width:${mw}px;height:${70 + feats.length * rh + 42}px"></div>`);
+  games.forEach((g, j) => H('#matrix', `<div class="z k" style="left:${mx + j * mw}px;top:${t0 + 28}px;width:${mw}px;text-align:center;font-size:15px;color:${j === 5 ? 'var(--o)' : 'var(--mut)'}">${g}</div>`));
+  feats.forEach(([f, vs], i) => {
+    const y = t0 + 70 + i * rh;
+    H('#matrix', `${i ? `<div class="hl" style="left:126px;top:${y}px;width:${mx + 5 * mw - 166}px"></div>` : ''}
+      <div class="z" style="left:130px;top:${y + 27}px;width:560px;font:700 22px/1.2 var(--sans);color:var(--ink)">${f}</div>`);
+    vs.forEach((v, j) => {
+      const cx = mx + j * mw + mw / 2, cy = y + 40, ours = j === 5;
+      const tick = `<path d="M${cx - 7} ${cy} l5 5 l9 -10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+      const svg = ours ? `<circle cx="${cx}" cy="${cy}" r="16" fill="#FF6B1F"/>${tick}`
+        : v === 'Y' ? `<circle cx="${cx}" cy="${cy}" r="16" fill="#43B832"/>${tick}`
+        : v === 'P' ? `<circle cx="${cx}" cy="${cy}" r="16" fill="#FFC423"/><path d="M${cx - 7} ${cy} h14" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`
+        : `<circle cx="${cx}" cy="${cy}" r="15" fill="#F1F3EE" stroke="#D6DBCF" stroke-width="2"/>`;
+      H('#matrix', `<svg class="ov" width="1920" height="1080">${svg}</svg>`);
+    });
+  });
+  const ly = t0 + 70 + feats.length * rh + 40;
+  H('#matrix', `<svg class="ov" width="1920" height="1080"><circle cx="108" cy="${ly + 11}" r="11" fill="#43B832"/><circle cx="238" cy="${ly + 11}" r="11" fill="#FFC423"/><circle cx="378" cy="${ly + 11}" r="10" fill="#F1F3EE" stroke="#D6DBCF" stroke-width="2"/><circle cx="488" cy="${ly + 11}" r="11" fill="#FF6B1F"/></svg>
+    <div class="z cap" style="left:128px;top:${ly + 1}px">Yes</div><div class="z cap" style="left:258px;top:${ly + 1}px">Partly</div><div class="z cap" style="left:398px;top:${ly + 1}px">No</div><div class="z cap" style="left:508px;top:${ly + 1}px">Planned (Shooter Party)</div>`);
+})();
+
+/* ---------- 14 innovation pillars ---------- */
+[['01','Mass, not size','o','Hits lower your mass while your size stays. The same shot launches a weakened player further, and everyone can see the danger build.'],
+ ['02','One trigger, many effects','c','The same shot pushes, damages or lifts you, depending on the mini-game. Controls are learned once; each mini-game feels new.'],
+ ['03','Your session, your rules','g','Random or custom playlists, excluded or repeated mini-games, and an end by rounds or score. All on a LAN, no internet.']].forEach(([n, t, c, d], i) => {
+  const x = 96 + i * 584;
+  H('#pillars', `<div class="card ${i === 0 ? 'hot' : ''}" style="left:${x}px;top:290px;width:560px;height:470px"></div>
+    <div class="z d" style="left:${x + 36}px;top:326px;font-size:64px;color:${COL[c]}">${n}</div>
+    <div class="z" style="left:${x + 400}px;top:322px">${cubeSvg(c, 80)}</div>
+    <div class="z h" style="left:${x + 36}px;top:430px;width:490px">${t}</div>
+    <div class="z b" style="left:${x + 36}px;top:490px;width:490px;font-size:26px">${d}</div>`);
+});
+
+/* ---------- 15 prior art ---------- */
+(() => {
+  const rows = [['Hits weaken your body','Squarena (2D): lower health, smaller body. Morphies Law: hits move mass between robots.','Precedent','c'],
+    ['Lighter, launched further','Smash Bros. raises knockback with a damage % counter, not mass. In Squarena, smaller bodies feel more of their own recoil.','Not found','o'],
+    ['Blast to climb','Rocket jumping in classic shooters such as Quake and Team Fortress 2.','Precedent','c'],
+    ['Shoot to steer on ice','Recoil movement exists in some games; we did not search this one yet.','To check','y'],
+    ['Mass knockback in a LAN party game','No shipped game found.','Not found','o']];
+  H('#prior', `<div class="z k" style="left:136px;top:282px">Idea</div><div class="z k" style="left:620px;top:282px">Closest prior art</div><div class="z k" style="left:1570px;top:282px">Status</div>`);
+  rows.forEach(([t, p, s, c], i) => {
+    const y = 314 + i * 128, hot = c === 'o';
+    H('#prior', `<div class="card ${hot ? 'hot' : ''}" style="left:96px;top:${y}px;width:1728px;height:112px;box-shadow:none"></div>
+      <div class="z" style="left:136px;top:${y + 26}px;width:440px;height:60px;display:flex;align-items:center;font:700 24px/1.25 var(--sans);color:var(--ink)">${t}</div>
+      <div class="z" style="left:620px;top:${y + 26}px;width:900px;height:60px;display:flex;align-items:center;font:400 21px/1.4 var(--sans);color:var(--txt)">${p}</div>
+      <div class="chip" style="left:1570px;top:${y + 35}px;width:224px;height:42px;${c === 'o' ? 'background:var(--o);color:#fff' : c === 'c' ? 'background:var(--tc);color:var(--c)' : 'background:var(--ty);color:#A57600'}">${s}</div>`);
+  });
+})();
+
+/* ---------- 16 prototype ---------- */
+['blk1.png','blk2.png','blk3.png','blk4.png'].forEach((f, i) => {
+  const x = 96 + i * 438;
+  H('#strip', `<div class="pic" style="left:${x}px;top:284px;width:414px;height:250px"><img src="img/${f}"></div>`);
+});
+H('#strip', `<svg class="ov" width="1920" height="1080"><line x1="110" y1="580" x2="1810" y2="580" stroke="#C9CFC0" stroke-width="4" stroke-linecap="round"/>${[0,1,2,3].map(i => `<circle cx="${96 + i * 438 + 207}" cy="580" r="12" fill="${i ? '#43B832' : '#1B2340'}" stroke="#F4F7EE" stroke-width="4"/>`).join('')}</svg>
+  ${['Before','Shot 1','Shot 2','Shot 3'].map((t, i) => `<div class="z d" style="left:${96 + i * 438}px;top:606px;width:414px;text-align:center;font-size:24px;color:${i ? 'var(--g)' : 'var(--ink)'}">${t}</div>`).join('')}`);
+[['What we built and saw','g','tg','A deterministic physics test in Three.js. Over three shots the target flies further each time, and the rule is readable without any UI.'],
+ ['What changed since','y','ty','This early test showed lost mass as shrinking. Our rule now keeps the size and lowers only the mass, so the Unity test needs another way to show it: a HUD bar, a colour or an effect, to be chosen.']].forEach(([t, c, cls, d], i) => {
+  const x = 96 + i * 876;
+  H('#proto', `<div class="card ${cls}" style="left:${x}px;top:680px;width:852px;height:300px"></div>
+    <div class="z lab" style="left:${x + 40}px;top:716px;color:${c === 'y' ? '#A57600' : COL[c]}">${t}</div>
+    <div class="z" style="left:${x + 40}px;top:756px;width:772px;font:400 25px/1.45 var(--sans);color:var(--ink)">${d}</div>`);
+});
+
+/* ---------- 17 art drafts ---------- */
+[['draft_direction_A_vinyl.png','A','Vinyl toy'],['draft_direction_B_blocks.png','B','Building blocks'],['glossy_lineup.png','C','Glossy toy · chosen'],['character_sheet_jelly.png','D','Jelly']].forEach(([f, l, t], i) => {
+  const x = 96 + (i % 2) * 652, y = 284 + Math.floor(i / 2) * 360;
+  H('#art', `<div class="pic" style="left:${x}px;top:${y}px;width:628px;height:300px;${l === 'C' ? 'border:4px solid var(--o);background:#4C8EEA' : ''}"><img src="img/${f}" style="${l === 'C' ? 'object-fit:contain' : ''}"></div>
+    <div class="dot" style="left:${x}px;top:${y + 312}px;width:34px;height:34px;background:var(--o)"></div>
+    <div class="z d" style="left:${x}px;top:${y + 312}px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff">${l}</div>
+    <div class="z" style="left:${x + 46}px;top:${y + 318}px;font:700 21px/1 var(--sans);color:${l === 'C' ? 'var(--o)' : 'var(--ink)'}">${t}</div>`);
+});
+[['Orange','#FF6B1F'],['Cyan','#1FA9EA'],['Lime','#43B832'],['Purple','#8F55F5']].forEach(([n, h], i) => {
+  const x = 1416 + i * 96;
+  H('#sw', `<div class="z" style="left:${x}px;top:726px;width:80px;height:80px;border-radius:22px;background:${h}"></div>
+    <div class="z cap" style="left:${x}px;top:818px;width:90px;font-size:16px;color:var(--ink)">${n}</div>`);
+});
+
+/* ---------- 18 logos ---------- */
+(() => {
+  const face = (x, y, s, c, dk) => `<rect x="${x + s * .84}" y="${y + s * .42}" width="${s * .36}" height="${s * .18}" rx="${s * .05}" fill="${dk}"/><rect x="${x}" y="${y}" width="${s}" height="${s}" rx="${s * .22}" fill="${c}"/><rect x="${x + s * .32}" y="${y + s * .32}" width="${s * .1}" height="${s * .26}" rx="${s * .05}" fill="#1B2340"/><rect x="${x + s * .56}" y="${y + s * .32}" width="${s * .1}" height="${s * .26}" rx="${s * .05}" fill="#1B2340"/>`;
+  const logos = [
+    ['#FFFFFF', `<g transform="translate(280 250) rotate(-4)"><text x="0" y="0" text-anchor="middle" font-family="Arial Rounded MT Bold" font-size="88" textLength="460" lengthAdjust="spacingAndGlyphs"><tspan fill="#1B2340">Shooter </tspan><tspan fill="#FF6B1F">Party</tspan></text></g>
+      <path d="M100 306 Q 240 334 380 306" fill="none" stroke="#43B832" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="404" cy="304" r="13" fill="#FF6B1F"/><circle cx="434" cy="298" r="9" fill="#FF6B1F" opacity=".6"/><circle cx="458" cy="292" r="6" fill="#FF6B1F" opacity=".35"/>`, 'A · Wordmark', 'Title screen, deck cover, video end card.'],
+    ['#E7F5E1', `${face(200, 40, 130, '#FF6B1F', '#D0561A')}<circle cx="392" cy="114" r="11" fill="#FF6B1F"/><circle cx="416" cy="108" r="7" fill="#FF6B1F" opacity=".6"/>
+      <text x="280" y="292" text-anchor="middle" font-family="Arial Rounded MT Bold" font-size="74" fill="#1B2340">Shooter</text>
+      <text x="280" y="372" text-anchor="middle" font-family="Arial Rounded MT Bold" font-size="74" fill="#43B832">Party</text>`, 'B · Stacked', 'Square formats: store capsule, lobby screen.'],
+    ['#FF6B1F', `<rect x="160" y="70" width="240" height="240" rx="64" fill="#FFFFFF"/>${face(200, 125, 130, '#1FA9EA', '#1888BE')}
+      <text x="280" y="392" text-anchor="middle" font-family="Arial Rounded MT Bold" font-size="32" fill="#FFFFFF">Shooter Party</text>`, 'C · Icon', 'Taskbar, build icon, favicon.']];
+  logos.forEach(([bg, art, t, d], i) => {
+    const x = 96 + i * 584;
+    H('#logos', `<div class="pic" style="left:${x}px;top:284px;width:560px;height:540px;background:${bg};border:2px solid var(--line)"><svg width="560" height="540" viewBox="0 -30 560 540">${art}</svg></div>
+      <div class="z lab" style="left:${x}px;top:850px;color:var(--ink)">Draft ${t}</div>
+      <div class="z" style="left:${x}px;top:884px;width:560px;font:400 23px/1.4 var(--sans);color:var(--txt)">${d}</div>`);
+  });
+})();
+
+/* ---------- 19 levels ---------- */
+(() => {
+  H('#levels', `<div class="card" style="left:96px;top:290px;width:844px;height:690px"></div>
+    <div class="z lab" style="left:136px;top:322px">Knockback Arena · arena draft</div>
+    <svg class="ov" width="1920" height="1080">
+      <rect x="216" y="390" width="470" height="470" rx="26" fill="#D7EFC9"/>
+      <rect x="236" y="410" width="430" height="430" rx="16" fill="#F7FBF3" stroke="#FF6B1F" stroke-width="5" stroke-dasharray="2 14" stroke-linecap="round"/>
+      <line x1="451" y1="430" x2="451" y2="820" stroke="#E4E9DD" stroke-width="2"/><line x1="256" y1="625" x2="646" y2="625" stroke="#E4E9DD" stroke-width="2"/>
+    </svg>
+    ${[[296,470,'o'],[590,470,'c'],[296,764,'g'],[590,764,'p']].map(([x, y, c]) => `<div class="z" style="left:${x - 22}px;top:${y - 22}px">${cubeSvg(c, 44, false)}</div>`).join('')}
+    <div class="z k" style="left:216px;top:886px;width:470px;text-align:center;color:var(--o)">Open edge = knockout line</div>
+    <div class="z cap" style="left:712px;top:410px;width:200px">Fall zone. No walls, no cover.</div>
+    <div class="z cap" style="left:712px;top:604px;width:200px">One flat square platform.</div>
+    <div class="z cap" style="left:712px;top:760px;width:200px">Spawn near corners.</div>`);
+  const P = 'M1120 820 L1120 520 C1120 420 1180 390 1260 390 L1420 390 C1500 390 1520 450 1480 510 L1420 600 C1380 660 1420 700 1500 700 L1600 700 C1680 700 1700 760 1700 800 C1700 860 1660 880 1600 880 L1180 880 C1140 880 1120 860 1120 820 Z';
+  H('#levels', `<div class="card" style="left:980px;top:290px;width:844px;height:690px"></div>
+    <div class="z lab" style="left:1020px;top:322px;color:var(--c)">Ice Loop · track draft</div>
+    <svg class="ov" width="1920" height="1080">
+      <g transform="translate(0 14)">
+      <path d="${P}" fill="none" stroke="#CFE9FB" stroke-width="78" stroke-linejoin="round"/>
+      <path d="${P}" fill="none" stroke="#F4FBFF" stroke-width="56" stroke-linejoin="round"/>
+      <path d="${P}" fill="none" stroke="#A9D8F5" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+      ${[0,1,2,3].map(k => `<rect x="${1092 + k * 14}" y="672" width="14" height="14" fill="${k % 2 ? '#1B2340' : '#fff'}"/><rect x="${1092 + k * 14}" y="686" width="14" height="14" fill="${k % 2 ? '#fff' : '#1B2340'}"/>`).join('')}
+      ${[[1340,390],[1450,560],[1700,800]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="16" fill="#1FA9EA" stroke="#fff" stroke-width="4"/>`).join('')}
+      ${[[1490,450],[1430,640],[1140,860]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="40" fill="#FFC423" fill-opacity=".18" stroke="#FFC423" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>`).join('')}
+      </g>
+    </svg>
+    <div class="z k" style="left:1170px;top:688px;color:var(--ink)">Start</div>
+    <div class="z k" style="left:1318px;top:350px;color:var(--c)">CP1</div>
+    <div class="z k" style="left:1376px;top:562px;color:var(--c)">CP2</div>
+    <div class="z k" style="left:1726px;top:806px;color:var(--c)">CP3</div>
+    <div class="z cap" style="left:1550px;top:430px;width:240px"><b style="color:#A57600">Yellow:</b> slippery corners. Set up early or slide off.</div>
+    <div class="z cap" style="left:1550px;top:576px;width:240px">The track loops; every checkpoint counts +1.</div>`);
+})();
+
+/* ---------- 20 roadmap, risks, owners ---------- */
+(() => {
+  const ms = [['19 Oct','Proposal','g','Concept, research, physics prototype and this pitch.','Done'],
+              ['16 Nov','Demo 1','c','Shared core, LAN host/join and a playable Knockback Arena.',''],
+              ['14 Dec','Demo 2','o','Ice Loop and Hole Grab. A full session with playlist and scoreboard.',''],
+              ['11 Jan','Final','p','Blast Parkour if time allows. Tuning, polish, promo video.','']];
+  H('#road', `<svg class="ov" width="1920" height="1080"><line x1="303" y1="372" x2="1617" y2="372" stroke="#C9CFC0" stroke-width="6" stroke-linecap="round"/></svg>`);
+  ms.forEach(([d, t, c, g, st], i) => {
+    const x = 96 + i * 438, cx = x + 207;
+    H('#road', `<div class="dot" style="left:${cx - 16}px;top:356px;width:32px;height:32px;background:${COL[c]};box-shadow:0 0 0 5px var(--paper)"></div>
+      <div class="card ${'t' + c}" style="left:${x}px;top:404px;width:414px;height:220px"></div>
+      <div class="z d" style="left:${x + 28}px;top:428px;font-size:36px;color:${COL[c]}">${d}</div>
+      <div class="z h" style="left:${x + 28}px;top:474px;font-size:24px">${t}</div>
+      <div class="z" style="left:${x + 28}px;top:510px;width:360px;font:400 20px/1.38 var(--sans);color:var(--txt)">${g}</div>
+      ${st ? `<div class="chip" style="left:${x + 290}px;top:432px;width:96px;height:32px;background:var(--g);color:#fff;font-size:13px">${st}</div>` : ''}`);
+  });
+})();
+[['Networked physics','c','Clients disagree on a push or a fall.','The host simulates; clients only render and interpolate.'],
+ ['Balance','o','Hits too easy, or mass loss snowballing.','Fire-rate limits; gravity shots if needed.'],
+ ['Scope','p','More mini-game ideas than one term allows.','The core first; mini-games in priority order; extras only once the MVP is fun.']].forEach(([t, c, w, m], i) => {
+  const x = 96 + i * 584, y = 646;
+  H('#risks', `<div class="card" style="left:${x}px;top:${y}px;width:560px;height:228px"></div>
+    <div class="chip" style="left:${x + 28}px;top:${y + 24}px;width:104px;height:30px;background:${TINT[c]};color:${COL[c]};font-size:13px">Risk 0${i + 1}</div>
+    <div class="z d" style="left:${x + 148}px;top:${y + 24}px;font-size:30px;color:${COL[c]}">${t}</div>
+    <div class="z" style="left:${x + 28}px;top:${y + 76}px;width:504px;font:700 20px/1.35 var(--sans);color:var(--ink)">${w}</div>
+    <div class="z" style="left:${x + 28}px;top:${y + 132}px;width:504px;font:400 20px/1.38 var(--sans);color:var(--txt)"><b style="color:${COL[c]}">Plan:</b> ${m}</div>`);
+});
+const OWNERS = [['o','Ezel','Network, build'],['c','Abdurrahim','Shots, mini-game rules'],['g','Kürşat','Movement, levels'],['p','Ardıl','Art, UI, session'],['n','Team','Shared tasks']];
+const ownerRow = (sel, y) => {
+  H(sel, `<div class="z k" style="left:96px;top:${y + 12}px;color:var(--ink)">Proposed owners</div>`);
+  OWNERS.forEach(([c, n, a], i) => {
+    const x = 330 + i * 300;
+    H(sel, `<div class="z" style="left:${x}px;top:${y}px;width:38px;height:38px;border-radius:11px;background:${COL[c]}"></div>
+      <div class="z" style="left:${x + 50}px;top:${y - 1}px;font:700 20px/1.2 var(--sans);color:var(--ink)">${n}</div>
+      <div class="z cap" style="left:${x + 50}px;top:${y + 23}px;font-size:16px">${a}</div>`);
+  });
+};
+ownerRow('#owners', 914);
+
+/* ---------- 21–23 gantt (reference format: WBS, task, owner, duration, M–F grid) ---------- */
+const OWN = {E:['Ezel','o'], A:['Abdurrahim','c'], K:['Kürşat','g'], R:['Ardıl','p'], T:['Team','n']};
+function gantt(sel, top, phase, title, color, weeks, rows) {
+  const X0 = 96, W = 1728, cW = {wbs: 76, task: 500, own: 190, dur: 110};
+  const fixed = cW.wbs + cW.task + cW.own + cW.dur + 24, gx = X0 + fixed + 6, gw = W - fixed - 30;
+  const days = weeks.length * 5, dw = gw / days, RH = rows.length > 9 ? 50 : rows.length > 7 ? 56 : 68;
+  const h1 = 30, h2 = 38, h3 = 30, body = top + h1 + h2 + h3 + 6;
+  const height = h1 + h2 + h3 + 6 + RH * (rows.length + 1) + 18;
+  H(sel, `<div class="card" style="left:${X0}px;top:${top - 22}px;width:${W}px;height:${height + 22}px"></div>`);
+  let cx = X0 + 24;
+  [['WBS', cW.wbs], ['Task', cW.task], ['Owner', cW.own], ['Duration', cW.dur]].forEach(([t, w]) => {
+    H(sel, `<div class="z k" style="left:${cx}px;top:${top + h1 + 10}px;width:${w - 10}px">${t}</div>`); cx += w;
+  });
+  weeks.forEach(([wk, dates], i) => {
+    const x = gx + i * 5 * dw;
+    H(sel, `<div class="z" style="left:${x}px;top:${top}px;width:${5 * dw}px;text-align:center;font:700 18px/1.2 var(--sans);color:var(--ink)">${dates}</div>
+      <div class="z" style="left:${x + 4}px;top:${top + h1}px;width:${5 * dw - 8}px;height:${h2 - 6}px;border-radius:16px;background:${color}"></div>
+      <div class="z" style="left:${x + 4}px;top:${top + h1}px;width:${5 * dw - 8}px;height:${h2 - 6}px;display:flex;align-items:center;justify-content:center;font:700 16px/1 var(--sans);letter-spacing:.06em;color:#fff">${wk}</div>`);
+    ['M','T','W','T','F'].forEach((d, k) => H(sel, `<div class="z" style="left:${x + k * dw}px;top:${top + h1 + h2}px;width:${dw}px;height:${h3}px;display:flex;align-items:center;justify-content:center;font:700 15px/1 var(--sans);color:var(--mut)">${d}</div>`));
+  });
+  H(sel, `<div class="z" style="left:${X0 + 14}px;top:${body}px;width:${W - 28}px;height:${RH - 6}px;border-radius:14px;background:#F1F5EA;z-index:2"></div>
+    <div class="z d" style="left:${X0 + 24}px;top:${body + (RH - 6) / 2 - 11}px;font-size:23px;color:var(--ink)">${phase}</div>
+    <div class="z d" style="left:${X0 + 24 + cW.wbs}px;top:${body + (RH - 6) / 2 - 11}px;font-size:23px;color:var(--ink)">${title}</div>`);
+  let grid = '';
+  for (let d = 0; d <= days; d++) grid += `<line x1="${gx + d * dw}" y1="${body + RH - 4}" x2="${gx + d * dw}" y2="${body + RH * (rows.length + 1)}" stroke="${d % 5 ? '#EEF1EA' : '#D9DFD0'}" stroke-width="${d % 5 ? 1.5 : 2.5}"/>`;
+  H(sel, `<svg class="ov" width="1920" height="1080">${grid}</svg>`);
+  rows.forEach(([wbs, task, o, start, len], i) => {
+    const y = body + RH * (i + 1), [on, oc] = OWN[o], mid = y + RH / 2;
+    H(sel, `${i ? `<div class="z" style="left:${X0 + 24}px;top:${y - 2}px;width:${fixed - 30}px;height:1.5px;background:#EEF1EA;z-index:2"></div>` : ''}
+      <div class="z" style="left:${X0 + 24}px;top:${mid - 10}px;font:400 19px/1 var(--sans);color:var(--mut)">${wbs}</div>
+      <div class="z" style="left:${X0 + 24 + cW.wbs}px;top:${mid - 11}px;width:${cW.task - 14}px;font:400 21px/1.1 var(--sans);color:var(--ink)">${task.replace('&', '&amp;')}</div>
+      <div class="chip" style="left:${X0 + 24 + cW.wbs + cW.task}px;top:${mid - 16}px;width:${cW.own - 36}px;height:32px;background:${TINT[oc]};color:${COL[oc]};font-size:17px;letter-spacing:0;text-transform:none">${on}</div>
+      <div class="z" style="left:${X0 + 24 + cW.wbs + cW.task + cW.own}px;top:${mid - 10}px;width:${cW.dur - 30}px;text-align:center;font:400 19px/1 var(--sans);color:var(--txt)">${len / 5} wk</div>
+      <div class="z" style="left:${gx + start * dw + 4}px;top:${mid - 14}px;width:${len * dw - 8}px;height:28px;border-radius:14px;background:${COL[oc]}"></div>`);
+  });
+  return top + height;
+}
+gantt('#gantt1', 252, '1', 'Demo 1 · 16 Nov', 'var(--c)', [['W1','19–23 Oct'],['W2','26–30 Oct'],['W3','2–6 Nov'],['W4','9–13 Nov']], [
+  ['1.1','Unity project, scenes, build pipeline','E',0,5],['1.2','Cube controller: WASD, jump','K',0,10],['1.3','Third-person camera','K',10,5],
+  ['1.4','LAN host / join (Netcode)','E',5,10],['1.5','Host authority & state sync','E',15,5],['1.6','Shot system: projectiles, fire rate','A',0,10],
+  ['1.7','Mass loss & knockback rule','A',10,10],['1.8','Knockback Arena level & fall-out','K',15,5],['1.9','Lobby & join UI','R',5,10],
+  ['1.10','Character model, four colours','R',15,5],['1.11','Demo 1 build & presentation','T',15,5]]);
+gantt('#gantt2', 252, '2', 'Demo 2 · 14 Dec', 'var(--o)', [['W5','16–20 Nov'],['W6','23–27 Nov'],['W7','30 Nov–4 Dec'],['W8','7–11 Dec']], [
+  ['2.1','Networked projectiles & hits','E',0,15],['2.2','Session: playlist and end rules','R',0,10],['2.3','Scoreboard & placement points','R',10,10],
+  ['2.4','Ice Loop: ice physics, checkpoints','K',0,15],['2.5','Hole Grab: holes, rounds, bulldozer','A',0,15],['2.6','First full-session playtest','T',15,5],
+  ['2.7','Demo 2 build & presentation','T',15,5]]);
+const b3 = gantt('#gantt3', 252, '3', 'Final · 11 Jan', 'var(--p)', [['W9','14–18 Dec'],['W10','21–25 Dec'],['W11','28 Dec–1 Jan'],['W12','4–8 Jan']], [
+  ['3.1','Blast Parkour (stretch goal)','A',0,15],['3.2','Network fixes from playtests','E',0,10],['3.3','Balance tuning from playtests','T',0,10],
+  ['3.4','VFX & sound','K',5,10],['3.5','Art & UI polish, party-theme arenas','R',0,15],['3.6','LAN stress test & final build','E',10,5],
+  ['3.7','Promo video & final deck','T',15,5]]);
+ownerRow('#ownlegend', b3 + 46);
+
+/* ---------- 24 takeaways ---------- */
+[['1st','2–4 players, one LAN, no internet, your own playlist.','o'],['2nd','One shooting cube; every mini-game changes what a shot does.','c'],['3rd','Every hit lowers your mass, so the next push sends you further.','g']].forEach(([p, t, c], i) => {
+  const y = 300 + i * 132;
+  H('#takeaways', `<div class="card" style="left:140px;top:${y}px;width:900px;height:110px"></div>
+    <div class="chip" style="left:166px;top:${y + 31}px;width:86px;height:48px;background:${COL[c]};color:#fff;font:400 26px/1 var(--disp);letter-spacing:0;text-transform:none">${p}</div>
+    <div class="z" style="left:280px;top:${y + 25}px;width:730px;height:60px;display:flex;align-items:center;font:400 25px/1.32 var(--sans);color:var(--ink)">${t}</div>`);
+});
+
+/* ---------- 25 sources ---------- */
+['[1] Newzoo final 2025 figures, via GameDev Reports, 26 Jun 2026. gamedevreports.substack.com/p/newzoo-gaming-market-surpassed-200',
+ '[2] Alinea Analytics, games with co-op on Steam, H1 2025 (proprietary estimates). alineaanalytics.substack.com/p/games-with-co-op-generated-over-4',
+ '[3] ESA Essential Facts 2026 (survey Feb 2026, n=13,545). theesa.com',
+ '[4] Steam store search, tag “Party Game” × LAN PvP / Online PvP / Shared-Split-screen PvP, 17 Oct 2026. Tags are user-applied.',
+ '[5] Game Developers, 2025 Steam revenue distribution (Gamalytic estimates), 21 Aug 2026. game-developers.org/2025-steam-game-revenue-distribution',
+ '[6] PC Gamer, Valve at GDC 2026: 5,863 games over $100K on Steam in 2025. pcgamer.com',
+ '[7] Steam store pages and SteamDB charts, apps 1260320, 285900, 1097150, 880940, 1858400: prices, peaks, reviews, owner estimates. 17 Oct 2026.',
+ '[8] GameRevolution / Prima Games: Party Animals requires an internet connection, including split-screen.',
+ '[9] Squarena on Steam (app 1858400); codeaclysmgames.com/squarena-details.',
+ '[10] Morphies Law official site, morphieslaw.com/game.',
+ 'Images: concept renders are AI-generated (GPT Image via Higgsfield; MiniMax H3) from our own reference art; illustrations and level drafts were made for this pitch. None show gameplay.'
+].forEach((t, i) => H('#src', `<div class="z" style="left:136px;top:${270 + i * 62}px;width:1650px;font:400 19px/1.4 var(--sans);color:${i === 10 ? 'var(--mut)' : 'var(--txt)'}">${t}</div>`));
+
+window.READY = true;
+</script>
+</body></html>

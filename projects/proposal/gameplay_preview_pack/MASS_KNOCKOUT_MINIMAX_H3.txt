@@ -1,0 +1,28 @@
+GAMEPLAY PREVIEW — MASS KNOCKOUT
+INPUT: 02_MASS_KNOCKOUT_reference.png as the ONLY image reference.
+FORMAT: 1344x768, 24 fps, one uninterrupted 5.5-second gameplay shot.
+
+Create a plausible gameplay recording from the SAME small 3D party game as Ice Race, but for the Mass Knockout mini-game. Follow ONLY the supplied Mass Knockout screenshot: ONE simple flat pale platform with totally exposed edges, blue empty space below, four colored rounded cube characters. This is not an ice race: there is no course, steering drift, checkpoint, stadium, weapon barrel or gun. The cubes attack by THROWING CHUNKS OF THEIR OWN COLORED BODY MASS.
+
+IMPORTANT FIRST-FRAME ALIGNMENT: the reference image shows Orange on the near-left side having JUST thrown one orange spherical chunk. That exact orange chunk is already visible in flight between Orange and Cyan. Orange's throwing arm is extended and Orange is already slightly smaller as a consequence. Cyan is at the near-right exposed edge, beginning to brace for impact; Green and Purple stay at the back. START HERE. DO NOT rewind the action, introduce a different projectile, or create a second throw.
+
+[0.0–0.8s — PROJECTILE FOLLOW-THROUGH]
+The one existing orange body-mass chunk moves from Orange toward Cyan in one straight, forward-moving arc just above the platform. Orange settles from its throwing pose with a tiny recoil and finishes a subtle 8–10% uniform shrink from losing its own mass. Its head, body and feet scale together. The orange projectile remains a clearly solid, round piece of Orange; a short fading orange trail follows BEHIND it. Green and Purple are still and do not interfere.
+
+[0.8–1.4s — ONE EXACT CONTACT]
+That same orange chunk physically contacts Cyan at the near side of Cyan's body. On the precise contact frame the orange chunk disappears, Cyan squashes briefly along the hit direction, a small white impact flash and three tiny cyan fragments appear, and Cyan becomes about 10–12% smaller. Add an extremely brief impact hold (2 frames at 24 fps) for weight, then resume motion. No secondary collision, no burst before contact, no huge explosion.
+
+[1.4–3.4s — KNOCKBACK WITH FOLLOW-THROUGH]
+Cyan is propelled backward to the right, away from Orange and toward the open right edge. It slides continuously on the flat surface with diminishing speed, tilts slightly from the impulse, then tries and fails to regain balance. The direction of knockback is the continuation of the projectile's original travel direction, not a random sideways jump. Cyan gets no propulsion of its own. Orange remains on the platform at left and stays smaller than its original size. Green and Purple remain in their starting areas.
+
+[3.4–5.0s — CLEAR KNOCKOUT]
+Cyan reaches the unprotected right-hand edge. Its feet cross the visible boundary, its body loses support and falls DOWN below the platform into the blue void. Show the cube moving from above-platform to below-platform, with the platform edge remaining fixed. No wall, no railing, no invisible floor and no bounce back onto the stage.
+
+[5.0–5.5s — RESULT]
+Hold the stable gameplay view for half a second. Cyan is below the platform and leaving the frame. Orange, Green and Purple remain standing on top. Do not invent score changes, extra attacks or new characters. The single satisfying result is one throw causing one hit, shrink, knockback and fall.
+
+VISUAL FEEDBACK, INSPIRED BY THE PROVIDED VFX TUTORIALS: anticipation and follow-through, one solid projectile with a very short trailing streak, squash/stretch at contact, 2-frame hit-stop, a restrained impact burst and persistent knockback. The character and projectile themselves must remain readable; effects never hide the hit.
+
+ABSOLUTE CONTINUITY: one Orange, one Cyan, one Green and one Purple throughout; no cannons, barrels, firearms, magical glowing weapons, body splitting into multiple clones, camera cuts, cinematic zooms or environmental destruction. The only moving projectile is the single existing ORANGE body chunk. The target alone changes size at impact; the shooter shrinks as the thrown mass leaves. The flat platform never tilts or moves.
+
+Camera: static elevated oblique third-person gameplay view matching the reference exactly, with enough visible right edge to observe Cyan falling. No orbit, no dolly, no camera shake beyond a near-imperceptible 1-frame impact nudge.

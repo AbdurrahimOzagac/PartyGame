@@ -1,0 +1,6 @@
+set -e
+node render.mjs slides.html out
+NODE_PATH=/private/tmp/claude-501/-Users-ezelbayraktar-Documents-Development-PartyGame/9274d9c7-7631-4e33-aefc-30a38befa928/scratchpad/deck/node_modules node pack.js out raw.pptx
+/private/tmp/claude-501/-Users-ezelbayraktar-Documents-Development-PartyGame/9274d9c7-7631-4e33-aefc-30a38befa928/scratchpad/venv/bin/python -I /private/tmp/claude-501/-Users-ezelbayraktar-Documents-Development-PartyGame/9274d9c7-7631-4e33-aefc-30a38befa928/scratchpad/deck/animate.py raw.pptx IceRumble_v4.pptx
+/private/tmp/claude-501/-Users-ezelbayraktar-Documents-Development-PartyGame/9274d9c7-7631-4e33-aefc-30a38befa928/scratchpad/venv/bin/python /Users/ezelbayraktar/.claude/skills/synced/8b886348-9c9c-49b7-9173-1192562a186d_31a6ea3d-af1d-4570-895d-4c064195fc7c/pptx/scripts/office/validate.py IceRumble_v4.pptx | tail -1
+cd qa; rm -f p-*.png; /private/tmp/claude-501/-Users-ezelbayraktar-Documents-Development-PartyGame/9274d9c7-7631-4e33-aefc-30a38befa928/scratchpad/venv/bin/python /Users/ezelbayraktar/.claude/skills/synced/8b886348-9c9c-49b7-9173-1192562a186d_31a6ea3d-af1d-4570-895d-4c064195fc7c/pptx/scripts/office/soffice.py --headless --convert-to pdf --outdir . ../IceRumble_v4.pptx >/dev/null 2>&1; pdftoppm -r 60 -png IceRumble_v4.pdf p

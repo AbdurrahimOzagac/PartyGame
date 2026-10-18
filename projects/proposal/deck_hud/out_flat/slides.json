@@ -1,0 +1,142 @@
+[
+ {
+  "section": "Introduction",
+  "notes": "Shooter Party, our working title. A multiplayer party game: one shooting cube, many mini-games, and a shot that does something new in each one. The four of us are at the bottom right with our shared systems; everyone also designs one mini-game. All character and scene images are 3D concept renders made for this pitch; none show final gameplay.",
+  "img": "s01.jpg"
+ },
+ {
+  "section": "The game",
+  "notes": "Each player is on their own device; one hosts and the others join over the network. Everyone is a small shooting cube in their own colour, and every mini-game changes what the shot does. A session runs lobby, pick, play, place, standings, and repeats. The host sets the rules: the session ends after a set number of mini-games or at a target score; the playlist is random or custom, with exclusions and repeats; and a mini-game can run rounds of its own.",
+  "img": "s02.jpg"
+ },
+ {
+  "section": "The game",
+  "notes": "Placement in each mini-game becomes points: 4, 3, 2, 1 for four players, as a proposal; the scale grows with the player count. Three comeback rules keep the session open. The player in last place overall earns one bonus point after each mini-game. On equal points, the player who was further behind ranks higher. And the leader wears a crown, so everyone can see who to catch.",
+  "img": "s03.jpg"
+ },
+ {
+  "section": "Gameplay",
+  "notes": "One shooting cube everywhere: a small character whose barrel fires real physics projectiles, not instant hits. Its proportions stay close to 1:1:1, and every player has their own colour. One trigger, three effects. Damage lowers the target's health. Knockback pushes the target away from where the shot came from. Blast explodes, and fired at the ground it lifts you up.",
+  "img": "s04.jpg"
+ },
+ {
+  "section": "Gameplay",
+  "notes": "The same shot, five meanings. In Knockback Arena it pushes, and every hit lowers the target's mass. In Blast Parkour it is a blast that lifts you and pushes rivals off ledges; hold it for a strong one. In Ice Loop it is knockback and momentum: push rivals and steer yourself with recoil. In Hole Grab it pushes rivals away from the holes. In Battle it does damage. Movement is WASD; jumping only where a mini-game allows it; Shift to dash on a cooldown or as charges from a power-up. The camera is a third-person shooter camera in a 3D world, and a mini-game can adjust it.",
+  "img": "s05.jpg"
+ },
+ {
+  "section": "Mini-games",
+  "notes": "Knockback Arena. Shoot the others off a flat floor. Shooting is free with a fire-rate limit; shots are real thrown objects and do nothing to the shooter. A hit is a force from the shot's direction and a drop in mass; the size stays the same. So the same shot sends a weakened player further: at full mass a hit pushes a little, after a few hits it is a longer push, after many one more shot sends it off the edge. Jump is a pickup because it is strong, and a lighter cube jumps higher; dash is on Shift, for example three charges. Falling off means you are out; placement by order of elimination.",
+  "img": "s06.jpg"
+ },
+ {
+  "section": "Mini-games",
+  "notes": "Blast Parkour, an obstacle course in the sky. Open islands with no walls or cover, so everyone is always in someone's line of fire. Hold to fire a strong explosion, but while charging you cannot move. A shot at the ground lifts you up, and the same blast can push a nearby rival off a ledge. Whoever drops below the course is out; first to the top flag wins and the rest are ranked by height. If hitting is too easy, shots fall with gravity; we decide that in playtests.",
+  "img": "s07.jpg"
+ },
+ {
+  "section": "Mini-games",
+  "notes": "Ice Loop. Most checkpoints before the timer runs out wins. When the track ends it starts again, and every checkpoint you pass counts plus one; the count, not the lap, decides the placement. The ice is slippery: push rivals off it into the water and they restart from their last checkpoint. Firing forward while sliding pushes you back, so a shot can also correct your line. Ice is the theme of this mini-game only.",
+  "img": "s08.jpg"
+ },
+ {
+  "section": "Mini-games",
+  "notes": "Hole Grab: musical chairs with holes. Holes open in the ground in the player's shape, with the barrel's angle marked, so you have to line up to drop in. Each round has one hole fewer than players: with four players, three holes, then two, then one. Whoever is left without a hole is crushed by the bulldozer. Shots push other players away from the holes, but a player already inside a hole cannot be pushed out.",
+  "img": "s09.jpg"
+ },
+ {
+  "section": "Mini-games",
+  "notes": "The playlist is built to grow: same cube, same shot, new maps and rules. Battle is a straight shoot-out where the shot does damage; a harder setting can raise the damage or remove power-ups. In The Monster, one player becomes the monster for a round and everyone else plays against them; the role moves on each round. Battle is next in line once the four are fun. Two concept ideas, not in the plan yet: character types, where weight is the natural first difference because knockback depends on mass, and a rage meter that builds up across mini-games and can be spent later.",
+  "img": "s10.jpg"
+ },
+ {
+  "section": "Mini-games",
+  "notes": "Players can make the cube their own, but cosmetics change the look, never the game. Four slots: head, face, ears and extras. An in-game shop lets players browse cosmetics, try them on in the lobby and dress their cube before a session. Nothing in the shop changes mass, speed or the shot. Cosmetics never cover the barrel or the eyes, so aiming stays readable. And the crown is not for sale: only the current session leader wears it.",
+  "img": "s11.jpg"
+ },
+ {
+  "section": "Technology",
+  "notes": "Every mini-game implements the same small contract: set up with the players and the session settings, run, and report placement. Below it is shared gameplay: the cube controller with WASD, jump and dash; the third-person camera with per-game tweaks; the shot system whose effect each mini-game sets; the session and playlist; the scoreboard with points, comeback rules and the crown; and menus, UI and the shop. Under that, one player hosts and the others join as clients; Unity Netcode is our candidate, and online servers come later. The engine is Unity in 3D with built-in rigidbody physics.",
+  "img": "s12.jpg"
+ },
+ {
+  "section": "Technology",
+  "notes": "One shot end to end. Client A sends fire input and aim direction. The host checks the fire-rate limit and spawns the projectile; the shooter is not affected. The physics step carries it to B, and the host applies this mini-game's effect: B loses mass and is pushed from the shot's direction. The host sends the same snapshot of positions, mass and scores to every client, and clients interpolate between snapshots. Your own movement is predicted locally so it feels instant. The main risk is smooth physics on every client; we tune the snapshot rate and test with real players early.",
+  "img": "s13.jpg"
+ },
+ {
+  "section": "Market",
+  "notes": "Our audience is groups of friends who want short, chaotic rounds together, online or in the same room, plus streamers and viewers who enjoy party-game chaos. The global games market was 197 billion dollars in 2025; PC alone was 43.6 billion, up 12 percent. 70 percent of US players aged 8 and up play with other people, and co-op games made an estimated 4.1 billion dollars on Steam in the first half of 2025. The risk: Steam is crowded, and most releases earn very little. Our one-sentence hook is one shot that means something new in every mini-game.",
+  "img": "s14.jpg"
+ },
+ {
+  "section": "Market",
+  "notes": "Six data points. Super Mario Party sold over 21 million: mini-game party games are a mass-market genre. Jamboree sold 5.6 million in 11 weeks, the series' fastest seller, so the genre is still growing. Stick Fight, a small studio's physics shooter, reached an estimated 4.75 million. Pummel Party still sells years after launch. Party Animals had 135,834 players in its free playtest and over 113,000 Twitch viewers. Feather Party, 22 mini-games for up to 8 players, is at 87 percent positive.",
+  "img": "s15.jpg"
+ },
+ {
+  "section": "Market",
+  "notes": "Five games we are measured against. Party Animals and Gang Beasts are physics brawlers. Fall Guys runs short rounds in a playlist. Pummel Party is a board game with competitive mini-games. Feather Party has a board mode and 22 mini-games where ice, fire and electric effects change the physics. Owner numbers are third-party estimates, and we label them that way.",
+  "img": "s16.jpg"
+ },
+ {
+  "section": "Market",
+  "notes": "All five competitors have 3D characters and cosmetic customisation. Pummel Party and Feather Party combine several mini-games into one result; Fall Guys partly, since its playlist eliminates players instead of scoring each round. None keeps one shot whose effect changes per mini-game; Feather Party changes physics with elemental effects but has no shared shot. Our column is the plan.",
+  "img": "s17.jpg"
+ },
+ {
+  "section": "Innovation",
+  "notes": "Six things together. One trigger, many effects: the same shot pushes, damages, lifts or steers, so controls are learned once. Shooting at the heart: aiming and timing a shot is the core skill in every round, where most party games are about brawling, racing or luck. Variety on one mechanic: different maps, themes and rules on the same cube and shot. A comeback built in: plus one for last place, ties to the underdog and a crown on the leader. Your session, your rules. And mass, not size: hits lower mass while the size stays.",
+  "img": "s18.jpg"
+ },
+ {
+  "section": "Innovation",
+  "notes": "How we differ. Pummel Party and Feather Party give each mini-game its own controls and goal; neither keeps one shot as the common verb. Racing and party games often help the trailing player with random items; our comeback is a fixed, visible rule. Smash Bros. raises knockback with a damage percentage; we use the physical mass a hit removes. Many party games let players pick mini-games; we add an end by score or count, and favourites that can repeat.",
+  "img": "s19.jpg"
+ },
+ {
+  "section": "Drafts",
+  "notes": "The art direction is a glossy toy: rounded cubes in bright colours, a barrel on every character, and bright party settings such as grass, sky and water. Ice appears in Ice Loop only. Each mini-game was blocked out in 3D to check the camera angle, the scale and how readable the shots are before we build it in Unity.",
+  "img": "s20.jpg"
+ },
+ {
+  "section": "Drafts",
+  "notes": "Two level drafts seen from above, for scope and blockout. Knockback Arena: one flat square platform with open edges and no walls; players spawn near the corners and the open edge is the knockout line. Ice Loop: a looping track with checkpoints; a fall into the water respawns you at your last checkpoint. Dimensions, spawn points and checkpoint count are not set.",
+  "img": "s21.jpg"
+ },
+ {
+  "section": "Plan",
+  "notes": "Four Monday checkpoints. The proposal on 19 October: concept, research, 3D drafts and this pitch. Demo 1 on 16 November: the core prototype, host and join, and the first mini-games playable. Demo 2 on 14 December: all four mini-games and a full session with scoreboard and menus. The final on 11 January: UI, sound, cosmetics, polish and the promo video. Three risks: networked physics, handled by host simulation; balance, handled by fire-rate limits, jump as a power-up and comeback rules; and scope, handled by building one shared core first and keeping mini-games small.",
+  "img": "s22.jpg"
+ },
+ {
+  "section": "Plan",
+  "notes": "Everyone designs and builds at least one mini-game, including what the shot does in it, and finds its assets; each of us also owns a shared system. Abdurrahim: Knockback Arena, plus the core mechanics prototype and the scoreboard. Ardıl: Blast Parkour, plus menus and the promo video. Kürşat: Ice Loop, plus UI design, sound and music. Ezel: Hole Grab, plus the online system, sound and music. The assignments are a proposal.",
+  "img": "s23.jpg"
+ },
+ {
+  "section": "Plan",
+  "notes": "Weeks 1 to 4. Abdurrahim builds the core mechanics prototype: move, shoot and mass. Ezel researches the online system and builds host and join. Everyone designs their own mini-game and its shot in week 1. Ardıl does the main menu and lobby flow, Kürşat the UI style and HUD drafts. In weeks 3 and 4 each of us blocks out our mini-game, and week 4 ends with the Demo 1 build.",
+  "img": "s24.jpg"
+ },
+ {
+  "section": "Plan",
+  "notes": "Weeks 5 to 8. Scoreboard, points and comeback rules; networked shots and state sync; everyone finishes their own mini-game and its shot and makes its assets; the session menu with playlist and end rules; the in-game HUD and scoreboard screens. Week 8 is the first full-session playtest and the Demo 2 build.",
+  "img": "s25.jpg"
+ },
+ {
+  "section": "Plan",
+  "notes": "Weeks 9 to 12. The cosmetics shop, sound effects and music, balance tuning from playtests, polishing our own mini-games, and the Battle mini-game as the stretch goal. In the last two weeks: online tests and the final build, the promo video, and the final deck and hand-in. The final date may still move.",
+  "img": "s26.jpg"
+ },
+ {
+  "section": "Close",
+  "notes": "In short. One shooting cube; every mini-game changes what a shot does. A comeback built in: plus one for last place, ties to the underdog, a crown on the leader. And multiplayer sessions you shape: your playlist, your end rule, your look. Questions.",
+  "img": "s27.jpg"
+ },
+ {
+  "section": "Close",
+  "notes": "All sources, with dates. Owner counts are third-party estimates.",
+  "img": "s28.jpg"
+ }
+]
