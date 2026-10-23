@@ -1,0 +1,809 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Ice Rumble — HUD deck</title>
+<style>
+:root{
+  --bg:#060E1C; --pnl:#0B1830; --pnl2:#10213F; --line:#1D3358; --line2:#2C4B7E;
+  --ice:#EEF5FF; --txt:#D3DEF2; --mut:#8C9FC3; --dim:#56698F;
+  --o:#FF6A1A; --c:#2EC0FF; --g:#6CD63A; --p:#A56BFF; --y:#FFD23F;
+  --disp: Impact, "Arial Narrow", sans-serif; --sans: Arial, Helvetica, sans-serif; --mono: "Courier New", monospace;
+  --cp: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+  --cps: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+*{box-sizing:border-box}
+body{margin:0;background:#333}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden;font-family:var(--sans);color:var(--ice);margin:0 0 40px;
+  background:
+    radial-gradient(1300px 760px at 88% -12%, rgba(40,110,255,.24), rgba(40,110,255,0) 62%),
+    radial-gradient(1000px 640px at -8% 112%, rgba(46,192,255,.10), rgba(46,192,255,0) 62%),
+    linear-gradient(rgba(120,160,230,.05) 1px, transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg, rgba(120,160,230,.05) 1px, transparent 1px) 0 0/48px 48px,
+    var(--bg);}
+.notes{display:none}
+.z{position:absolute;z-index:3}
+.bg{position:absolute;inset:0;z-index:0}
+.bg img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* chrome */
+.hud-r{position:absolute;z-index:4;left:96px;top:46px;font:700 16px/1 var(--mono);letter-spacing:.2em;color:var(--mut)}
+.hud-r b{color:var(--o)}
+.hud-s{position:absolute;z-index:4;left:96px;top:70px;font:700 16px/1 var(--mono);letter-spacing:.2em;color:var(--ice)}
+.hud-pg{position:absolute;z-index:4;right:96px;top:52px;font:700 22px/1 var(--mono);letter-spacing:.08em;color:var(--ice)}
+.seg{position:absolute;z-index:4;top:60px;width:44px;height:8px;transform:skewX(-24deg)}
+.ttl{position:absolute;z-index:3;left:96px;top:124px;width:1640px;font:700 56px/1.1 var(--sans);letter-spacing:-.018em;color:var(--ice)}
+.ttl .o{color:var(--o)} .ttl .c{color:var(--c)}
+.fn{position:absolute;z-index:3;left:96px;bottom:40px;width:1500px;font:400 15px/1.35 var(--mono);color:var(--dim)}
+
+/* type */
+.tag{font:700 15px/1.2 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--o)}
+.k{font:700 14px/1.2 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+.b{font:400 22px/1.42 var(--sans);color:var(--txt)}
+.b b{color:var(--ice)}
+.h{font:700 28px/1.15 var(--sans);color:var(--ice)}
+.d{font-family:var(--disp);font-weight:400;letter-spacing:.005em;line-height:.92;text-transform:uppercase}
+.cap{font:400 15px/1.35 var(--mono);color:var(--mut)}
+
+/* panels: chamfered with 1.5px border */
+.pnl{position:absolute;z-index:1}
+.pnl::before{content:"";position:absolute;inset:0;background:var(--bc, var(--line));clip-path:var(--cp)}
+.pnl::after{content:"";position:absolute;inset:1.5px;background:var(--pf, var(--pnl));clip-path:var(--cp)}
+.pnl.s::before,.pnl.s::after{clip-path:var(--cps)}
+.pnl.hot{--bc:var(--o);--pf:#1A1626}
+.pnl.glass{--pf:rgba(6,14,28,.86)}
+/* image frame with targeting brackets */
+.shot{position:absolute;z-index:1;clip-path:var(--cp);overflow:hidden;background:#0B1830}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.brk{position:absolute;z-index:2;pointer-events:none;--bk:var(--ice);
+  background:
+   linear-gradient(var(--bk),var(--bk)) left top/34px 3px no-repeat, linear-gradient(var(--bk),var(--bk)) left top/3px 34px no-repeat,
+   linear-gradient(var(--bk),var(--bk)) right top/34px 3px no-repeat, linear-gradient(var(--bk),var(--bk)) right top/3px 34px no-repeat,
+   linear-gradient(var(--bk),var(--bk)) left bottom/34px 3px no-repeat, linear-gradient(var(--bk),var(--bk)) left bottom/3px 34px no-repeat,
+   linear-gradient(var(--bk),var(--bk)) right bottom/34px 3px no-repeat, linear-gradient(var(--bk),var(--bk)) right bottom/3px 34px no-repeat;}
+/* segmented mass bar */
+.bar{position:absolute;z-index:3;height:16px;background:repeating-linear-gradient(90deg,#17294A 0 20px,transparent 20px 24px)}
+.bar i{position:absolute;left:0;top:0;bottom:0;display:block;background:repeating-linear-gradient(90deg,var(--bf,var(--ice)) 0 20px,transparent 20px 24px)}
+.bar u{position:absolute;top:0;bottom:0;display:block;background:repeating-linear-gradient(90deg,var(--bl,rgba(255,106,26,.35)) 0 20px,transparent 20px 24px)}
+.chip{position:absolute;z-index:3;display:flex;align-items:center;justify-content:center;font:700 14px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;clip-path:var(--cps)}
+.dot{position:absolute;z-index:3;border-radius:50%}
+.hl{position:absolute;z-index:2;height:1.5px;background:var(--line)}
+.vl{position:absolute;z-index:2;width:1.5px;background:var(--line)}
+svg.ov{position:absolute;z-index:2;left:0;top:0;overflow:visible}
+</style></head>
+<body>
+
+<!-- ===================== 1 COVER / LOBBY ===================== -->
+<section class="slide" data-section="Introduction" data-nochrome>
+  <div class="bg" style="left:620px"><img src="img/ko_spit_full.png" style="object-position:20% 50%"></div>
+  <div class="bg" style="background:linear-gradient(90deg,rgba(6,14,28,1) 0%,rgba(6,14,28,1) 32%,rgba(6,14,28,.55) 46%,rgba(6,14,28,0) 60%)"></div>
+  <div class="bg" style="top:auto;height:420px;background:linear-gradient(0deg,rgba(6,14,28,.96) 10%,rgba(6,14,28,0))"></div>
+  <div class="z tag" style="left:96px;top:64px;color:var(--mut)">CMP406 GameTech · Fall 2026 · Game proposal</div>
+  <div class="z d" style="left:90px;top:190px;font-size:250px;color:var(--c)">Ice</div>
+  <div class="z d" style="left:90px;top:410px;font-size:250px;color:var(--ice)">Rumble</div>
+  <div class="chip" style="left:96px;top:660px;width:220px;height:40px;background:transparent;box-shadow:inset 0 0 0 2px var(--o);color:var(--o);clip-path:none">Working title</div>
+  <div class="z" style="left:96px;top:724px;width:760px;font:400 30px/1.36 var(--sans);color:var(--ice)">A LAN party game for 2–4 players: short physics mini-games, one shared scoreboard.</div>
+  <div id="lobby"></div>
+  <div class="z cap" style="right:96px;top:64px;text-align:right;color:rgba(238,245,255,.75)">Concept render, AI-generated. Not gameplay.</div>
+  <aside class="notes">Ice Rumble is a working title. It is a party game for two to four players on one local network: short physics mini-games, with points carried on one scoreboard. The four of us are the four player slots at the bottom. All game images in this deck are AI concept renders made from our own reference art; none of them is gameplay.</aside>
+</section>
+
+<!-- ===================== 2 WHAT IT IS ===================== -->
+<section class="slide" data-section="Introduction" data-round="1">
+  <div class="ttl">A party game for <span class="c">one room</span>: short physics rounds, one scoreboard</div>
+  <div class="z" style="left:96px;top:300px;width:800px;font:400 34px/1.42 var(--sans);color:var(--ice)">Two to four friends sit in the same room, each at their own PC. One PC hosts; the others join over the local network.</div>
+  <div class="z b" style="left:96px;top:520px;width:780px;font-size:26px">They play a run of short mini-games. Each round, your placement earns points, and one scoreboard runs across the whole session. Highest total wins.</div>
+  <div class="shot" style="left:960px;top:290px;width:864px;height:470px"><img src="img/podium_full.png" style="object-position:50% 60%"></div>
+  <div class="brk" style="left:950px;top:280px;width:884px;height:490px"></div>
+  <div class="z cap" style="left:960px;top:776px">FIG 1 · End of a round: placement decides points. Concept render, AI-generated.</div>
+  <div id="facts"></div>
+  <aside class="notes">Plain-language summary. Who: two to four friends, each on a PC, in the same room; one PC hosts. What: a session is a run of short mini-games; your place in each round gives points; the scoreboard decides the night. Scope: two mini-games for the course, both built on the same shared core. Everyone plays the same cube character in one of four colours.</aside>
+</section>
+
+<!-- ===================== 3 SESSION FLOW ===================== -->
+<section class="slide" data-section="Introduction" data-round="1">
+  <div class="ttl">How a session runs: lobby, rounds, standings</div>
+  <div id="flow"></div>
+  <div class="pnl" style="left:96px;top:620px;width:820px;height:370px"></div>
+  <div class="z tag" style="left:136px;top:652px">Placement points · proposed</div>
+  <div id="pts"></div>
+  <div class="pnl" style="left:956px;top:620px;width:868px;height:370px"></div>
+  <div class="z tag" style="left:996px;top:652px;color:var(--c)">Between rounds</div>
+  <div class="z k" style="left:996px;top:706px;color:var(--ice)">Carries over</div>
+  <div class="z b" style="left:1236px;top:700px;width:550px;font-size:21px">Points. Nothing else accumulates.</div>
+  <div class="hl" style="left:996px;top:762px;width:788px"></div>
+  <div class="z k" style="left:996px;top:790px;color:var(--ice)">Catch-up</div>
+  <div class="z b" style="left:1236px;top:784px;width:550px;font-size:21px">The last round's winner earns slightly fewer points next round; last place earns slightly more.</div>
+  <div class="hl" style="left:996px;top:878px;width:788px"></div>
+  <div class="z k" style="left:996px;top:906px;color:var(--ice)">Resets</div>
+  <div class="z b" style="left:1236px;top:900px;width:550px;font-size:21px">Mass and position, so one bad round does not snowball.</div>
+  <aside class="notes">The session loop. The host owns the lobby and the round order. Only points carry over between rounds; mass and position reset, so a bad round never makes the next one harder. We also plan catch-up scoring: whoever won the last round earns slightly fewer points in the next one, and whoever came last earns slightly more, so trailing players stay in contention until the final. Placement points 4, 3, 2, 1 and the size of the adjustment are proposals we will tune in playtests.</aside>
+</section>
+
+<!-- ===================== 4 CORE MECHANIC ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="ttl">One value is your <span class="o">health</span>, your <span class="o">ammunition</span> and your <span class="o">weight</span></div>
+  <div id="mech"></div>
+  <div class="pnl s" style="left:96px;top:876px;width:1728px;height:96px;--pf:#0E1D38"></div>
+  <div class="z" style="left:136px;top:902px;width:1560px;font:400 28px/1.5 var(--sans);color:var(--ice)">Shooting, getting hit and getting launched all read from one number the player can see: <b style="color:var(--o)">the cube's size.</b></div>
+  <div class="fn" style="bottom:22px">Bars show direction only. Costs and knockback values are set in playtests.</div>
+  <aside class="notes">One resource does three jobs. Shooting spends it: the cube spits out a piece of its own body, hit or miss. Getting hit loses it and pushes you back. And the less you have, the further the same hit sends you; off the edge is a knockout. We present the rule, not the numbers: the exact costs are tuning values we will set in playtests.</aside>
+</section>
+
+<!-- ===================== 5 WHY BOTH PAY ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="ttl">Why both the shooter <span class="o">and</span> the target lose mass</div>
+  <div id="variants"></div>
+  <div class="z" style="left:96px;top:880px;width:1500px;font:400 30px/1.4 var(--sans);color:var(--ice)">A shot only pays off when it lands, so <b style="color:var(--o)">accuracy becomes the skill.</b></div>
+  <div class="fn">Exact costs are tuning values. We fix them in playtests, not on paper.</div>
+  <aside class="notes">Why the rule charges both sides. If only the shooter paid, shooting would be pure loss and hiding would win. If only the target paid, shooting would be free and spamming would win. Charging both makes each shot a trade: a hit should take more from the target than the shot cost you, and a miss costs only you. So aim and timing become the skill.</aside>
+</section>
+
+<!-- ===================== 6 NEVER SHOOTING ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="ttl">Can a player win by <span class="o">never shooting?</span></div>
+  <div class="pnl" style="left:96px;top:290px;width:820px;height:190px;--bc:#5A2A1A;--pf:#1A1420"></div>
+  <div class="z tag" style="left:136px;top:322px">The risk</div>
+  <div class="z b" style="left:136px;top:358px;width:740px">A cube that never shoots keeps its mass, so it stays heavy and hard to push. If the last cube standing won, waiting could be the best strategy.</div>
+  <div class="z tag" style="left:96px;top:530px;color:var(--c)">Our answer: score knockouts, not survival</div>
+  <div id="answers"></div>
+  <div class="z cap" style="left:96px;top:930px;width:820px">Fallback if playtests still show stalling: a shrinking arena, or letting cubes re-absorb spent globs.</div>
+  <div class="pnl" style="left:976px;top:290px;width:848px;height:690px"></div>
+  <div class="z tag" style="left:1016px;top:322px;color:var(--ice)">Same hit, less mass, more knockback</div>
+  <svg class="ov" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <defs><linearGradient id="kg" x1="0" x2="1"><stop offset="0" stop-color="#2EC0FF"/><stop offset="1" stop-color="#FF6A1A"/></linearGradient></defs>
+    <line x1="1080" y1="860" x2="1770" y2="860" stroke="#2C4B7E" stroke-width="2"/>
+    <line x1="1080" y1="860" x2="1080" y2="400" stroke="#2C4B7E" stroke-width="2"/>
+    <path d="M1080 860 l-8 0" stroke="#2C4B7E"/>
+    <path d="M1090 830 C 1300 820, 1500 760, 1600 640 S 1720 430, 1750 410" fill="none" stroke="url(#kg)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="1110" cy="828" r="12" fill="#2EC0FF"/>
+    <circle cx="1750" cy="410" r="12" fill="#FF6A1A"/>
+    <path d="M1770 860 l-14 -8 v16 z" fill="#2C4B7E"/>
+    <path d="M1080 400 l-8 14 h16 z" fill="#2C4B7E"/>
+  </svg>
+  <div class="z k" style="left:1016px;top:378px;color:var(--mut)">Knockback</div>
+  <div class="z k" style="left:1440px;top:880px;width:330px;text-align:right">Mass: full → low</div>
+  <div class="z" style="left:1136px;top:676px;width:330px;font:400 19px/1.35 var(--sans);color:var(--txt)"><b style="color:var(--c)">Heavy, never shot:</b> hard to push, but has scored nothing.</div>
+  <div class="z" style="left:1290px;top:396px;width:420px;text-align:right;font:400 19px/1.35 var(--sans);color:var(--txt)"><b style="color:var(--o)">Light:</b> the same hit launches it off the edge.</div>
+  <div class="z cap" style="left:1016px;top:930px">Shape only. Axis values come from tuning.</div>
+  <aside class="notes">The obvious objection: shooting costs mass, so why not just wait? A waiting cube does stay heavy and hard to push. But points come from knockouts, not survival, so waiting scores nothing. Respawning at full mass stops snowballing, and a short timer removes the stall. If playtests still show stalling, we have two fallbacks: shrink the arena, or let cubes re-absorb spent globs.</aside>
+</section>
+
+<!-- ===================== 7 MASS KNOCKOUT ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="bg" style="right:auto;width:1240px"><img src="img/ko_hit_full.png" style="object-position:40% 50%"></div>
+  <div class="bg" style="background:linear-gradient(180deg,rgba(6,14,28,.85) 0%,rgba(6,14,28,0) 18%,rgba(6,14,28,0) 80%,rgba(6,14,28,.9) 100%),linear-gradient(90deg,rgba(6,14,28,0) 50%,rgba(6,14,28,1) 65%)"></div>
+  <div class="pnl glass" style="left:1180px;top:120px;width:644px;height:880px"></div>
+  <div class="z tag" style="left:1224px;top:160px">Mini-game 01</div>
+  <div class="z d" style="left:1220px;top:194px;font-size:118px;color:var(--ice)">Mass<br>Knockout</div>
+  <div id="spec-ko"></div>
+  <div class="z cap" style="left:96px;bottom:40px;width:900px;color:rgba(238,245,255,.85)">FIG 2 · Orange spits a piece of itself; Cyan is hit near the edge. Concept render, AI-generated. Not gameplay.</div>
+  <aside class="notes">Mass Knockout. One flat platform with open edges. Spitting costs you mass; hits cost the target mass and push it; lighter cubes fly further. The last cube to hit someone gets the knockout. Rounds are timed and ranked by knockouts. Respawns are at full mass.</aside>
+</section>
+
+<!-- ===================== 8 ICE RACE ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="bg" style="left:620px"><img src="img/race1.png" style="object-position:50% 50%"></div>
+  <div class="bg" style="background:linear-gradient(180deg,rgba(6,14,28,.85) 0%,rgba(6,14,28,0) 18%,rgba(6,14,28,0) 80%,rgba(6,14,28,.9) 100%),linear-gradient(90deg,rgba(6,14,28,1) 32%,rgba(6,14,28,0) 46%)"></div>
+  <div class="pnl glass" style="left:96px;top:120px;width:644px;height:880px;--bc:#1E5878"></div>
+  <div class="z tag" style="left:140px;top:160px;color:var(--c)">Mini-game 02</div>
+  <div class="z d" style="left:136px;top:194px;font-size:118px;color:var(--ice)">Ice<br>Race</div>
+  <div id="spec-race"></div>
+  <div class="z cap" style="right:96px;bottom:40px;width:900px;text-align:right;color:rgba(238,245,255,.85)">FIG 3 · Racing a floating ice track; the HUD is part of the render. Concept render, AI-generated. Not gameplay.</div>
+  <aside class="notes">Ice Race. No shooting here; the skill is momentum. Input sets acceleration, not velocity, and sideways grip is low, so you have to set up corners early. Braking restores grip. Falling sends you back to the last checkpoint: you lose time, not the race. Finish order gives placement, and anyone unfinished at the timeout is ranked by track progress.</aside>
+</section>
+
+<!-- ===================== 9 ARCHITECTURE ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="ttl">One shared core; each mini-game <span class="c">plugs into it</span></div>
+  <div id="arch"></div>
+  <div class="vl" style="left:1284px;top:290px;height:690px"></div>
+  <div class="z tag" style="left:1332px;top:296px;color:var(--ice)">Why this split</div>
+  <div class="z h" style="left:1332px;top:350px;color:var(--o)">Reuse</div>
+  <div class="z b" style="left:1332px;top:390px;width:490px;font-size:21px">A new mini-game is new rules plus one arena. Character, camera, network and scores already exist.</div>
+  <div class="z h" style="left:1332px;top:560px;color:var(--c)">Per-game physics</div>
+  <div class="z b" style="left:1332px;top:600px;width:490px;font-size:21px">Each mini-game sets its own profile: low grip on ice, firm grip in Knockout.</div>
+  <div class="z h" style="left:1332px;top:740px;color:var(--g)">One truth</div>
+  <div class="z b" style="left:1332px;top:780px;width:490px;font-size:21px">Everything that decides a result runs on the host, so every screen agrees.</div>
+  <aside class="notes">Architecture. The mini-games sit on top of a shared core. Each one implements the same small contract: set up with the players, run, report placement. Below that sit the character, camera, round state machine, scoreboard and lobby, then the LAN layer, where the host is authoritative. Unity Netcode for GameObjects is our candidate library, not a final choice.</aside>
+</section>
+
+<!-- ===================== 10 NETWORK SEQUENCE ===================== -->
+<section class="slide" data-section="Gameplay and tech" data-round="2">
+  <div class="ttl">One shot over the LAN, <span class="c">step by step</span></div>
+  <div id="seq"></div>
+  <div class="pnl s" style="left:96px;top:880px;width:1728px;height:110px;--pf:#0E1D38"></div>
+  <div class="z b" style="left:136px;top:902px;width:1650px;font-size:21px"><b>Your own movement is predicted locally, so it feels instant.</b> Hits, mass changes and knockouts are decided only on the host. <b style="color:var(--o)">Main risk:</b> keeping physics smooth on clients. LAN latency is low, and we tune the snapshot rate.</div>
+  <aside class="notes">One shot end to end. The client only sends intent. The host checks the cooldown, takes mass from the shooter, simulates the glob, applies the hit and knockback, and sends one snapshot to everyone. Clients interpolate. Own movement is predicted locally for feel; anything that decides a result lives on the host.</aside>
+</section>
+
+<!-- ===================== 11 MARKET NUMBERS ===================== -->
+<section class="slide" data-section="Market" data-round="3">
+  <div class="ttl">Social PC play is growing; <span class="o">LAN party games are rare</span></div>
+  <div id="kpis"></div>
+  <div class="pnl" style="left:1060px;top:290px;width:764px;height:520px"></div>
+  <div class="z tag" style="left:1100px;top:322px;color:var(--ice)">Steam “Party Game” titles by multiplayer tag</div>
+  <div id="tagbars"></div>
+  <div class="z cap" style="left:1100px;top:760px">Steam store search, Oct 2026 [4]. Tags are user-applied.</div>
+  <div class="pnl s" style="left:96px;top:850px;width:1728px;height:130px;--bc:#5A2A1A;--pf:#1A1420"></div>
+  <div class="z tag" style="left:136px;top:880px">Risk, stated plainly</div>
+  <div class="z b" style="left:136px;top:912px;width:1650px;font-size:21px">An estimated 65.9% of 2025 Steam releases earned under $1,000 [5], while 5,863 games passed $100K in 2025 (Valve) [6]. <b>LAN is our differentiator, not a demand driver.</b></div>
+  <aside class="notes">Market potential. PC is a 43.6 billion dollar market that grew 12 percent in 2025; games with co-op made an estimated 4.1 billion on Steam in the first half of 2025; most players play with others. Only about 8 percent of Steam party games list LAN. Revenue is very uneven: most releases earn little, but thousands pass 100 thousand dollars. LAN is how we stand out, not why people buy.</aside>
+</section>
+
+<!-- ===================== 12 COMPETITORS ===================== -->
+<section class="slide" data-section="Market" data-round="3">
+  <div class="ttl">Five games we are measured against</div>
+  <div id="comps"></div>
+  <div class="fn" style="bottom:28px">Screenshots: official Steam media, © publishers. “Owner est.” = third-party estimates via SteamDB, not sales. 2026-10-17 [7].</div>
+  <aside class="notes">Five comparables, each chosen for one reason. Party Animals and Gang Beasts share our audience and physics comedy. Fall Guys and Pummel Party share our session format of short rounds. Squarena is the closest mechanic: it shrinks you as you lose health, in 2D. Owner numbers are third-party estimates and we label them that way.</aside>
+</section>
+
+<!-- ===================== 13 MATRIX ===================== -->
+<section class="slide" data-section="Market" data-round="3">
+  <div class="ttl">Where we sit among them</div>
+  <div id="matrix"></div>
+  <div class="fn" style="width:1728px">“Official LAN: No” = not advertised in the game's Steam features. “Partly”: Party Animals and Pummel Party have some weapons or items; Fall Guys' playlist eliminates rather than scores. Party Animals needs internet even on one screen [8]. Ice Rumble column = planned design.</div>
+  <aside class="notes">Positioning. Each competitor covers part of this table. Squarena is the only one where damage changes your size, and none ties knockback to lost mass. None advertises official LAN. The Ice Rumble column is our plan, not shipped software.</aside>
+</section>
+
+<!-- ===================== 14 INNOVATION CLAIM ===================== -->
+<section class="slide" data-section="Innovation" data-round="4">
+  <div class="z tag" style="left:96px;top:150px">The new link</div>
+  <div class="z" style="left:96px;top:196px;width:780px;font:700 64px/1.1 var(--sans);letter-spacing:-.02em;color:var(--ice)">No shipped game we found ties <span style="color:var(--o)">knockback to the mass you have lost.</span></div>
+  <div class="z b" style="left:96px;top:500px;width:740px;font-size:25px">Mass Knockout puts four links on one physical value the player can see. Links 01 to 03 have relatives in other games. <b>Link 04 we did not find.</b></div>
+  <div class="z cap" style="left:96px;top:930px;width:780px">Prior-art search of shipped games, Oct 2026 [9–12]. Evidence on the next slide.</div>
+  <div id="loop"></div>
+  <aside class="notes">Our core rule is that losing mass makes the next incoming hit launch you further. Spend your body to shoot, lose body when hit, that body is your size, ammunition and health, and less of it means you fly further. We searched for the last link and did not find it in any shipped game. The next slide shows the closest prior art for each link.</aside>
+</section>
+
+<!-- ===================== 15 PRIOR ART ===================== -->
+<section class="slide" data-section="Innovation" data-round="4">
+  <div class="ttl">Closest prior art for each link, and <span class="o">what we did not find</span></div>
+  <div id="prior"></div>
+  <div class="fn">Prior-art search of shipped games, Oct 2026 [9–12]. “Not found” means not found after searching.</div>
+  <aside class="notes">The other links have relatives, and we name them: Osmos and Agar.io spend body mass, but to move; Squarena shrinks you as you lose health, in 2D; Morphies Law moves mass between robots; Crisol spends your blood as ammunition. Smash Bros. raises knockback with a percentage counter, not with mass. Lighter-means-launched-further, and all four links in one 3D party game, we did not find.</aside>
+</section>
+
+<!-- ===================== 16 LAN ===================== -->
+<section class="slide" data-section="Innovation" data-round="4">
+  <div class="ttl">Built for one room, <span class="c">with no internet</span></div>
+  <div class="pnl" style="left:96px;top:290px;width:800px;height:690px"></div>
+  <div class="z tag" style="left:136px;top:322px;color:var(--ice)">Steam “Party Game” titles that list LAN PvP</div>
+  <div id="waffle"></div>
+  <div class="z d" style="left:676px;top:384px;font-size:112px;color:var(--o)">≈8%</div>
+  <div class="z b" style="left:676px;top:510px;width:200px;font-size:19px">of ~3,490 titles [4]. One square ≈ 1%.</div>
+  <div id="lanpts"></div>
+  <aside class="notes">The second thing that sets us apart is where it is played. Only about 8 percent of Steam party games list LAN. None of our five comparables advertises official LAN, and Party Animals needs an internet connection even on one screen. Ice Rumble runs entirely on the room's network: one PC hosts, the others join by local IP. We are honest that LAN is a differentiator, not something that creates demand on its own.</aside>
+</section>
+
+<!-- ===================== 17 BUILDS ===================== -->
+<section class="slide" data-section="Innovation" data-round="4">
+  <div class="ttl">Same rules, different builds: <span class="o">weight is also ammunition</span></div>
+  <div class="shot" style="left:96px;top:290px;width:900px;height:510px"><img src="img/arche_full.png"></div>
+  <div class="brk" style="left:86px;top:280px;width:920px;height:530px"></div>
+  <div class="z cap" style="left:96px;top:816px;width:900px">FIG 4 · Heavy, balanced and light builds of the same character. Concept render, AI-generated.</div>
+  <div class="z b" style="left:96px;top:880px;width:900px;font-size:21px">Weight classes are standard in the genre (e.g. Mario Kart). The twist: here weight is also your ammunition, so a build changes how you play, not only how you look.</div>
+  <div id="builds"></div>
+  <div class="z cap" style="left:1076px;top:930px;width:748px">Framework for after the MVP. Pips are relative; stats are not designed yet.</div>
+  <aside class="notes">A framework, not a finished design. Characters can differ in starting mass and speed. Weight classes are common in the genre; what is different here is that mass is also ammunition, so a heavy build has more shots and a light build fewer. We would tune this after the two MVP mini-games work.</aside>
+</section>
+
+<!-- ===================== 18 PROTOTYPE ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-round="5">
+  <div class="ttl">Prototype: the mass rule simulated <span class="g" style="color:var(--g)">before any Unity code</span></div>
+  <div id="strip"></div>
+  <div id="proto"></div>
+  <aside class="notes">Drafts and prototypes. This is a real prototype: a deterministic physics simulation of the Mass Knockout rule, written in Three.js and rendered frame by frame. Over three shots the target shrinks and is pushed further each time. We built it to check that the escalating knockback reads clearly on screen before writing any Unity code.</aside>
+</section>
+
+<!-- ===================== 19 ART DRAFTS ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-round="5">
+  <div class="ttl">Four art directions for the same cube</div>
+  <div id="art"></div>
+  <div class="pnl" style="left:1380px;top:280px;width:444px;height:700px"></div>
+  <div class="z tag" style="left:1416px;top:312px;color:var(--ice)">Purpose</div>
+  <div class="z b" style="left:1416px;top:346px;width:380px;font-size:20px">Four looks for the same character, generated to choose a direction before modelling.</div>
+  <div class="z tag" style="left:1416px;top:500px;color:var(--o)">Used in this deck</div>
+  <div class="z b" style="left:1416px;top:534px;width:380px;font-size:20px">The concept renders follow the glossy-toy direction.</div>
+  <div class="z tag" style="left:1416px;top:660px;color:var(--ice)">Player colours</div>
+  <div id="sw"></div>
+  <div class="z cap" style="left:1416px;top:900px;width:380px">All AI-generated drafts. None is gameplay.</div>
+  <aside class="notes">Four art-direction drafts for the same character: vinyl toy, building blocks, tin toy and jelly. We generated them to choose a direction before anyone models anything. The concept renders in this deck follow the glossy-toy direction. The four player colours stay the same whatever look we pick.</aside>
+</section>
+
+<!-- ===================== 20 LOGO DRAFTS ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-round="5">
+  <div class="ttl">Logo drafts</div>
+  <div id="logos"></div>
+  <div class="fn">Drafts made for this proposal. The name is a working title; the logo is not final.</div>
+  <aside class="notes">Three logo drafts for the working title. A is a wordmark for the title screen and this deck. B stacks the name under the cube for square formats like a store capsule. C is a small icon for the taskbar and the build. None is final.</aside>
+</section>
+
+<!-- ===================== 21 LEVEL DRAFTS ===================== -->
+<section class="slide" data-section="Drafts and prototypes" data-round="5">
+  <div class="ttl">Level drafts, top-down: <span class="o">arena</span> and <span class="c">track</span></div>
+  <div id="levels"></div>
+  <div class="fn">Draft layouts for scope and blockout. Dimensions, spawn points and checkpoint count are not set.</div>
+  <aside class="notes">Two level drafts, seen from above. Mass Knockout: one flat square platform with open edges and no walls, so every edge is a knockout line; players spawn near the corners. Ice Race: a closed loop with a start-finish line and checkpoints; corners are where low grip matters, and a fall puts you back at the last checkpoint. These are drafts for the blockout, not final levels.</aside>
+</section>
+
+<!-- ===================== 22 BUILD ORDER ===================== -->
+<section class="slide" data-section="Plan" data-round="6">
+  <div class="ttl">Build order: shared core first, then each mini-game</div>
+  <div class="pnl" style="left:96px;top:280px;width:1728px;height:700px"></div>
+  <div id="gantt"></div>
+  <aside class="notes">Build order. The shared core comes first, then the LAN layer, then the two mini-games, Ice Race first because it reuses more of the core, Mass Knockout as the riskier one. Then the session loop and tuning. The order is fixed; milestone dates and owners are still to be decided.</aside>
+</section>
+
+<!-- ===================== 23 RISKS ===================== -->
+<section class="slide" data-section="Plan" data-round="6">
+  <div class="ttl">Three risks, and how the design contains them</div>
+  <div id="risks"></div>
+  <aside class="notes">Three main risks. Networked physics: clients could disagree on a knockback, so the host simulates and clients only render. Balance: stalling or snowballing, handled by scoring knockouts, full-mass respawns, a timer and catch-up scoring. Scope: too many mini-games, so the MVP is exactly two, and more come only once both are fun.</aside>
+</section>
+
+<!-- ===================== 24 FINAL STANDINGS ===================== -->
+<section class="slide" data-section="Close" data-nochrome>
+  <div class="bg" style="left:700px"><img src="img/podium_full.png" style="object-position:45% 50%"></div>
+  <div class="bg" style="background:linear-gradient(90deg,rgba(6,14,28,1) 0%,rgba(6,14,28,1) 38%,rgba(6,14,28,.4) 50%,rgba(6,14,28,0) 62%)"></div>
+  <div class="z tag" style="left:96px;top:64px;color:var(--mut)">Final standings</div>
+  <div class="z d" style="left:92px;top:130px;font-size:150px;color:var(--c)">Ice <span style="color:var(--ice)">Rumble</span></div>
+  <div id="takeaways"></div>
+  <div class="z d" style="left:94px;top:760px;font-size:120px;color:var(--o)">Questions?</div>
+  <div class="z" style="left:96px;top:940px;width:1100px;font:400 20px/1.4 var(--sans);color:var(--mut)">Ezel Bayraktar · Abdurrahim Özağaç · Kürşat Hürkan Aydın · Ardıl Bilal Ülkü</div>
+  <div class="z cap" style="right:96px;top:64px;text-align:right;color:rgba(238,245,255,.75)">Concept render, AI-generated. Not gameplay.</div>
+  <aside class="notes">Summary: a LAN party game, two mini-games on one shared core, and one rule that makes every shot a trade. Questions.</aside>
+</section>
+
+<!-- ===================== 25 SOURCES ===================== -->
+<section class="slide" data-section="Close" data-round="0">
+  <div class="ttl">Sources</div>
+  <div id="src"></div>
+  <aside class="notes">Full research notes with all sources are in research/market-research.md.</aside>
+</section>
+
+<script>
+const H = (sel, html) => { const el = document.querySelector(sel); el.insertAdjacentHTML('beforeend', html); };
+const COL = {o:'var(--o)', c:'var(--c)', g:'var(--g)', p:'var(--p)'};
+
+/* ---------- chrome ---------- */
+const ROUNDS = ['The game','Gameplay & tech','Market','Innovation','Drafts & prototypes','Development plan'];
+const slides = [...document.querySelectorAll('section.slide')];
+slides.forEach((s, i) => {
+  const pg = String(i + 1).padStart(2, '0');
+  if (s.hasAttribute('data-nochrome')) return;
+  const r = +s.dataset.round;
+  s.insertAdjacentHTML('beforeend', r
+    ? `<div class="hud-r">ROUND <b>${r}</b> / 6</div><div class="hud-s">${ROUNDS[r - 1].toUpperCase()}</div>`
+    : `<div class="hud-r">APPENDIX</div>`);
+  for (let k = 0; k < 6; k++) {
+    const c = k + 1 < r ? 'var(--ice)' : k + 1 === r ? 'var(--o)' : '#1D3358';
+    s.insertAdjacentHTML('beforeend', `<div class="seg" style="right:${236 + (5 - k) * 52}px;background:${c}"></div>`);
+  }
+  s.insertAdjacentHTML('beforeend', `<div class="hud-pg">${pg}<span style="color:var(--dim)"> / ${slides.length}</span></div>`);
+});
+
+/* ---------- 1 lobby ---------- */
+[['P1','o','Ezel Bayraktar','2220356197'],['P2','c','Abdurrahim Özağaç','2220356033'],['P3','g','Kürşat Hürkan Aydın','2230356008'],['P4','p','Ardıl Bilal Ülkü','2230356051']].forEach(([p, c, n, id], i) => {
+  const x = 96 + i * 440, y = 852;
+  H('#lobby', `<div class="pnl s glass" style="left:${x}px;top:${y}px;width:416px;height:132px;--bc:#22385E"></div>
+    <div class="z" style="left:${x}px;top:${y}px;width:416px;height:6px;background:${COL[c]};clip-path:polygon(0 0,404px 0,410px 6px,0 6px)"></div>
+    <div class="z d" style="left:${x + 24}px;top:${y + 32}px;font-size:56px;color:${COL[c]}">${p}</div>
+    <div class="z" style="left:${x + 104}px;top:${y + 36}px;width:300px;font:700 23px/1.2 var(--sans);color:var(--ice)">${n}</div>
+    <div class="z cap" style="left:${x + 104}px;top:${y + 70}px">${id}</div>
+    <div class="z k" style="left:${x + 300}px;top:${y + 96}px;width:92px;text-align:right;color:${COL[c]}">Ready</div>`);
+});
+
+/* ---------- 2 facts ---------- */
+[['2–4','c','Players','Each at their own PC, in one room.'],['1','o','Host PC','The others join over the LAN. No internet, no accounts.'],['2','g','Mini-games in the MVP','Mass Knockout and Ice Race.'],['1','p','Character','The same cube, in four colours, with the same controls everywhere.']].forEach(([n, c, l, d], i) => {
+  const x = 96 + i * 438, y = 830;
+  H('#facts', `<div class="pnl s" style="left:${x}px;top:${y}px;width:414px;height:160px"></div>
+    <div class="z d" style="left:${x + 28}px;top:${y + 26}px;font-size:100px;color:${COL[c]}">${n}</div>
+    <div class="z k" style="left:${x + (n.length > 1 ? 196 : 120)}px;top:${y + 32}px;width:${n.length > 1 ? 196 : 270}px;color:var(--ice)">${l}</div>
+    <div class="z" style="left:${x + (n.length > 1 ? 196 : 120)}px;top:${y + 62}px;width:${n.length > 1 ? 196 : 270}px;font:400 18px/1.35 var(--sans);color:var(--txt)">${d}</div>`);
+});
+
+/* ---------- 3 flow ---------- */
+const flow = [['01','Lobby','Host starts a session. Others join with the host’s local IP.'],['02','Round','Host picks the next mini-game. Everyone loads the same arena.'],['03','Play','Host runs the physics. Clients send input and draw the result.'],['04','Place','Round ends. Placement becomes points.'],['05','Standings','Scoreboard updates. After the last round: overall winner.']];
+flow.forEach(([n, t, d], i) => {
+  const x = 96 + i * 357, y = 290, hot = i === 2;
+  H('#flow', `<div class="pnl s ${hot ? 'hot' : ''}" style="left:${x}px;top:${y}px;width:300px;height:196px"></div>
+    <div class="z k" style="left:${x + 24}px;top:${y + 24}px;color:${hot ? 'var(--o)' : 'var(--mut)'}">${n}</div>
+    <div class="z d" style="left:${x + 24}px;top:${y + 50}px;font-size:46px;color:var(--ice)">${t}</div>
+    <div class="z" style="left:${x + 24}px;top:${y + 104}px;width:256px;font:400 18px/1.35 var(--sans);color:var(--txt)">${d}</div>`);
+  if (i < 4) H('#flow', `<svg class="ov" width="1920" height="1080"><path d="M${x + 314} ${y + 88} l18 10 l-18 10" fill="none" stroke="#56698F" stroke-width="3"/></svg>`);
+});
+H('#flow', `<svg class="ov" width="1920" height="1080"><path d="M${96 + 4 * 357 + 150} 486 v54 H ${96 + 357 + 150} v-46" fill="none" stroke="#FF6A1A" stroke-width="3" stroke-dasharray="10 8"/><path d="M${96 + 357 + 150 - 9} 500 l9 -14 l9 14" fill="#FF6A1A"/></svg>
+  <div class="chip" style="left:${96 + 2 * 357 + 30}px;top:524px;width:240px;height:34px;background:var(--bg);color:var(--o);box-shadow:inset 0 0 0 2px var(--o);clip-path:none">Next mini-game</div>`);
+/* points */
+[['1st',4],['2nd',3],['3rd',2],['4th',1]].forEach(([p, v], i) => {
+  const y = 700 + i * 66;
+  H('#pts', `<div class="z d" style="left:136px;top:${y}px;font-size:40px;color:${i === 0 ? 'var(--o)' : 'var(--ice)'}">${p}</div>
+    <div class="bar" style="left:250px;top:${y + 12}px;width:420px;--bf:${i === 0 ? 'var(--o)' : 'var(--ice)'}"><i style="width:${v * 96}px"></i></div>
+    <div class="z d" style="left:700px;top:${y}px;font-size:40px;color:var(--ice)">${v} <span style="font-family:var(--mono);font-size:16px;letter-spacing:.16em;color:var(--mut)">PTS</span></div>`);
+});
+
+/* ---------- 4 mechanic ---------- */
+[['ko_spit_full.png','1','Shoot','A cube spits out a piece of its own body. Every shot makes it smaller, hit or miss.','Shooter mass',78,12,'var(--o)'],
+ ['ko_hit_full.png','2','Hit','The target loses mass on impact and is pushed back along the line of the shot.','Target mass',56,22,'var(--c)'],
+ ['launch_full.png','3','Fall','Less mass means the same hit pushes further. Off the edge is a knockout.','Knockback, same hit',92,0,'var(--o)']].forEach(([img, n, t, d, bl, w, lost, c], i) => {
+  const x = 96 + i * 584;
+  H('#mech', `<div class="shot" style="left:${x}px;top:280px;width:560px;height:315px"><img src="img/${img}"></div>
+    <div class="chip" style="left:${x}px;top:280px;width:150px;height:46px;background:${c};color:#06101F;font:400 26px/1 var(--disp);letter-spacing:.04em;clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%)">${n} · ${t}</div>
+    <div class="z" style="left:${x}px;top:616px;width:540px;font:400 21px/1.4 var(--sans);color:var(--txt)">${d}</div>
+    <div class="z k" style="left:${x}px;top:722px;color:var(--ice)">${bl}</div>
+    <div class="bar" style="left:${x}px;top:752px;width:560px;--bf:${c};--bl:${c === 'var(--c)' ? 'rgba(46,192,255,.3)' : 'rgba(255,106,26,.3)'}"><i style="width:${w}%"></i>${lost ? `<u style="left:${w}%;width:${lost}%"></u>` : ''}</div>
+    <div class="z cap" style="left:${x}px;top:782px">${i === 2 ? 'grows as mass drops' : 'lost this exchange ▸ faded'}</div>`);
+  if (i < 2) H('#mech', `<svg class="ov" width="1920" height="1080"><circle cx="${x + 572}" cy="437" r="20" fill="#060E1C" stroke="#2C4B7E" stroke-width="2"/><path d="M${x + 566} 429 l9 8 l-9 8" fill="none" stroke="#EEF5FF" stroke-width="3"/></svg>`);
+});
+
+/* ---------- 5 variants ---------- */
+[['A','Only the shooter pays','Shooting is pure loss. The best play is to never shoot and wait for the others to weaken each other.','Rewards hiding',[1,0]],
+ ['B','Only the target pays','Shooting is free. The best play is to shoot nonstop in every direction.','Rewards spam',[0,1]],
+ ['C','Both pay: our rule','Every shot is a trade. A hit should take more from the target than the shot cost you, and a miss costs only you.','Rewards aim and timing',[1,1]]].forEach(([v, t, d, r, pay], i) => {
+  const x = 96 + i * 584, ours = i === 2;
+  H('#variants', `<div class="pnl ${ours ? 'hot' : ''}" style="left:${x}px;top:280px;width:560px;height:560px"></div>
+    <div class="z k" style="left:${x + 36}px;top:316px;color:${ours ? 'var(--o)' : 'var(--mut)'}">Variant ${v}</div>
+    <div class="z h" style="left:${x + 36}px;top:344px;width:490px">${t}</div>
+    <svg class="ov" width="1920" height="1080">
+      <rect x="${x + 70}" y="430" width="90" height="90" rx="16" fill="#FF6A1A" opacity="${pay[0] ? 1 : .9}"/>
+      <rect x="${x + 400}" y="430" width="90" height="90" rx="16" fill="#2EC0FF"/>
+      <line x1="${x + 176}" y1="475" x2="${x + 380}" y2="475" stroke="#EEF5FF" stroke-width="3" stroke-dasharray="4 10" stroke-linecap="round"/>
+      <circle cx="${x + 330}" cy="475" r="12" fill="#FF6A1A"/>
+    </svg>
+    <div class="chip" style="left:${x + 70}px;top:536px;width:90px;height:34px;clip-path:none;background:${pay[0] ? 'var(--o)' : '#1D3358'};color:${pay[0] ? '#06101F' : 'var(--mut)'};font-size:18px">${pay[0] ? '− mass' : 'free'}</div>
+    <div class="chip" style="left:${x + 400}px;top:536px;width:90px;height:34px;clip-path:none;background:${pay[1] ? 'var(--c)' : '#1D3358'};color:${pay[1] ? '#06101F' : 'var(--mut)'};font-size:18px">${pay[1] ? '− mass' : 'free'}</div>
+    <div class="z k" style="left:${x + 36}px;top:604px">Best play</div>
+    <div class="z" style="left:${x + 36}px;top:630px;width:490px;font:400 21px/1.4 var(--sans);color:var(--txt)">${d}</div>
+    <div class="chip" style="left:${x + 36}px;top:768px;width:${ours ? 330 : 230}px;height:42px;background:${ours ? 'var(--o)' : 'transparent'};color:${ours ? '#06101F' : 'var(--mut)'};box-shadow:${ours ? 'none' : 'inset 0 0 0 2px #2C4B7E'};${ours ? '' : 'clip-path:none'}">${ours ? '✓ ' : '✕ '}${r}</div>`);
+});
+
+/* ---------- 6 answers ---------- */
+[['Points come from knockouts.','A cube that never shoots scores nothing, however heavy it is.'],['Respawn at full mass.','A knocked-out cube returns after a short delay, so falling behind does not snowball.'],['Short round timer.','Waiting out the clock earns no points.']].forEach(([t, d], i) => {
+  const y = 576 + i * 112;
+  H('#answers', `<div class="z d" style="left:96px;top:${y}px;font-size:64px;color:var(--c)">${i + 1}</div>
+    <div class="z" style="left:160px;top:${y + 4}px;width:740px;font:400 21px/1.4 var(--sans);color:var(--txt)"><b style="color:var(--ice)">${t}</b> ${d}</div>`);
+});
+
+/* ---------- 7/8 spec sheets ---------- */
+const spec = (sel, x, rows, c) => rows.forEach(([k, v], i) => {
+  const y = 470 + i * 104;
+  H(sel, `<div class="hl" style="left:${x}px;top:${y - 16}px;width:556px;background:#22385E"></div>
+    <div class="z k" style="left:${x}px;top:${y}px;color:${c}">${k}</div>
+    <div class="z" style="left:${x}px;top:${y + 26}px;width:556px;font:400 21px/1.38 var(--sans);color:var(--ice)">${v}</div>`);
+});
+spec('#spec-ko', 1224, [['Goal','Knock other cubes off the floating platform.'],['Controls','Move, aim, spit. A short cooldown between shots.'],['Scoring','A knockout goes to the last cube that hit the one that fell. Most knockouts at the timer wins.'],['Respawn','After a short delay, at full mass.'],['Arena','One flat square platform. Open edges, no walls.']], 'var(--o)');
+spec('#spec-race', 140, [['Goal','Finish the laps first on a floating ice track.'],['Controls','Steering changes acceleration, not velocity. Braking restores grip.'],['Skill','Low sideways grip: carry speed through corners without sliding off.'],['Falls','Respawn at the last checkpoint. You lose time, not the race.'],['Placement','Finish order. Unfinished players ranked by track progress.']], 'var(--c)');
+
+/* ---------- 9 architecture ---------- */
+(() => {
+  const L = (y, t) => H('#arch', `<div class="z k" style="left:96px;top:${y}px">${t}</div>`);
+  L(290, 'Mini-games');
+  H('#arch', `<div class="pnl s" style="left:96px;top:318px;width:360px;height:104px;--bc:var(--o);--pf:#1A1626"></div>
+    <div class="z h" style="left:124px;top:336px;color:var(--o)">Mass Knockout</div>
+    <div class="z cap" style="left:124px;top:376px;color:var(--txt)">mass state · spit · knockback</div>
+    <div class="pnl s" style="left:476px;top:318px;width:360px;height:104px;--bc:var(--c);--pf:#0C2038"></div>
+    <div class="z h" style="left:504px;top:336px;color:var(--c)">Ice Race</div>
+    <div class="z cap" style="left:504px;top:376px;color:var(--txt)">ice profile · track · checkpoints</div>
+    <div class="z" style="left:856px;top:318px;width:360px;height:104px;border:2px dashed #2C4B7E"></div>
+    <div class="z h" style="left:884px;top:336px;color:var(--dim)">Next mini-game</div>
+    <div class="z cap" style="left:884px;top:376px;color:var(--dim)">new rules + one arena</div>`);
+  L(450, 'Mini-game contract');
+  H('#arch', `<div class="pnl s" style="left:96px;top:478px;width:1120px;height:64px;--bc:var(--y);--pf:#17190F"></div>
+    <div class="z" style="left:96px;top:478px;width:1120px;height:64px;display:flex;align-items:center;justify-content:center;font:700 23px/1 var(--mono);color:var(--y)">Setup(players) → Run() → Results() : placement</div>`);
+  L(570, 'Shared gameplay');
+  ['Character','Camera','Round state machine','Scoreboard','Lobby & UI'].forEach((m, i) => {
+    const w = [180, 170, 300, 210, 200][i], x = 96 + [0, 196, 382, 698, 924][i];
+    H('#arch', `<div class="pnl s" style="left:${x}px;top:598px;width:${w}px;height:64px;--pf:#10213F"></div>
+      <div class="z" style="left:${x}px;top:598px;width:${w}px;height:64px;display:flex;align-items:center;justify-content:center;font:700 20px/1 var(--sans);color:var(--ice)">${m.replace('&', '&amp;')}</div>`);
+  });
+  L(690, 'Network');
+  H('#arch', `<div class="pnl s" style="left:96px;top:718px;width:1120px;height:64px;--bc:#2C4B7E;--pf:#132A52"></div>
+    <div class="z" style="left:96px;top:718px;width:1120px;height:64px;display:flex;align-items:center;justify-content:center;font:700 20px/1 var(--sans);color:var(--ice)">Host-authoritative LAN · Unity Netcode for GameObjects (candidate)</div>`);
+  L(810, 'Engine');
+  H('#arch', `<div class="pnl s" style="left:96px;top:838px;width:1120px;height:64px;--pf:#0B1830"></div>
+    <div class="z" style="left:96px;top:838px;width:1120px;height:64px;display:flex;align-items:center;justify-content:center;font:700 20px/1 var(--sans);color:var(--mut)">Unity · built-in rigidbody physics</div>`);
+})();
+
+/* ---------- 10 sequence ---------- */
+(() => {
+  const X = {a: 330, h: 960, b: 1590};
+  [['a','Client A','shooter','var(--o)'],['h','Host','authority: runs the physics','var(--ice)'],['b','Client B','target','var(--c)']].forEach(([k, t, s, c]) => {
+    H('#seq', `<div class="pnl s" style="left:${X[k] - 170}px;top:270px;width:340px;height:86px;--bc:${c}"></div>
+      <div class="z d" style="left:${X[k] - 170}px;top:286px;width:340px;text-align:center;font-size:34px;color:${c}">${t}</div>
+      <div class="z cap" style="left:${X[k] - 170}px;top:326px;width:340px;text-align:center">${s}</div>
+      <div class="vl" style="left:${X[k]}px;top:356px;height:490px;background:#2C4B7E"></div>`);
+  });
+  const arrow = (x1, x2, y, c) => `<svg class="ov" width="1920" height="1080"><line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${c}" stroke-width="3"/><path d="M${x2} ${y} l${x2 > x1 ? -14 : 14} -8 v16 z" fill="${c}"/></svg>`;
+  const num = (x, y, n, c) => `<div class="z d" style="left:${x - 18}px;top:${y - 18}px;width:36px;height:36px;border-radius:50%;background:${c};color:#06101F;display:flex;align-items:center;justify-content:center;font-size:22px">${n}</div>`;
+  H('#seq', arrow(X.a, X.h, 410, '#FF6A1A') + num(X.a + 60, 410, 1, 'var(--o)') +
+    `<div class="z" style="left:${X.a + 90}px;top:374px;font:700 20px/1.2 var(--sans);color:var(--ice)">Fire input + aim direction</div>`);
+  H('#seq', `<div class="z" style="left:${X.h - 10}px;top:440px;width:20px;height:250px;background:var(--o)"></div>`);
+  [['2','Check cooldown; shrink A; spawn the glob'],['3','Physics step: the glob reaches B'],['4','B loses mass; push scaled by B’s new mass']].forEach(([n, t], i) => {
+    const y = 470 + i * 80;
+    H('#seq', num(X.h + 50, y, n, 'var(--ice)') + `<div class="z" style="left:${X.h + 80}px;top:${y - 13}px;width:480px;font:400 20px/1.3 var(--sans);color:var(--ice)">${t}</div>`);
+  });
+  H('#seq', arrow(X.h, X.a, 740, '#2EC0FF') + arrow(X.h, X.b, 740, '#2EC0FF') +
+    num(X.h - 60, 740, 5, 'var(--c)') + num(X.h + 60, 740, 5, 'var(--c)') +
+    `<div class="z" style="left:${X.a + 40}px;top:704px;width:520px;font:700 20px/1.2 var(--sans);color:var(--ice)">Snapshot: positions, sizes, scores</div>
+     <div class="z" style="left:${X.h + 100}px;top:704px;width:520px;font:700 20px/1.2 var(--sans);color:var(--ice)">Same snapshot to every client</div>`);
+  H('#seq', num(X.a, 810, 6, 'var(--ice)') + num(X.b, 810, 6, 'var(--ice)') +
+    `<div class="z" style="left:${X.a + 34}px;top:797px;width:560px;font:400 20px/1.3 var(--sans);color:var(--txt)">Clients interpolate between snapshots and draw.</div>`);
+})();
+
+/* ---------- 11 kpis ---------- */
+[['$43.6B','PC games revenue in 2025, up 12% year on year.','Newzoo [1]','c'],['$4.1B','Steam revenue of games with co-op in H1 2025, an all-time high (estimate).','Alinea [2]','g'],['70%','of US players aged 8+ play with other people.','ESA 2026 [3]','p'],['≈8%','of ~3,490 Steam “Party Game” titles list LAN PvP.','Steam, Oct 2026 [4]','o']].forEach(([n, d, s, c], i) => {
+  const x = 96 + (i % 2) * 492, y = 290 + Math.floor(i / 2) * 270;
+  H('#kpis', `<div class="pnl s" style="left:${x}px;top:${y}px;width:468px;height:250px;${c === 'o' ? '--bc:var(--o);--pf:#1A1626' : ''}"></div>
+    <div class="z d" style="left:${x + 32}px;top:${y + 30}px;font-size:96px;color:${COL[c]}">${n}</div>
+    <div class="z" style="left:${x + 32}px;top:${y + 136}px;width:404px;font:400 20px/1.35 var(--sans);color:var(--txt)">${d}</div>
+    <div class="z cap" style="left:${x + 32}px;top:${y + 208}px;color:var(--dim)">${s}</div>`);
+});
+[['Online PvP',1870,'var(--ice)'],['Shared / split-screen PvP',1017,'var(--ice)'],['LAN PvP',292,'var(--o)']].forEach(([t, v, c], i) => {
+  const y = 400 + i * 120, w = Math.round(v / 1870 * 680);
+  H('#tagbars', `<div class="z k" style="left:1100px;top:${y}px;color:${c}">${t}</div>
+    <div class="bar" style="left:1100px;top:${y + 30}px;width:556px;height:28px;--bf:${c}"><i style="width:${Math.round(v / 1870 * 556)}px"></i></div>
+    <div class="z d" style="left:1664px;top:${y + 22}px;width:120px;text-align:right;font-size:40px;color:${c}">${v.toLocaleString('en-US')}</div>`);
+});
+
+/* ---------- 12 comps ---------- */
+const comps = [
+  ['1260320_3.jpg','Audience','o','Party Animals','Recreate Games · 2023',[['Visual','Plush 3D animals, toy-like arenas.'],['Mechanic','Physics brawling: grab, punch, throw rivals out.'],['Multiplayer','Online and same-screen. No LAN listed.'],['Financials','Launch peak 104,174 players. Owner est. 2.5M–6.0M.']]],
+  ['285900_1.jpg','Physics','c','Gang Beasts','Boneloaf · 2017',[['Visual','Soft, gelatinous 3D people.'],['Mechanic','Ragdoll brawling into stage hazards.'],['Multiplayer','Same-screen and online. No LAN listed.'],['Financials','85% positive. Owner est. 4.6M–5.8M.']]],
+  ['1097150_2.jpg','Format','g','Fall Guys','Mediatonic / Epic · 2020',[['Visual','Candy-coloured beans, obstacle courses.'],['Mechanic','Short race and survival rounds in a playlist.'],['Multiplayer','Online, cross-platform only.'],['Financials','Free-to-play. Legacy Steam peak 172,213. Metacritic 80.']]],
+  ['880940_1.jpg','Format','g','Pummel Party','Rebuilt Games · 2018',[['Visual','Colourful low-poly 3D, slapstick items.'],['Mechanic','Board game with short competitive mini-games.'],['Multiplayer','4–8 online and local. No LAN listed.'],['Financials','$14.99. Peak 20,957. Owner est. 1.5M–7.6M.']]],
+  ['1858400_2.jpg','Mechanic','p','Squarena','Codeaclysm · 2022',[['Visual','Minimal flat 2D squares.'],['Mechanic','Arena shooter: low health shrinks you; small bodies feel more recoil.'],['Multiplayer','Up to 6 local. No LAN listed.'],['Financials','$4.99. Sales not disclosed.']]],
+];
+comps.forEach(([img, why, c, name, dev, rows], i) => {
+  const x = 96 + i * 350, w = 330;
+  H('#comps', `<div class="pnl s" style="left:${x}px;top:270px;width:${w}px;height:722px"></div>
+    <div class="shot" style="left:${x + 10}px;top:280px;width:${w - 20}px;height:174px;clip-path:var(--cps)"><img src="img/${img}"></div>
+    <div class="chip" style="left:${x + 10}px;top:280px;width:140px;height:30px;font-size:12px;background:${COL[c]};color:#06101F;clip-path:none">${why}</div>
+    <div class="z h" style="left:${x + 24}px;top:472px;font-size:26px">${name}</div>
+    <div class="z cap" style="left:${x + 24}px;top:508px;font-size:14px">${dev}</div>`);
+  rows.forEach(([k, v], j) => {
+    const y = 556 + j * 108;
+    H('#comps', `<div class="z k" style="left:${x + 24}px;top:${y}px;font-size:12px;color:${COL[c]}">${k}</div>
+      <div class="z" style="left:${x + 24}px;top:${y + 22}px;width:${w - 44}px;font:400 17px/1.36 var(--sans);color:var(--txt)">${v}</div>`);
+  });
+});
+
+/* ---------- 13 matrix ---------- */
+(() => {
+  const games = ['Party Animals','Gang Beasts','Fall Guys','Pummel Party','Squarena','Ice Rumble'];
+  const feats = [['3D characters',['Y','Y','Y','Y','N','Y']],['Ranged attacks',['P','N','N','P','Y','Y']],['Damage changes your body size',['N','N','N','N','Y','Y']],['Less mass, further knockback',['N','N','N','N','N','Y']],['Several mini-games, one result',['N','N','P','Y','N','Y']],['Official LAN play',['N','N','N','N','N','Y']],['Plays with no internet',['N','Y','N','Y','Y','Y']]];
+  const mx = 700, mw = 187, t0 = 270, rh = 82;
+  H('#matrix', `<div class="pnl hot" style="left:${mx + 5 * mw}px;top:${t0 - 6}px;width:${mw}px;height:${70 + feats.length * rh + 20}px"></div>`);
+  games.forEach((g, j) => H('#matrix', `<div class="z k" style="left:${mx + j * mw}px;top:${t0 + 22}px;width:${mw}px;text-align:center;font-size:13px;color:${j === 5 ? 'var(--o)' : 'var(--mut)'}">${g}</div>`));
+  feats.forEach(([f, vs], i) => {
+    const y = t0 + 70 + i * rh;
+    H('#matrix', `<div class="hl" style="left:96px;top:${y}px;width:${mx + 5 * mw - 96}px"></div>
+      <div class="z" style="left:96px;top:${y + 26}px;width:580px;font:700 23px/1.2 var(--sans);color:${i === 3 || i === 5 ? 'var(--ice)' : 'var(--txt)'}">${f}</div>`);
+    vs.forEach((v, j) => {
+      const cx = mx + j * mw + mw / 2, cy = y + 41, ours = j === 5;
+      const fill = ours ? '#FF6A1A' : v === 'Y' ? '#EEF5FF' : 'none';
+      const svg = v === 'P'
+        ? `<circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="#EEF5FF" stroke-width="2.5"/><path d="M${cx} ${cy - 14} a14 14 0 0 0 0 28 z" fill="#EEF5FF"/>`
+        : `<circle cx="${cx}" cy="${cy}" r="14" fill="${fill}" stroke="${v === 'N' ? '#2C4B7E' : fill}" stroke-width="2.5"/>`;
+      H('#matrix', `<svg class="ov" width="1920" height="1080">${svg}</svg>`);
+    });
+  });
+  const ly = t0 + 70 + feats.length * rh + 30;
+  H('#matrix', `<svg class="ov" width="1920" height="1080"><circle cx="110" cy="${ly + 12}" r="11" fill="#EEF5FF"/><circle cx="250" cy="${ly + 12}" r="11" fill="none" stroke="#EEF5FF" stroke-width="2.5"/><path d="M250 ${ly + 1} a11 11 0 0 0 0 22 z" fill="#EEF5FF"/><circle cx="400" cy="${ly + 12}" r="11" fill="none" stroke="#2C4B7E" stroke-width="2.5"/><circle cx="520" cy="${ly + 12}" r="11" fill="#FF6A1A"/></svg>
+    <div class="z cap" style="left:130px;top:${ly + 2}px">Yes</div><div class="z cap" style="left:270px;top:${ly + 2}px">Partly</div><div class="z cap" style="left:420px;top:${ly + 2}px">No</div><div class="z cap" style="left:540px;top:${ly + 2}px">Planned (Ice Rumble)</div>`);
+})();
+
+/* ---------- 14 loop ---------- */
+(() => {
+  const cx = 1370, cy = 640, R = 300;
+  H('#loop', `<svg class="ov" style="z-index:0" width="1920" height="1080"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#2C4B7E" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>
+    <path d="M${cx} ${cy + R} A ${R} ${R} 0 0 1 ${cx - R} ${cy}" fill="none" stroke="#FF6A1A" stroke-width="6"/>
+    <circle cx="${cx}" cy="${cy}" r="104" fill="#0B1830" stroke="#2C4B7E" stroke-width="2"/></svg>
+    <div class="z d" style="left:${cx - 110}px;top:${cy - 34}px;width:220px;text-align:center;font-size:64px;color:var(--ice)">Mass</div>
+    <div class="z k" style="left:${cx - 110}px;top:${cy + 36}px;width:220px;text-align:center">one value</div>`);
+  [['01','Spend','Shooting spits out part of your own body.',0],['02','Drain','Every hit you take removes body mass.',90],['03','One value','That mass is your size, ammunition and health.',180],['04','Launch','Less mass: the same incoming hit sends you further.',270]].forEach(([n, t, d, a], i) => {
+    const r = a * Math.PI / 180, px = cx + R * Math.sin(r), py = cy - R * Math.cos(r), hot = i === 3;
+    const w = 300, h = 140, x = px - w / 2, y = py - h / 2;
+    H('#loop', `<div class="pnl s ${hot ? 'hot' : ''}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;${hot ? '' : '--pf:#0E1D38'}"></div>
+      <div class="z d" style="left:${x + 22}px;top:${y + 20}px;font-size:40px;color:${hot ? 'var(--o)' : 'var(--ice)'}">${n} ${t}</div>
+      <div class="z" style="left:${x + 22}px;top:${y + 68}px;width:${w - 44}px;font:400 18px/1.35 var(--sans);color:var(--txt)">${d}</div>`);
+  });
+  H('#loop', `<div class="chip" style="left:${cx - R - 150}px;top:${cy + 84}px;width:290px;height:36px;background:var(--o);color:#06101F;clip-path:none">Not found elsewhere</div>`);
+})();
+
+/* ---------- 15 prior art ---------- */
+(() => {
+  const rows = [['01','Spend your body','Osmos ejects its own matter to move, not to attack. Agar.io ejects mass.','Different use','dim'],
+    ['02','Hits shrink you','Squarena (2D): lower health, smaller body. Morphies Law: hits move mass between robots.','Precedent','c'],
+    ['03','Attack costs health','Crisol: Theater of Idols: your blood is your ammunition. Not physical mass.','Precedent','c'],
+    ['04','Lighter, launched further','Smash Bros. raises knockback with a damage % counter, not mass. In Squarena, smaller bodies feel more of their own recoil.','Not found','o'],
+    ['01–04','All four in one 3D party game','—','Not found','o']];
+  H('#prior', `<div class="z k" style="left:136px;top:282px">Link</div><div class="z k" style="left:620px;top:282px">Closest prior art</div><div class="z k" style="left:1560px;top:282px">Status</div>`);
+  rows.forEach(([n, t, p, s, c], i) => {
+    const y = 316 + i * 122, hot = c === 'o';
+    H('#prior', `<div class="pnl s ${hot ? 'hot' : ''}" style="left:96px;top:${y}px;width:1728px;height:106px;${hot ? '' : '--pf:#0C1A33'}"></div>
+      <div class="z d" style="left:136px;top:${y + 30}px;font-size:44px;color:${hot ? 'var(--o)' : 'var(--mut)'}">${n}</div>
+      <div class="z" style="left:${n.length > 2 ? 316 : 230}px;top:${y + 36}px;width:340px;font:700 23px/1.25 var(--sans);color:var(--ice)">${t}</div>
+      <div class="z" style="left:620px;top:${y + 24}px;width:880px;font:400 20px/1.4 var(--sans);color:${p === '—' ? 'var(--dim)' : 'var(--txt)'}">${p === '—' ? 'No shipped game found.' : p}</div>
+      <div class="chip" style="left:1560px;top:${y + 34}px;width:224px;height:38px;clip-path:none;${c === 'o' ? 'background:var(--o);color:#06101F' : c === 'c' ? 'box-shadow:inset 0 0 0 2px var(--c);color:var(--c)' : 'box-shadow:inset 0 0 0 2px #2C4B7E;color:var(--mut)'}">${s}</div>`);
+  });
+})();
+
+/* ---------- 16 waffle + LAN points ---------- */
+(() => {
+  for (let i = 0; i < 100; i++) {
+    const r = Math.floor(i / 10), c = i % 10, x = 136 + c * 52, y = 384 + r * 52;
+    H('#waffle', `<div class="z" style="left:${x}px;top:${y}px;width:44px;height:44px;${i < 8 ? 'background:var(--o)' : 'background:#132A52'}"></div>`);
+  }
+  [['None of our five comparables','advertises official LAN play in its Steam features [7].','var(--ice)'],
+   ['Party Animals needs internet','even on one shared screen [8].','var(--ice)'],
+   ['Ice Rumble runs on the room’s network','One PC hosts; the others join by local IP. No accounts, no servers, no internet.','var(--c)'],
+   ['Stated plainly','LAN is our differentiator, not a demand driver.','var(--mut)']].forEach(([t, d, c], i) => {
+    const y = 300 + i * 172;
+    H('#lanpts', `<div class="z d" style="left:956px;top:${y}px;font-size:48px;color:${c === 'var(--mut)' ? 'var(--dim)' : 'var(--o)'}">0${i + 1}</div>
+      <div class="z" style="left:1040px;top:${y + 2}px;width:780px;font:700 27px/1.25 var(--sans);color:${c}">${t}</div>
+      <div class="z" style="left:1040px;top:${y + 42}px;width:780px;font:400 21px/1.4 var(--sans);color:var(--txt)">${d}</div>
+      ${i < 3 ? `<div class="hl" style="left:956px;top:${y + 140}px;width:868px"></div>` : ''}`);
+  });
+})();
+
+/* ---------- 17 builds ---------- */
+[['Heavy','p',5,2,'More starting mass: more shots to spend, harder to push. Moves slower.'],['Balanced','o',3,3,'The reference build every other one is tuned against.'],['Light','g',2,5,'Less starting mass: fewer shots, flies further when hit. Moves faster.']].forEach(([t, c, m, s, d], i) => {
+  const x = 1076, y = 290 + i * 206;
+  H('#builds', `<div class="pnl s" style="left:${x}px;top:${y}px;width:748px;height:186px"></div>
+    <div class="z d" style="left:${x + 28}px;top:${y + 26}px;font-size:48px;color:${COL[c]}">${t}</div>
+    <div class="z" style="left:${x + 28}px;top:${y + 84}px;width:370px;font:400 19px/1.38 var(--sans);color:var(--txt)">${d}</div>
+    <div class="z k" style="left:${x + 440}px;top:${y + 44}px">Mass · ammo</div>
+    <div class="z k" style="left:${x + 440}px;top:${y + 112}px">Speed</div>`);
+  [[m, 70], [s, 138]].forEach(([v, oy]) => {
+    for (let k = 0; k < 5; k++) H('#builds', `<div class="z" style="left:${x + 440 + k * 54}px;top:${y + oy}px;width:46px;height:14px;transform:skewX(-24deg);background:${k < v ? COL[c] : '#1D3358'}"></div>`);
+  });
+});
+
+/* ---------- 18 prototype ---------- */
+['blk1.png','blk2.png','blk3.png','blk4.png'].forEach((f, i) => {
+  const x = 96 + i * 438;
+  H('#strip', `<div class="shot" style="left:${x}px;top:280px;width:414px;height:237px;clip-path:var(--cps)"><img src="img/${f}"></div>
+    <div class="chip" style="left:${x}px;top:280px;width:96px;height:34px;background:#06101F;color:var(--g);clip-path:none">t${i}</div>`);
+});
+H('#strip', `<svg class="ov" width="1920" height="1080"><line x1="96" y1="560" x2="1824" y2="560" stroke="#2C4B7E" stroke-width="2"/>${[0,1,2,3].map(i => `<circle cx="${96 + i * 438 + 207}" cy="560" r="9" fill="${i ? '#6CD63A' : '#EEF5FF'}"/>`).join('')}<path d="M1824 560 l-14 -8 v16 z" fill="#2C4B7E"/></svg>
+  ${['Before','Shot 1','Shot 2','Shot 3'].map((t, i) => `<div class="z k" style="left:${96 + i * 438}px;top:582px;width:414px;text-align:center;color:${i ? 'var(--g)' : 'var(--ice)'}">${t}</div>`).join('')}`);
+[['What it is','g','A deterministic physics simulation of the Mass Knockout rule, written in Three.js and rendered frame by frame.'],
+ ['What it checked','o','Over three shots the target shrinks and is pushed further each time. The escalating knockback reads clearly on screen.'],
+ ['What it is not','c','Not Unity, not networked, and not tuned. It tests whether the rule reads, not the final numbers.']].forEach(([t, c, d], i) => {
+  const x = 96 + i * 584;
+  H('#proto', `<div class="pnl" style="left:${x}px;top:660px;width:560px;height:250px"></div>
+    <div class="z tag" style="left:${x + 36}px;top:696px;color:${COL[c]}">${t}</div>
+    <div class="z" style="left:${x + 36}px;top:736px;width:488px;font:400 22px/1.45 var(--sans);color:var(--ice)">${d}</div>`);
+});
+
+/* ---------- 19 art drafts ---------- */
+[['draft_direction_A_vinyl.png','A','Vinyl toy'],['draft_direction_B_blocks.png','B','Building blocks'],['draft_direction_C_tin.png','C','Tin toy'],['character_sheet_jelly.png','D','Jelly']].forEach(([f, l, t], i) => {
+  const x = 96 + (i % 2) * 652, y = 280 + Math.floor(i / 2) * 362;
+  H('#art', `<div class="shot" style="left:${x}px;top:${y}px;width:628px;height:300px;clip-path:var(--cps)"><img src="img/${f}"></div>
+    <div class="z d" style="left:${x}px;top:${y + 312}px;font-size:30px;color:var(--o)">${l}</div>
+    <div class="z k" style="left:${x + 32}px;top:${y + 318}px;color:var(--ice)">${t}</div>`);
+});
+[['Orange','#FF6A1A'],['Cyan','#2EC0FF'],['Lime','#6CD63A'],['Purple','#A56BFF']].forEach(([n, h], i) => {
+  const x = 1416 + i * 96;
+  H('#sw', `<div class="z" style="left:${x}px;top:700px;width:80px;height:80px;border-radius:18px;background:${h}"></div>
+    <div class="z cap" style="left:${x}px;top:792px;width:80px;font-size:13px">${n}</div>
+    <div class="z cap" style="left:${x}px;top:812px;width:80px;font-size:12px;color:var(--dim)">${h}</div>`);
+});
+
+/* ---------- 20 logos ---------- */
+(() => {
+  const cube = (x, y, s, c) => `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="${s * .2}" fill="${c}"/><rect x="${x + s * .28}" y="${y + s * .36}" width="${s * .1}" height="${s * .2}" rx="${s * .05}" fill="#06101F"/><rect x="${x + s * .62}" y="${y + s * .36}" width="${s * .1}" height="${s * .2}" rx="${s * .05}" fill="#06101F"/>`;
+  const W = 560, Y = 280, Hh = 500;
+  const logos = [
+    ['#0B1830', `<g transform="translate(280 250) skewX(-10)"><text x="0" y="0" text-anchor="middle" font-family="Impact" font-size="104" textLength="450" lengthAdjust="spacingAndGlyphs"><tspan fill="#2EC0FF">ICE </tspan><tspan fill="#EEF5FF">RUMBLE</tspan></text></g>
+      <rect x="150" y="282" width="300" height="9" fill="#FF6A1A" transform="skewX(-24)"/><circle cx="342" cy="287" r="11" fill="#FF6A1A"/><circle cx="368" cy="287" r="7" fill="#FF6A1A" opacity=".7"/><circle cx="388" cy="287" r="4" fill="#FF6A1A" opacity=".45"/>`, 'A · Wordmark', 'Title screen, deck cover, video end card.'],
+    ['#EAF4FF', `${cube(215, 70, 130, '#FF6A1A')}<circle cx="370" cy="118" r="10" fill="#FF6A1A"/><circle cx="392" cy="110" r="6" fill="#FF6A1A" opacity=".6"/>
+      <text x="280" y="300" text-anchor="middle" font-family="Impact" font-size="76" fill="#0A1F44">ICE</text>
+      <text x="280" y="378" text-anchor="middle" font-family="Impact" font-size="76" fill="#0A1F44">RUMBLE</text>`, 'B · Stacked', 'Square formats: store capsule, lobby screen.'],
+    ['#FF6A1A', `<rect x="160" y="85" width="240" height="240" rx="56" fill="#0A1F44"/>${cube(210, 125, 110, '#2EC0FF')}<rect x="215" y="262" width="130" height="10" rx="5" fill="#EEF5FF" opacity=".9"/>
+      <text x="280" y="400" text-anchor="middle" font-family="Courier New" font-weight="700" font-size="22" fill="#0A1F44" letter-spacing="4">ICE RUMBLE</text>`, 'C · Icon', 'Taskbar, build icon, favicon.']];
+  logos.forEach(([bg, art, t, d], i) => {
+    const x = 96 + i * 584;
+    H('#logos', `<div class="shot" style="left:${x}px;top:${Y}px;width:${W}px;height:${Hh}px;background:${bg}"><svg width="${W}" height="${Hh}" viewBox="0 -15 560 500">${art}</svg></div>
+      <div class="z tag" style="left:${x}px;top:${Y + Hh + 30}px;color:var(--ice)">Draft ${t}</div>
+      <div class="z" style="left:${x}px;top:${Y + Hh + 64}px;width:${W}px;font:400 21px/1.4 var(--sans);color:var(--txt)">${d}</div>`);
+  });
+})();
+
+/* ---------- 21 levels ---------- */
+(() => {
+  // Mass Knockout arena
+  H('#levels', `<div class="pnl" style="left:96px;top:280px;width:844px;height:690px"></div>
+    <div class="z tag" style="left:136px;top:312px">Mass Knockout · arena draft</div>
+    <svg class="ov" width="1920" height="1080">
+      <defs><pattern id="hatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="14" stroke="#2EC0FF" stroke-width="2" opacity=".18"/></pattern></defs>
+      <rect x="196" y="380" width="520" height="520" fill="url(#hatch)" stroke="none"/>
+      <rect x="236" y="420" width="440" height="440" fill="#CFE6FF" opacity=".12" stroke="#EEF5FF" stroke-width="3"/>
+      <rect x="236" y="420" width="440" height="440" fill="none" stroke="#FF6A1A" stroke-width="5" stroke-dasharray="18 12"/>
+      <line x1="456" y1="420" x2="456" y2="860" stroke="#2C4B7E" stroke-width="1.5" stroke-dasharray="4 8"/>
+      <line x1="236" y1="640" x2="676" y2="640" stroke="#2C4B7E" stroke-width="1.5" stroke-dasharray="4 8"/>
+      ${[[296,480,'#FF6A1A'],[616,480,'#2EC0FF'],[296,800,'#6CD63A'],[616,800,'#A56BFF']].map(([x,y,c]) => `<rect x="${x - 18}" y="${y - 18}" width="36" height="36" rx="8" fill="${c}"/><circle cx="${x}" cy="${y}" r="30" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="3 5"/>`).join('')}
+      <path d="M456 640 l-10 0 M456 640 l0 -10" stroke="#EEF5FF"/>
+    </svg>
+    <div class="z k" style="left:236px;top:880px;width:440px;text-align:center;color:var(--o)">Open edge = knockout line</div>
+    <div class="z cap" style="left:712px;top:420px;width:200px">Fall zone. No walls, no cover.</div>
+    <div class="z cap" style="left:712px;top:760px;width:200px">Spawn near corners (draft).</div>
+    <div class="z cap" style="left:712px;top:600px;width:200px">One flat square platform.</div>`);
+  // Ice Race track
+  H('#levels', `<div class="pnl" style="left:980px;top:280px;width:844px;height:690px"></div>
+    <div class="z tag" style="left:1020px;top:312px;color:var(--c)">Ice Race · track draft</div>
+    <svg class="ov" width="1920" height="1080">
+      <path id="trk" d="M1120 820 L1120 520 C1120 420 1180 390 1260 390 L1420 390 C1500 390 1520 450 1480 510 L1420 600 C1380 660 1420 700 1500 700 L1600 700 C1680 700 1700 760 1700 800 C1700 860 1660 880 1600 880 L1180 880 C1140 880 1120 860 1120 820 Z" fill="none" stroke="#CFE6FF" stroke-opacity=".14" stroke-width="64" stroke-linejoin="round"/>
+      <path d="M1120 820 L1120 520 C1120 420 1180 390 1260 390 L1420 390 C1500 390 1520 450 1480 510 L1420 600 C1380 660 1420 700 1500 700 L1600 700 C1680 700 1700 760 1700 800 C1700 860 1660 880 1600 880 L1180 880 C1140 880 1120 860 1120 820 Z" fill="none" stroke="#EEF5FF" stroke-width="2" stroke-dasharray="10 10"/>
+      <rect x="1086" y="676" width="68" height="10" fill="#EEF5FF"/><rect x="1086" y="676" width="17" height="10" fill="#06101F"/><rect x="1120" y="676" width="17" height="10" fill="#06101F"/>
+      ${[[1340,390,'CP1'],[1450,560,'CP2'],[1700,800,'CP3']].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="14" fill="#2EC0FF"/>`).join('')}
+      ${[[1490,450],[1430,640],[1140,860]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="38" fill="none" stroke="#FFD23F" stroke-width="2" stroke-dasharray="5 6"/>`).join('')}
+      <path d="M1120 610 l-10 18 h20 z" fill="#EEF5FF"/>
+    </svg>
+    <div class="z k" style="left:1170px;top:672px;color:var(--ice)">Start / finish</div>
+    <div class="z k" style="left:1318px;top:338px;color:var(--c)">CP1</div>
+    <div class="z k" style="left:1360px;top:540px;color:var(--c)">CP2</div>
+    <div class="z k" style="left:1724px;top:788px;color:var(--c)">CP3</div>
+    <div class="z cap" style="left:1540px;top:420px;width:250px"><b style="color:var(--y)">◌</b> Low-grip corner: set up early or slide off.</div>
+    <div class="z cap" style="left:1540px;top:560px;width:250px">Open edges. A fall respawns you at the last checkpoint.</div>`);
+})();
+
+/* ---------- 22 gantt ---------- */
+(() => {
+  const phases = [['Core','Character, camera, movement, fall detection',0,1,'var(--ice)'],['LAN','Host / join, host authority, sync',0.5,1.5,'#4F7BD9'],['Ice Race','Ice movement, track, checkpoints, finish',1.5,2.5,'var(--c)'],['Mass Knockout','Mass state, spit, hits, knockback, respawn',2,3,'var(--o)'],['Session','Lobby, rotation, scoreboard, catch-up scoring',2.5,3.5,'var(--p)'],['Tune & polish','Playtests; trails, hit flash, UI',3,4,'var(--g)']];
+  const GX = 860, GW = 920, gy = 380, grh = 86;
+  ['M1','M2','M3','M4'].forEach((m, i) => {
+    const x = GX + i * GW / 4;
+    H('#gantt', `<div class="z" style="left:${x}px;top:${gy - 30}px;width:0;height:${phases.length * grh + 30}px;border-left:2px dashed #1D3358"></div>
+      <div class="z d" style="left:${x + 14}px;top:${gy - 76}px;font-size:34px;color:var(--ice)">${m}</div>
+      <div class="z cap" style="left:${x + 64}px;top:${gy - 66}px;color:var(--dim)">date TBD</div>`);
+  });
+  phases.forEach(([k, v, a, b, c], i) => {
+    const y = gy + i * grh;
+    H('#gantt', `<div class="z" style="left:136px;top:${y + 16}px;width:220px;font:700 23px/1.2 var(--sans);color:var(--ice)">${k.replace('&', '&amp;')}</div>
+      <div class="z" style="left:360px;top:${y + 18}px;width:470px;font:400 19px/1.3 var(--sans);color:var(--txt)">${v}</div>
+      <div class="z" style="left:${GX + a * GW / 4 + 8}px;top:${y + 14}px;width:${(b - a) * GW / 4 - 16}px;height:34px;background:${c};transform:skewX(-20deg)"></div>`);
+  });
+  H('#gantt', `<div class="z k" style="left:136px;top:${gy + phases.length * grh + 26}px;color:var(--o)">Order is fixed · dates and owners: TBD</div>`);
+})();
+
+/* ---------- 23 risks ---------- */
+[['Networked physics','c','Clients disagree on a knockback.','Host-authoritative simulation; clients only render and interpolate. Own movement predicted locally.'],
+ ['Balance','o','Stalling, or a leader snowballing.','Score knockouts, not survival; respawn at full mass; round timer; catch-up scoring. Fallback: shrinking arena or re-absorbing globs.'],
+ ['Scope','p','Too many mini-games for one term.','Exactly two in the MVP. More only once both are fun, each as rules plus one arena.']].forEach(([t, c, w, m], i) => {
+  const y = 280 + i * 236;
+  H('#risks', `<div class="pnl" style="left:96px;top:${y}px;width:1728px;height:212px"></div>
+    <div class="z d" style="left:136px;top:${y + 40}px;font-size:28px;color:var(--mut)">Risk 0${i + 1}</div>
+    <div class="z d" style="left:136px;top:${y + 76}px;width:440px;font-size:56px;color:${COL[c]}">${t}</div>
+    <div class="z k" style="left:620px;top:${y + 44}px">What goes wrong</div>
+    <div class="z" style="left:620px;top:${y + 74}px;width:420px;font:700 24px/1.35 var(--sans);color:var(--ice)">${w}</div>
+    <div class="vl" style="left:1090px;top:${y + 40}px;height:132px"></div>
+    <div class="z k" style="left:1130px;top:${y + 44}px;color:${COL[c]}">How the design contains it</div>
+    <div class="z" style="left:1130px;top:${y + 74}px;width:654px;font:400 21px/1.42 var(--sans);color:var(--txt)">${m}</div>`);
+});
+
+/* ---------- 24 takeaways ---------- */
+[['1st','2–4 players, one LAN, no internet.','var(--o)'],['2nd','Two mini-games on one shared Unity core.','var(--c)'],['3rd','Every shot costs the shooter mass, so aim matters more than volume.','var(--g)']].forEach(([p, t, c], i) => {
+  const y = 340 + i * 120;
+  H('#takeaways', `<div class="pnl s glass" style="left:96px;top:${y}px;width:860px;height:100px;--bc:#22385E"></div>
+    <div class="z d" style="left:126px;top:${y + 26}px;font-size:48px;color:${c}">${p}</div>
+    <div class="z" style="left:240px;top:${y + 20}px;width:690px;font:400 25px/1.35 var(--sans);color:var(--ice);height:60px;display:flex;align-items:center">${t}</div>`);
+});
+
+/* ---------- 25 sources ---------- */
+['[1] Newzoo final 2025 figures, via GameDev Reports, 2026-06-26. gamedevreports.substack.com/p/newzoo-gaming-market-surpassed-200',
+ '[2] Alinea Analytics, games with co-op on Steam, H1 2025 (proprietary estimates). alineaanalytics.substack.com/p/games-with-co-op-generated-over-4',
+ '[3] ESA Essential Facts 2026 (survey Feb 2026, n=13,545). theesa.com',
+ '[4] Steam store search, tag “Party Game” × LAN PvP / Online PvP / Shared-Split-screen PvP, 2026-10-17. Tags are user-applied.',
+ '[5] Game Developers, 2025 Steam revenue distribution (Gamalytic estimates), 2026-08-21. game-developers.org/2025-steam-game-revenue-distribution',
+ '[6] PC Gamer, Valve at GDC 2026: 5,863 games over $100K on Steam in 2025. pcgamer.com',
+ '[7] Steam store pages and SteamDB charts, apps 1260320, 285900, 1097150, 880940, 1858400: prices, peaks, reviews, owner estimates. 2026-10-17.',
+ '[8] GameRevolution / Prima Games: Party Animals requires an internet connection, including split-screen.',
+ '[9] Osmos official site, osmos-game.com.   [10] Squarena on Steam (app 1858400); codeaclysmgames.com/squarena-details.',
+ '[11] Morphies Law official site, morphieslaw.com/game.   [12] Crisol: Theater of Idols, Blumhouse Games and Steam (app 1790930).',
+ 'Images: all game visuals are AI concept renders (GPT Image via Higgsfield; MiniMax H3) from our own reference art, except competitor screenshots (official Steam media). Logo and level drafts made for this proposal.'
+].forEach((t, i) => H('#src', `<div class="z" style="left:96px;top:${260 + i * 62}px;width:1728px;font:400 19px/1.4 var(--sans);color:${i === 10 ? 'var(--mut)' : 'var(--txt)'}">${t}</div>`));
+
+window.READY = true;
+</script>
+</body></html>

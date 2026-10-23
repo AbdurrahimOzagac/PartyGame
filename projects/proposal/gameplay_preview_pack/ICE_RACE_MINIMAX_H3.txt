@@ -1,0 +1,26 @@
+GAMEPLAY PREVIEW — ICE RACE
+INPUT: 01_ICE_RACE_reference.png as the ONLY image reference.
+FORMAT: 1344x768, 24 fps, one uninterrupted 7-second gameplay shot.
+
+Make a believable gameplay capture from a SMALL 3D multiplayer party game, NOT a cinematic advertisement. Reproduce the provided reference frame as the opening frame: same minimal blue void, same single continuous pale ice track and exposed drop-offs, same camera, same four rounded cube characters (Orange, Cyan, Green, Purple), same checkpoint and HUD. No guns, no projectiles. Keep the track geometry perfectly unchanged.
+
+GAME RULE: characters accelerate and conserve momentum on ice. Steering applies sideways acceleration, not instantaneous changes in travel direction. A cube can face toward the corner while still sliding along its previous velocity. Each character remains on the track for the full duration of this shot. The goal in this preview is a skillful cornering overtake, NOT a random fall.
+
+[0.0–1.0s — RACING ALREADY IN PROGRESS]
+Exactly four characters are already racing FORWARD along the visible route in the same direction. Orange is the closest character in the foreground, following Cyan. Green and Purple are farther ahead toward the checkpoint. Orange and Cyan have subtle narrow motion trails directly behind their feet. The high trailing gameplay camera follows Orange smoothly at an almost fixed distance and height. The ice track slides backward relative to the camera, creating a clear feeling of speed.
+
+[1.0–2.4s — SETTING UP THE PASS]
+Orange gains on Cyan along the straight leading into the broad right-hand bend. Cyan remains in front but enters the bend on a wider outside line. Orange moves gradually toward the inside line, to the right side of Cyan. No sudden sideways jumps. Their world positions advance continuously along the track; the background flags and arrow markings move past at a constant believable rate.
+
+[2.4–4.3s — VISIBLE ICE DRIFT]
+At the corner, Orange steers into the turn. Its cube body yaws toward the new direction, but its velocity continues forward for a moment, making one smooth sideways drift arc. A pair of thin curved skid streaks follows behind Orange on the ice. Cyan also drifts but goes slightly wider while staying safely on the platform. The two racers remain upright and grounded. The camera tracks their forward progression, not a cinematic orbit.
+
+[4.3–5.7s — OVERTAKE]
+Orange carries more speed through the inside of the corner and passes Cyan by approximately one character length. This pass is gradual and visually continuous: first Orange is behind, then side by side, then clearly ahead. Cyan does not teleport, spin, stop, or reverse. Green and Purple continue further ahead on their existing route, making only subtle forward progress.
+
+[5.7–7.0s — CLEAN EXIT]
+Orange straightens out and accelerates toward the next arrow markings. Cyan follows on the same course one length behind. The checkpoint arch remains fixed in world space and becomes slightly closer through forward movement, never moving toward the characters by itself. The clip ends while the race is still underway, with all four competitors still on the ice.
+
+PHYSICAL CONTINUITY RULES: keep exactly four cube racers with unchanged colors and silhouettes; keep the track and exposed edges fixed; maintain ordering until the single described overtake; no random falling, no respawns, no extra obstacles, no drifting backward, no collision explosions, no body-mass throws, no camera cuts, no flying, no slow-motion, no changes to the game UI. Favor continuous positional motion and believable inertia over decorative effects. Only Orange and Cyan perform significant maneuvers; Green and Purple remain predictable racers following the visible course.
+
+Camera: 35–45 degree elevated third-person follow, stable framing, gentle forward follow and small lateral lag, no zooming and no orbit. Art: inexpensive low-poly Unity-style geometry, four simple cubes, vivid blue void, pale ice track, soft shadows. Visual effects limited to fine trailing skid lines and small contact puffs.
