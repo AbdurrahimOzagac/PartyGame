@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_Ice
+  m_Shader: {fileID: 4800000, guid: 64cf5dd89c307497493cfe05d892fcd7, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 4eca78adb7f92470e9bf30c0e71a0cd6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MaskMap:
+        m_Texture: {fileID: 2800000, guid: fb769cffe74e04a999132d586d6c699d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AmbientStrength: 0.15
+    - _DepthOffset: 0.03
+    - _DepthStrength: 0.16
+    - _RimPower: 4
+    - _RimStrength: 0.14
+    - _SeamWidth: 0.035
+    - _Smoothness: 0.65
+    - _SparkleIntensity: 3
+    - _SparkleScale: 6
+    - _SparkleThreshold: 0.85
+    - _SpecStrength: 0.5
+    - _TileSize: 4
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _DeepColor: {r: 0.07058824, g: 0.24313726, b: 0.5254902, a: 1}
+    - _FrostColor: {r: 0.91800004, g: 0.94899994, b: 0.97999996, a: 1}
+    - _RimColor: {r: 0.85, g: 0.93, b: 1, a: 1}
+    - _SeamColor: {r: 0.561, g: 0.69, b: 0.831, a: 1}
+    - _ShadowColor: {r: 0.51399994, g: 0.741, b: 0.95699996, a: 1}
+    - _SideColor: {r: 0.23137255, g: 0.54901963, b: 0.7607843, a: 1}
+    - _TopColor: {r: 0.57254905, g: 0.74509805, b: 0.9098039, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

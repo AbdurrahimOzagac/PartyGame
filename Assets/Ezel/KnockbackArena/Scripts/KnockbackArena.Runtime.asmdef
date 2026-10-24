@@ -1,0 +1,10 @@
+{
+    "name": "KnockbackArena.Runtime",
+    "rootNamespace": "KnockbackArena",
+    "references": [
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "autoReferenced": true
+}

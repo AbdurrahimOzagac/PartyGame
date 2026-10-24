@@ -1,0 +1,149 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 702535f981dc441f4a56dfd8fb49976d, type: 3}
+  m_Name: SFX_Bank
+  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.SfxBank
+  entries:
+  - id: Spit
+    clips:
+    - {fileID: 8300000, guid: 96b0726785e9b446790806e7b5d4bf91, type: 3}
+    - {fileID: 8300000, guid: f045dd5b2261b42b3b957c84e710910f, type: 3}
+    - {fileID: 8300000, guid: f08693cdb338c480f8f7d1546ecff179, type: 3}
+    volume: 0.9
+    pitchJitter: 0.04
+    spatial: 0.6
+  - id: Hit
+    clips:
+    - {fileID: 8300000, guid: ab7afa95805a8402a95a9be46e87c347, type: 3}
+    - {fileID: 8300000, guid: 6122eabf0fe0448369122245a241da01, type: 3}
+    - {fileID: 8300000, guid: 19828170618cc40d3841cac482f0bd96, type: 3}
+    volume: 1
+    pitchJitter: 0.04
+    spatial: 0.6
+  - id: Splat
+    clips:
+    - {fileID: 8300000, guid: d738a22faafcd42a0af74ae6e9051a7e, type: 3}
+    - {fileID: 8300000, guid: 8730deb3032a942a6ae8a7ef1baa6619, type: 3}
+    volume: 0.8
+    pitchJitter: 0.04
+    spatial: 0.7
+  - id: BlobPop
+    clips:
+    - {fileID: 8300000, guid: 407c15c4037ff4201bc7ffa13476f948, type: 3}
+    volume: 0.8
+    pitchJitter: 0.04
+    spatial: 0.7
+  - id: Whoosh
+    clips:
+    - {fileID: 8300000, guid: 1d60f1fa8332c435693bab62009690ff, type: 3}
+    volume: 0.8
+    pitchJitter: 0.04
+    spatial: 0.6
+  - id: Wheee
+    clips:
+    - {fileID: 8300000, guid: 725ad481f9d4d4cb4a65d96a76275078, type: 3}
+    volume: 1
+    pitchJitter: 0.04
+    spatial: 0.5
+  - id: Splash
+    clips:
+    - {fileID: 8300000, guid: 27a31dc91def74ce49f105d08b98f093, type: 3}
+    volume: 1
+    pitchJitter: 0.04
+    spatial: 0.4
+  - id: Land
+    clips:
+    - {fileID: 8300000, guid: 2335bc4123b6947e694f7e9252f0e6a0, type: 3}
+    volume: 0.9
+    pitchJitter: 0.04
+    spatial: 0.6
+  - id: Step
+    clips:
+    - {fileID: 8300000, guid: 3182163efffa040f78aa55c74ae63a92, type: 3}
+    - {fileID: 8300000, guid: 6d8ff816c04424806b2d1fb4ed4a88fd, type: 3}
+    - {fileID: 8300000, guid: cc77b0afda8104cb5ae67d0e6cc793a3, type: 3}
+    - {fileID: 8300000, guid: 1757c5b2e65654d7088307c314727d92, type: 3}
+    volume: 0.8
+    pitchJitter: 0.04
+    spatial: 0.7
+  - id: Jump
+    clips:
+    - {fileID: 8300000, guid: 5555deed4761241439b9b7c506018745, type: 3}
+    volume: 0.9
+    pitchJitter: 0.04
+    spatial: 0.5
+  - id: Pickup
+    clips:
+    - {fileID: 8300000, guid: cab291687f79b485ab0c6e8ecf849c9e, type: 3}
+    volume: 1
+    pitchJitter: 0.04
+    spatial: 0.4
+  - id: Beep
+    clips:
+    - {fileID: 8300000, guid: 7fc7abde8a1924f13a0c22a3066ef968, type: 3}
+    volume: 1
+    pitchJitter: 0
+    spatial: 0
+  - id: Go
+    clips:
+    - {fileID: 8300000, guid: 2b1f409f46def42d1b24d11d5437262c, type: 3}
+    volume: 1
+    pitchJitter: 0
+    spatial: 0
+  - id: KO
+    clips:
+    - {fileID: 8300000, guid: cc0e0563267464834a1288996a1e3d51, type: 3}
+    volume: 0.9
+    pitchJitter: 0
+    spatial: 0
+  - id: Fanfare
+    clips:
+    - {fileID: 8300000, guid: 3293a4a57f4b248268442433937f5941, type: 3}
+    volume: 1
+    pitchJitter: 0
+    spatial: 0
+  - id: UiClick
+    clips:
+    - {fileID: 8300000, guid: 34c35787a3d4a4071be21a25569d1bc2, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    spatial: 0
+  - id: UiHover
+    clips:
+    - {fileID: 8300000, guid: 815babe96be5547c084c15df0ed404f3, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    spatial: 0
+  - id: UiBack
+    clips:
+    - {fileID: 8300000, guid: 53df96122957f4249b6319475f6edd02, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    spatial: 0
+  - id: DashReady
+    clips:
+    - {fileID: 8300000, guid: 2f27b4f6d506c4d1b9a292e716d2be23, type: 3}
+    volume: 0.8
+    pitchJitter: 0
+    spatial: 0
+  - id: MusicGameplay
+    clips:
+    - {fileID: 8300000, guid: 0b4f13954961544f7b686752fe0e41f0, type: 3}
+    volume: 1
+    pitchJitter: 0
+    spatial: 0
+  - id: MusicLobby
+    clips:
+    - {fileID: 8300000, guid: 050499a76f4754a0b99a1db2dddfed4a, type: 3}
+    volume: 1
+    pitchJitter: 0
+    spatial: 0
