@@ -22,20 +22,16 @@ namespace ShooterParty.EditorTools
         public const string UiRootPath = Root + "/Prefabs/UI_Root.prefab";
         public const string MenuScenePath = Root + "/Scenes/SP_Menu.unity";
 
-        static readonly Color Teal = new Color32(0x00, 0xB3, 0xA4, 0xFF);
-        static readonly Color Tomato = new Color32(0xFF, 0x4F, 0x2E, 0xFF);
-        static readonly Color Violet = new Color32(0x7B, 0x2F, 0xD0, 0xFF);
-        static readonly Color Card = new Color32(0x22, 0x28, 0x5A, 0xFF);
-        static readonly Color Pink = new Color32(0xFF, 0x5C, 0x8A, 0xFF);
         static readonly Vector2 C = new Vector2(0.5f, 0.5f);
 
-        public static GameObject BuildUiRoot()
+        public static GameObject BuildUiRoot(MiniGameCatalog catalog)
         {
             var go = new GameObject("UI_Root", typeof(RectTransform));
             OverlayCanvas(go, 10);
             var root = go.AddComponent<UiRoot>();
             var t = go.transform;
             root.menu = BuildMenu(t);
+            root.lobby = LobbyBuilder.BuildLobbyView(t, catalog);
             root.loadingCurtain = BuildCurtain(t, out root.loadingLabel);
             root.nameDialog = BuildNameDialog(t);
             root.progress = BuildProgress(t);
@@ -49,7 +45,7 @@ namespace ShooterParty.EditorTools
         }
 
         // ------------------------------------------------------------------ screens
-        static T Screen<T>(Transform parent, string name) where T : Component
+        internal static T Screen<T>(Transform parent, string name) where T : Component
         {
             var rt = R(parent, name, C, Vector2.zero, Vector2.zero);
             Fill(rt);
@@ -206,7 +202,7 @@ namespace ShooterParty.EditorTools
         }
 
         // ------------------------------------------------------------------ controls
-        static void Label(Transform parent, string name, string text, Vector2 pos, Vector2? anchor = null) =>
+        internal static void Label(Transform parent, string name, string text, Vector2 pos, Vector2? anchor = null) =>
             T(parent, name, text, 24f, Muted, anchor ?? new Vector2(0.5f, 1f), pos, new Vector2(640f, 32f), TextAlignmentOptions.Left, false, false);
 
         public static TMP_InputField Input(Transform parent, string name, Vector2 pos, Vector2 size, string placeholder, float fontSize = 40f, Vector2? anchor = null)
@@ -245,7 +241,7 @@ namespace ShooterParty.EditorTools
             return s;
         }
 
-        static Toggle Toggle(Transform parent, string name, string label, Vector2 pos, float width, Vector2? anchor = null)
+        internal static Toggle Toggle(Transform parent, string name, string label, Vector2 pos, float width, Vector2? anchor = null)
         {
             var row = R(parent, name, anchor ?? C, pos, new Vector2(width, 60f));
             T(row, "Label", label, 32f, Paper, new Vector2(0f, 0.5f), new Vector2(width * 0.5f - 40f, 0f), new Vector2(width - 120f, 50f), TextAlignmentOptions.Left, false, false);
@@ -271,6 +267,25 @@ namespace ShooterParty.EditorTools
         public static void BuildMenuScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var cam = BuildIceBackdrop();
+            var backdrop = new GameObject("MenuBackdrop").AddComponent<MenuBackdrop>();
+            backdrop.cameraRig = cam.transform;
+            var critter = AssetDatabase.LoadAssetAtPath<GameObject>(ArtRoot + "/Prefabs/CubeCritter.prefab");
+            var spots = new[] { new Vector3(-2.6f, 0.02f, 0.9f), new Vector3(-0.9f, 0.02f, -0.3f), new Vector3(0.9f, 0.02f, 0.4f), new Vector3(2.5f, 0.02f, -0.6f) };
+            backdrop.critters = spots.Select((s, i) =>
+            {
+                var g = (GameObject)PrefabUtility.InstantiatePrefab(critter);
+                g.name = "MenuCritter_" + i;
+                g.transform.SetPositionAndRotation(s, Quaternion.Euler(0f, 160f + i * 15f, 0f));
+                g.GetComponent<Rigidbody>().isKinematic = true;
+                return g.GetComponentInChildren<CritterAnimator>();
+            }).ToArray();
+            SaveBackdropScene(scene, MenuScenePath, "LS_SP_Menu");
+        }
+
+        // The sunny ice floe shared by the menu and the lobby: sun, sky, fog, floe, backdrop, snow, post FX, camera.
+        public static Camera BuildIceBackdrop()
+        {
             var sun = new GameObject("Sun").AddComponent<Light>();
             sun.type = LightType.Directional; sun.intensity = 1.2f; sun.color = new Color32(0xFF, 0xF6, 0xE8, 0xFF);
             sun.shadows = LightShadows.Soft; sun.shadowStrength = 0.85f;
@@ -295,26 +310,20 @@ namespace ShooterParty.EditorTools
             c.GetUniversalAdditionalCameraData().renderPostProcessing = true;
             var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(ArtRoot + "/Scenes/KA_Arena_PostFX.asset");
             if (profile) new GameObject("Post FX").AddComponent<Volume>().sharedProfile = profile;
-            var backdrop = new GameObject("MenuBackdrop").AddComponent<MenuBackdrop>();
-            backdrop.cameraRig = cam.transform;
-            var critter = AssetDatabase.LoadAssetAtPath<GameObject>(ArtRoot + "/Prefabs/CubeCritter.prefab");
-            var spots = new[] { new Vector3(-2.6f, 0.02f, 0.9f), new Vector3(-0.9f, 0.02f, -0.3f), new Vector3(0.9f, 0.02f, 0.4f), new Vector3(2.5f, 0.02f, -0.6f) };
-            backdrop.critters = spots.Select((s, i) =>
-            {
-                var g = (GameObject)PrefabUtility.InstantiatePrefab(critter);
-                g.name = "MenuCritter_" + i;
-                g.transform.SetPositionAndRotation(s, Quaternion.Euler(0f, 160f + i * 15f, 0f));
-                g.GetComponent<Rigidbody>().isKinematic = true;
-                return g.GetComponentInChildren<CritterAnimator>();
-            }).ToArray();
-            var ls = new LightingSettings { name = "LS_SP_Menu", bakedGI = false, realtimeGI = false };
-            var lsPath = Root + "/Scenes/LS_SP_Menu.lighting";
+            return c;
+        }
+
+        // Realtime-only lighting, baked once so the ambient probe and reflections match the sky.
+        public static void SaveBackdropScene(UnityEngine.SceneManagement.Scene scene, string path, string lightingName)
+        {
+            var ls = new LightingSettings { name = lightingName, bakedGI = false, realtimeGI = false };
+            var lsPath = Root + "/Scenes/" + lightingName + ".lighting";
             AssetDatabase.DeleteAsset(lsPath); AssetDatabase.CreateAsset(ls, lsPath);
             Lightmapping.lightingSettings = ls;
-            EditorSceneManager.SaveScene(scene, MenuScenePath);
+            EditorSceneManager.SaveScene(scene, path);
             Lightmapping.Bake();
-            EditorSceneManager.SaveScene(scene, MenuScenePath);
-            ShooterPartySetup.EnsureInBuildSettings(MenuScenePath);
+            EditorSceneManager.SaveScene(scene, path);
+            ShooterPartySetup.EnsureInBuildSettings(path);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace ShooterParty
         AutopilotArgs args;
         SessionPhase last = SessionPhase.Lobby;
         bool sawFinal, dropped, quitting;
-        float playingSince = -1f, nextStart;
+        float playingSince = -1f, nextStart, nextPlaylist;
         NetworkCritter driven;
 
         public void Begin(AutopilotArgs a)
@@ -93,7 +93,11 @@ namespace ShooterParty
         void Lobby(SessionManager s, PlayerState me)
         {
             if (!me.leader) { if (!me.ready) s.RequestReady(true); return; }
-            if (s.PlaylistIds.Count == 0) { s.RequestPlaylist("Autopilot", args.playlist); return; }
+            if (s.PlaylistName.Value != "Autopilot")   // rooms open on a preset; ask once a second until ours shows
+            {
+                if (Time.unscaledTime > nextPlaylist) { nextPlaylist = Time.unscaledTime + 1f; s.RequestPlaylist("Autopilot", args.playlist); }
+                return;
+            }
             int humans = 0; bool allReady = true;
             for (int i = 0; i < s.Players.Count; i++)
             {

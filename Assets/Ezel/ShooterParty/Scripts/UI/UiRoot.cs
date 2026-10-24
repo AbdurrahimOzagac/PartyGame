@@ -12,6 +12,7 @@ namespace ShooterParty.UI
         public static UiRoot Instance { get; private set; }
 
         public MenuScreen menu;
+        public LobbyView lobby;
         public NameCodeDialog nameDialog;
         public JoinProgressView progress;
         public Dialog dialog;

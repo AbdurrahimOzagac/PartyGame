@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Unity.Netcode;
@@ -29,13 +30,13 @@ namespace ShooterParty.EditorTools
             Directory.CreateDirectory(Root + "/Data");
             Directory.CreateDirectory(Root + "/Scenes");
             UiKit.Init();
-            var ui = UiBuilder.BuildUiRoot();
+            var catalog = BuildCatalog();   // first: the lobby UI has a button per mini-game and preset
+            var ui = UiBuilder.BuildUiRoot(catalog);
             UiBuilder.BuildMenuScene();
-            var catalog = BuildCatalog();
             SaveSingleton<ShotSystem>(ShotSystemPath);
             SaveSingleton<SessionManager>(SessionManagerPath, sm => sm.catalog = catalog);
             var prefabs = BuildNetPrefabs();
-            BuildLobbyScene();
+            LobbyBuilder.BuildLobbyScene();
             BuildBootScene(prefabs, ui);
             AssetDatabase.SaveAssets();
             Debug.Log("[ShooterParty] core assets rebuilt");
@@ -63,31 +64,14 @@ namespace ShooterParty.EditorTools
                 if (string.IsNullOrEmpty(d.sceneName) || !d.controllerPrefab || !d.critterPrefab)
                     Debug.LogWarning($"[ShooterParty] mini-game '{d.id}' is missing its scene, controller or critter prefab");
             }
+            // Built-in playlists cycle through the catalog; with one mini-game they repeat it. Curate by hand later.
+            var ids = catalog.games.Select(g => g.id).ToList();
+            catalog.presets = ids.Count == 0 ? new List<MiniGameCatalog.Preset>() : new[] { ("Quick", 3), ("Classic", 5), ("Marathon", 8) }
+                .Select(p => new MiniGameCatalog.Preset { name = p.Item1, games = Enumerable.Range(0, p.Item2).Select(i => ids[i % ids.Count]).ToList() })
+                .ToList();
             EditorUtility.SetDirty(catalog);
             Debug.Log("[ShooterParty] mini-games: " + string.Join(", ", catalog.games.Select(g => g.id)));
             return catalog;
-        }
-
-        // The room's scene between games (lobby, standings' final podium). Task 15 dresses it.
-        public static void BuildLobbyScene()
-        {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var sun = new GameObject("Sun").AddComponent<Light>();
-            sun.type = LightType.Directional; sun.intensity = 1.1f;
-            sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-            var cam = new GameObject("Main Camera") { tag = "MainCamera" };
-            cam.AddComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
-            cam.AddComponent<AudioListener>();
-            cam.transform.SetPositionAndRotation(new Vector3(0f, 2.2f, -6.5f), Quaternion.Euler(10f, 0f, 0f));
-            var stage = new GameObject("LobbyStage").transform;
-            for (int i = 0; i < 4; i++)
-            {
-                var spot = new GameObject("Pedestal_" + i).transform;
-                spot.SetParent(stage, false);
-                spot.localPosition = new Vector3(-2.7f + 1.8f * i, 0f, 0f);
-            }
-            EditorSceneManager.SaveScene(scene, LobbyScenePath);
-            EnsureInBuildSettings(LobbyScenePath);
         }
 
         // First scene of every build: PartyNet (prefab list + server singletons) and the Bootstrap that picks

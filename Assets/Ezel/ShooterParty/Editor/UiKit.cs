@@ -21,6 +21,12 @@ namespace ShooterParty.EditorTools
         public static readonly Color Gold = new Color32(0xFF, 0xD2, 0x3F, 0xFF);
         public static readonly Color Paper = new Color32(0xF4, 0xF7, 0xFF, 0xFF);
         public static readonly Color Muted = new Color32(0x9A, 0xA6, 0xD6, 0xFF);
+        public static readonly Color Teal = new Color32(0x00, 0xB3, 0xA4, 0xFF);
+        public static readonly Color Tomato = new Color32(0xFF, 0x4F, 0x2E, 0xFF);
+        public static readonly Color Violet = new Color32(0x7B, 0x2F, 0xD0, 0xFF);
+        public static readonly Color Card = new Color32(0x22, 0x28, 0x5A, 0xFF);
+        public static readonly Color Pink = new Color32(0xFF, 0x5C, 0x8A, 0xFF);
+        public static readonly Color Glass = new Color(1f, 1f, 1f, 0.12f);   // secondary buttons on a card
 
         // Loads (or makes) the fonts and imports the sprites; call once before building.
         public static void Init()
@@ -54,7 +60,7 @@ namespace ShooterParty.EditorTools
             }
             foreach (var n in new[] { "UI_Panel", "UI_PanelOutline", "UI_PanelShadow" }) Sprite($"{UiDir}/Sprites/{n}.png", new Vector4(40, 40, 40, 40));
             Sprite($"{UiDir}/Sprites/UI_Pill.png", new Vector4(32, 31, 32, 31));
-            foreach (var n in new[] { "UI_Circle", "UI_Ring", "UI_Crosshair", "UI_IconWeight", "UI_IconSpring", "UI_IconDash", "UI_IconCrown", "UI_IconCheck", "UI_FadeH" })
+            foreach (var n in new[] { "UI_Circle", "UI_Ring", "UI_Crosshair", "UI_IconWeight", "UI_IconSpring", "UI_IconDash", "UI_IconCrown", "UI_IconCheck", "UI_FadeH", "UI_IconArrow" })
                 Sprite($"{UiDir}/Sprites/{n}.png", Vector4.zero);
             foreach (var g in AssetDatabase.FindAssets("Portrait_CC_ t:Texture2D", new[] { Root + "/Portraits" }))
                 Sprite(AssetDatabase.GUIDToAssetPath(g), Vector4.zero, true);

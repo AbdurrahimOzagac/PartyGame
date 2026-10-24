@@ -53,21 +53,29 @@ namespace KnockbackArena.Tests
             }
         }
 
-        // The hit flash drives _EmissionColor, so the body materials must keep _EMISSION (or builds strip that variant).
-        // URP re-derives the keyword on import and drops it when the material is flagged EmissiveIsBlack.
-        [Test]
-        public void BodyMaterialsKeepTheEmissionKeywordThroughValidation()
+        // The hit flash brightens the body through a property block on _BaseColor: no shader keyword, so neither the
+        // editor's material re-validation nor build variant stripping can switch it off.
+        [UnityTest]
+        public IEnumerator HitFlashBrightensTheBodyThenClears()
         {
-            foreach (var name in new[] { "Tomato", "Teal", "Chartreuse", "Violet" })
-            {
-                var mat = AssetDatabase.LoadAssetAtPath<Material>($"Assets/Ezel/KnockbackArena/Materials/M_CC_Body_{name}.mat");
-                Assert.IsNotNull(mat, name);
-                Assert.IsTrue(mat.IsKeywordEnabled("_EMISSION"), name + " lost _EMISSION");
-                var copy = new Material(mat);
-                MaterialEditor.FixupEmissiveFlag(copy);
-                Assert.AreEqual(0, (int)(copy.globalIlluminationFlags & MaterialGlobalIlluminationFlags.EmissiveIsBlack), name + " would lose _EMISSION on reimport");
-                Object.DestroyImmediate(copy);
-            }
+            var critter = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Prefab), new Vector3(20f, 0f, 0f), Quaternion.identity);
+            critter.GetComponent<Rigidbody>().isKinematic = true;
+            var smr = critter.GetComponentInChildren<SkinnedMeshRenderer>();
+            int body = System.Array.FindIndex(smr.sharedMaterials, m => m && m.name.StartsWith("M_CC_Body"));
+            Assert.GreaterOrEqual(body, 0, "the critter has a body material slot");
+            var baseColour = smr.sharedMaterials[body].GetColor("_BaseColor");
+            yield return null;
+            critter.GetComponentInChildren<CritterAnimator>().PlayHit();
+            yield return null;
+            var block = new MaterialPropertyBlock();
+            smr.GetPropertyBlock(block, body);
+            Assert.IsTrue(block.HasColor("_BaseColor"), "the flash overrides the body colour");
+            var lit = block.GetColor("_BaseColor");
+            Assert.Greater(lit.g + lit.b, baseColour.g + baseColour.b + 0.5f, "Tomato flashes towards white");
+            yield return new WaitForSeconds(0.3f);
+            smr.GetPropertyBlock(block, body);
+            Assert.IsFalse(block.HasColor("_BaseColor"), "the flash clears");
+            Object.Destroy(critter);
         }
 
         [UnityTest]

@@ -200,6 +200,12 @@ namespace ShooterParty
             error = null;
             if (Phase != SessionPhase.Lobby) { error = "The session already started"; return false; }
             if (!IsLeader(pid)) { error = "Only the leader picks the playlist"; return false; }
+            return UsePlaylist(name, ids, out error);
+        }
+
+        // The server's own pick (the room's default playlist), validated like the leader's.
+        public bool UsePlaylist(string name, IReadOnlyList<string> ids, out string error)
+        {
             if (!PlaylistRules.TryValidate(name, ids, id => find(id) != null, out error)) return false;
             NameRules.TryClean(name, 1, PlaylistRules.MaxNameLength, "Playlist name", out var clean, out _);
             PlaylistName = clean;
@@ -233,9 +239,8 @@ namespace ShooterParty
         {
             if (Phase != SessionPhase.Lobby) return "The session already started";
             if (!IsLeader(pid)) return "Only the leader can start";
-            if (ConnectedHumans < options.minPlayers) return $"Need at least {options.minPlayers} players";
-            if (players.Any(p => !p.isBot && p.connected && !p.leader && !p.ready)) return "Everyone must be ready";
-            if (playlist.Count == 0) return "Pick a playlist first";
+            var blocker = StartBlocker(players, options.minPlayers, playlist.Count);
+            if (blocker != null) return blocker;
             players.RemoveAll(p => !p.isBot && !p.connected);
             for (int i = 0; i < players.Count; i++)
             {
@@ -246,6 +251,16 @@ namespace ShooterParty
             rankings.Clear();
             RoundIndex = -1;
             NextGame(now);
+            return null;
+        }
+
+        // Why the leader can't start yet, or null. Clients run it on the replicated seats to explain a disabled Start.
+        public static string StartBlocker(IEnumerable<PlayerState> seats, int minPlayers, int playlistCount)
+        {
+            var humans = seats.Where(p => !p.isBot && p.connected).ToList();
+            if (humans.Count < minPlayers) return $"Need at least {minPlayers} players";
+            if (humans.Any(p => !p.leader && !p.ready)) return "Everyone must be ready";
+            if (playlistCount == 0) return "Pick a playlist first";
             return null;
         }
 

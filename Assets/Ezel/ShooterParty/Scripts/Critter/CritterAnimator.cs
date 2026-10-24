@@ -21,13 +21,14 @@ namespace ShooterParty
         static readonly int LoseId = Animator.StringToHash("Lose");
         static readonly int TauntId = Animator.StringToHash("Taunt");
 
-        static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
+        static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
         Animator anim;
         SkinnedMeshRenderer face;
         MaterialPropertyBlock flashBlock;
         int blink = -1, happy = -1, hurt = -1, actionLayer = -1, bodySlot = -1;
         float nextBlink, blinkT = -1f, actionWeight, actionUntil, flashT = -1f;
+        Color flashBase;
         float stopUntil, stopLen, jiggleT = -1f, hitStrength;
 
         public Transform Muzzle { get; private set; }
@@ -65,6 +66,7 @@ namespace ShooterParty
         {
             anim.SetTrigger(HitId);
             flashT = 0f;
+            if (bodySlot >= 0 && face.sharedMaterials[bodySlot]) flashBase = face.sharedMaterials[bodySlot].GetColor(BaseColorId);   // CritterLook may have recoloured it
             hitStrength = Mathf.Clamp01(strength);
             stopLen = Mathf.Lerp(0.06f, 0.09f, hitStrength);
             stopUntil = Time.time + stopLen;
@@ -97,13 +99,13 @@ namespace ShooterParty
             }
             if (flashT >= 0f && bodySlot >= 0)
             {
-                // white flash on the body (body material has _EMISSION on, black by default): hold 40 ms, ease out 100 ms
+                // white flash on the body's base colour (a property block, so no shader keyword to lose): hold 40 ms, ease out 100 ms
                 flashT += Time.deltaTime;
                 float k = flashT < 0.04f ? 1f : Mathf.Clamp01(1f - (flashT - 0.04f) / 0.1f);
                 face.GetPropertyBlock(flashBlock, bodySlot);
-                flashBlock.SetColor(EmissionId, Color.white * (0.8f * k * k));
+                if (k > 0f) flashBlock.SetColor(BaseColorId, Color.Lerp(flashBase, Color.white, 0.85f * k * k));
+                else { flashBlock.Clear(); flashT = -1f; }
                 face.SetPropertyBlock(flashBlock, bodySlot);
-                if (k <= 0f) flashT = -1f;
             }
             // the Action layer (upper body + face) is only on while a spit plays, so it never freezes the run
             if (actionLayer < 0) return;

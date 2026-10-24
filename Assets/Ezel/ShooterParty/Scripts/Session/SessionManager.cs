@@ -91,6 +91,8 @@ namespace ShooterParty
             flow.SetupRound += SetupRound;
             flow.StartRound += StartRound;
             flow.PlayerOutMidRound += slot => { if (controller) controller.ServerPlayerLeft(slot); };
+            var preset = catalog ? catalog.presets.FirstOrDefault() : null;
+            if (preset != null && !flow.UsePlaylist(preset.name, preset.games, out var bad)) Debug.LogWarning("[Session] default playlist: " + bad);
             RoomCode.Value = args != null ? args.room : "";
             MiniGameController.Host = this;
             if (net)

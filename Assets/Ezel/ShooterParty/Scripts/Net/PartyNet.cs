@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
@@ -27,6 +29,7 @@ namespace ShooterParty
         public WssBridge Bridge { get; private set; }
         public ServerArgs Server { get; private set; }
         public string LastDenyReason { get; private set; }
+        public string Address { get; private set; }                    // LocalClient: the host address we joined
 
         public event Action ServerStarted;
         public event Action<string> Disconnected;                      // local client lost the server (reason)
@@ -98,6 +101,7 @@ namespace ShooterParty
             var parts = (address ?? "").Trim().Split(':');
             ushort port = parts.Length > 1 && ushort.TryParse(parts[1], out var p) ? p : (ushort)PartyProtocol.LocalPort;
             Transport.SetConnectionData(parts[0], port);
+            Address = port == PartyProtocol.LocalPort ? parts[0] : parts[0] + ":" + port;
             return Net.StartClient() || Fail();
         }
 
@@ -124,6 +128,20 @@ namespace ShooterParty
             Transport.SetConnectionData("127.0.0.1", (ushort)args.port, "127.0.0.1");
             Transport.ConnectionData.WebSocketPath = args.wsPath;
             return Net.StartServer() || Fail();
+        }
+
+        // This machine's IPv4 addresses on live, non-loopback interfaces: what Local players type to join a host.
+        public static List<string> LanAddresses()
+        {
+            try
+            {
+                return NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                    .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+                    .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork && !a.Address.ToString().StartsWith("169.254."))
+                    .Select(a => a.Address.ToString()).Distinct().ToList();
+            }
+            catch (Exception e) { Debug.LogWarning("[PartyNet] no LAN addresses: " + e.Message); return new List<string>(); }
         }
 
         // Netcode's own disconnect texts are for developers; players see "Connection lost" instead.

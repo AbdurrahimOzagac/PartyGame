@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,14 @@ namespace ShooterParty
     public class MiniGameCatalog : ScriptableObject
     {
         public List<MiniGameDefinition> games = new List<MiniGameDefinition>();
+        public List<Preset> presets = new List<Preset>();   // built-in playlists; the first is a new room's default
+
+        [Serializable]
+        public class Preset
+        {
+            public string name;
+            public List<string> games = new List<string>();
+        }
 
         public MiniGameDefinition Find(string id)
         {

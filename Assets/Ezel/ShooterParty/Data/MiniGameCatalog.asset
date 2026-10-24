@@ -14,3 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.MiniGameCatalog
   games:
   - {fileID: 11400000, guid: 05252792933bd47e1bff73564187180e, type: 2}
+  presets:
+  - name: Quick
+    games:
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+  - name: Classic
+    games:
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+  - name: Marathon
+    games:
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
+    - knockback_arena
