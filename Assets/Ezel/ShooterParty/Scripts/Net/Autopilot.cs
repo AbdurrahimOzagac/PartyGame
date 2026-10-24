@@ -10,6 +10,8 @@ namespace ShooterParty
     public class AutopilotArgs
     {
         public string join, ticket, local, name = "Auto";
+        public string roomService, code;            // -roomService <url> with -create or -code <CODE>
+        public bool create;
         public string[] playlist = { "knockback_arena", "knockback_arena" };
         public float dropAt = -1f;                  // seconds into the first round: drop the connection (rejoin test)
         public SessionPhase? leaveAt;               // quit as soon as this phase starts
@@ -19,11 +21,16 @@ namespace ShooterParty
             a = null;
             if (argv == null || !argv.Contains("-autopilot")) return false;
             string Get(string k) { int i = Array.IndexOf(argv, k); return i >= 0 && i + 1 < argv.Length ? argv[i + 1] : null; }
-            var r = new AutopilotArgs { join = Get("-join"), ticket = Get("-ticket"), local = Get("-local"), name = Get("-name") ?? "Auto" };
+            var r = new AutopilotArgs
+            {
+                join = Get("-join"), ticket = Get("-ticket"), local = Get("-local"), name = Get("-name") ?? "Auto",
+                roomService = Get("-roomService"), code = Get("-code"), create = argv.Contains("-create"),
+            };
             if (Get("-playlist") is string pl) r.playlist = pl.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             if (float.TryParse(Get("-dropAt"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d)) r.dropAt = d;
             if (Enum.TryParse<SessionPhase>(Get("-leaveAt"), out var leave)) r.leaveAt = leave;
-            if (r.join == null && r.local == null) return false;
+            bool viaRooms = r.roomService != null && (r.create || r.code != null);
+            if (r.join == null && r.local == null && !viaRooms) return false;
             a = r;
             return true;
         }
@@ -43,6 +50,19 @@ namespace ShooterParty
             Application.targetFrameRate = 60;
             var net = PartyNet.Instance;
             net.Disconnected += reason => { Log("disconnected: " + reason); if (!PartyNetRejoining()) Quit(sawFinal ? 0 : 3); };
+            if (a.roomService != null)
+            {
+                var flow = JoinFlow.Ensure();
+                flow.Changed += step =>
+                {
+                    Log("join flow " + step + (flow.Error != null ? ": " + flow.Error : ""));
+                    if (step == JoinFlow.Step.InLobby) Log("room " + flow.Code);
+                    if (step == JoinFlow.Step.Failed && !sawFinal) Quit(4);
+                };
+                if (a.create) flow.CreateRoom(a.name, false, a.roomService);
+                else flow.JoinRoom(a.code, a.name, a.roomService);
+                return;
+            }
             bool ok = a.local != null ? net.JoinLocal(a.local, a.name) : net.JoinOnline(a.join, a.ticket, a.name);
             Log("joining " + (a.local ?? a.join) + " as " + a.name + ": " + ok);
             if (!ok) Quit(4);

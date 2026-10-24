@@ -35,7 +35,7 @@ namespace ShooterParty
 
         readonly Dictionary<ulong, ApprovedPlayer> players = new Dictionary<ulong, ApprovedPlayer>();
         readonly HashSet<string> usedTickets = new HashSet<string>();
-        bool configured;
+        bool configured, leaving;
 
         public IReadOnlyDictionary<ulong, ApprovedPlayer> Players => players;
         public bool IsServer => Net && Net.IsServer;
@@ -60,6 +60,8 @@ namespace ShooterParty
             Net.OnClientDisconnectCallback += OnClientDisconnect;
             Net.OnServerStarted += OnServerStarted;
         }
+
+        void OnApplicationQuit() => leaving = true;
 
         void OnDestroy()
         {
@@ -124,8 +126,14 @@ namespace ShooterParty
             return Net.StartServer() || Fail();
         }
 
+        // Netcode's own disconnect texts are for developers; players see "Connection lost" instead.
+        public static string FriendlyReason(string reason) =>
+            string.IsNullOrWhiteSpace(reason) || reason.StartsWith("[Disconnect Event]") ? "Connection lost" : reason;
+
+        // We chose to leave: no "connection lost" afterwards.
         public void Leave()
         {
+            leaving = true;
             if (Net && Net.IsListening) Net.Shutdown();
             Bridge?.Dispose();
             Bridge = null;
@@ -136,6 +144,7 @@ namespace ShooterParty
         void Begin(PartyMode mode, string name, string ticket, bool ws)
         {
             if (Net.IsListening) Leave();
+            leaving = false;
             Configure();
             Mode = mode;
             LastDenyReason = null;
@@ -183,7 +192,8 @@ namespace ShooterParty
                 return;
             }
             if (clientId != Net.LocalClientId && clientId != NetworkManager.ServerClientId) return;
-            LastDenyReason = string.IsNullOrEmpty(Net.DisconnectReason) ? "Connection lost" : Net.DisconnectReason;
+            if (leaving) return;
+            LastDenyReason = FriendlyReason(Net.DisconnectReason);
             Bridge?.Dispose();
             Bridge = null;
             Mode = PartyMode.Offline;

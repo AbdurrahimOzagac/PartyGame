@@ -41,12 +41,7 @@ if [ "$SCENARIO" = rooms ]; then
   sleep 1
   api() { curl -s -H 'X-ShooterParty-Version: 1' -H 'Content-Type: application/json' -X POST -d "$2" "http://127.0.0.1:$RPORT/api/v1$1"; }
   field() { python3 -c "import json,sys; print(json.load(sys.stdin).get('$1',''))"; }
-  CREATE=$(api /rooms '{"name":"Ann","replaceLeaversWithBots":false}')
-  CODE=$(echo "$CREATE" | field code); URL=$(echo "$CREATE" | field wsUrl)
-  [ -n "$CODE" ] || { echo "create failed: $CREATE"; cat "$OUT/rooms.log"; exit 1; }
-  TICKETS=("$(echo "$CREATE" | field ticket)")
-  for n in Bea Cem; do TICKETS+=("$(api /rooms/$CODE/join "{\"name\":\"$n\"}" | field ticket)"); done
-  echo "  room $CODE at $URL"
+  ROOMS_URL="http://127.0.0.1:$RPORT/api/v1"
   server_out() { cat "$OUT"/rooms/*.log > "$OUT/server.out" 2>/dev/null; }
   server_alive() { ls "$OUT"/rooms/*.log >/dev/null 2>&1 && ! grep -q server_exited "$OUT/rooms.log"; }
 elif [ -n "$REMOTE" ]; then
@@ -75,18 +70,31 @@ else
   URL="ws://127.0.0.1:$PORT/g/1"
 fi
 
+if [ "$SCENARIO" = rooms ]; then
+  # the game's own client creates the room; the others join with the code it got
+  "$BIN" -batchmode -nographics -logFile "$OUT/client0.log" -autopilot -roomService "$ROOMS_URL" -create -name Ann > /dev/null 2>&1 &
+  PIDS+=($!)
+  for _ in $(seq 60); do CODE=$(sed -n 's/.*\[Autopilot\] room \([A-Z]*\).*/\1/p' "$OUT/client0.log" 2>/dev/null | head -1); [ -n "$CODE" ] && break; sleep 1; done
+  [ -n "$CODE" ] || { echo "the first client never got a room"; grep Autopilot "$OUT/client0.log"; exit 1; }
+  echo "  room $CODE"
+  for i in 1 2; do
+    "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot -roomService "$ROOMS_URL" -code "$CODE" -name "${NAMES[$i]}" > /dev/null 2>&1 &
+    PIDS+=($!); sleep 2
+  done
+fi
+
 for _ in $(seq 60); do server_out; grep -q '^@@READY' "$OUT/server.out" && break; sleep 1; done
 grep -q '^@@READY' "$OUT/server.out" || { echo "server never got ready"; tail -20 "$OUT/server.out"; exit 1; }
 
 for i in 0 1 2; do
+  [ "$SCENARIO" = rooms ] && break
   extra=()
   [ "$i" = 0 ] && lead=--leader || lead=
   case "$SCENARIO" in
     leave-during-load) [ "$i" = 2 ] && extra=(-leaveAt Loading) ;;
     drop) [ "$i" = 1 ] && extra=(-bridge -dropAt 8) ;;
   esac
-  if [ "$SCENARIO" = rooms ]; then ticket=${TICKETS[$i]}
-  else ticket=$(python3 "$HERE/rooms/make_ticket.py" --secret-hex "$SECRET" --room $ROOM --pid "p$i" --name "${NAMES[$i]}" $lead --ttl 120); fi
+  ticket=$(python3 "$HERE/rooms/make_ticket.py" --secret-hex "$SECRET" --room $ROOM --pid "p$i" --name "${NAMES[$i]}" $lead --ttl 120)
   "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot \
     -join "$URL" -ticket "$ticket" -name "${NAMES[$i]}" ${extra[@]+"${extra[@]}"} > /dev/null 2>&1 &
   PIDS+=($!)

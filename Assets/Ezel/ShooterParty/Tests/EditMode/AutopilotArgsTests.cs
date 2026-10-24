@@ -22,6 +22,16 @@ namespace ShooterParty.Tests
         }
 
         [Test]
+        public void ParsesRoomServiceCreateAndCode()
+        {
+            Assert.IsTrue(AutopilotArgs.TryParse(new[] { "-autopilot", "-roomService", "http://127.0.0.1:9701/api/v1", "-create", "-name", "Ann" }, out var a));
+            Assert.AreEqual("http://127.0.0.1:9701/api/v1", a.roomService); Assert.IsTrue(a.create);
+            Assert.IsTrue(AutopilotArgs.TryParse(new[] { "-autopilot", "-roomService", "http://x/api/v1", "-code", "BCDFG", "-name", "Bea" }, out var b));
+            Assert.AreEqual("BCDFG", b.code); Assert.IsFalse(b.create);
+            Assert.IsFalse(AutopilotArgs.TryParse(new[] { "-autopilot", "-roomService", "http://x/api/v1", "-name", "Cem" }, out _), "needs -create or -code");
+        }
+
+        [Test]
         public void NotAutopilot() => Assert.IsFalse(AutopilotArgs.TryParse(new[] { "Game", "-batchmode" }, out _));
 
         [Test]
