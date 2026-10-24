@@ -29,7 +29,7 @@ The mouse is captured automatically during a round and released in menus, pause 
 
 In the editor menu **ShooterParty → Build**: **macOS**, **Windows**, **Linux x64**, **Pi Server (Linux Arm64)** or **All**. Each build goes to `Builds/<target>/` (not in git). Each target needs its module (Unity Hub → Installs → 6000.3.9f1 → Add modules): *Windows Build Support (Mono)*, *Linux Build Support (Mono)*, *Mac Build Support (Mono)* (already part of the editor on a Mac), and for the Pi server *Linux Dedicated Server Build Support*. The Arm64 cross-compiler for the Pi comes from packages in `Packages/manifest.json` (`com.unity.toolchain.macos-arm64-linux`, `com.unity.sdk.linux-arm64`), so the Pi server is built on a Mac.
 
-The same builds from the command line, run in the project folder with the editor closed (Unity locks an open project). `-logFile -` prints Unity's log to the terminal; the last line says whether the build succeeded.
+The same builds from the command line, run in the project folder with the editor closed (Unity locks an open project). `-logFile -` prints Unity's log to the terminal. Exit code 0 means the build succeeded; near the end of the log, a `[PartyBuild] … Succeeded` (or `Failed`) line gives the size and time.
 
 macOS (Terminal):
 ```sh
