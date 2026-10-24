@@ -20,6 +20,7 @@ namespace ShooterParty.EditorTools
         public const string CatalogPath = Root + "/Data/MiniGameCatalog.asset";
         public const string SessionManagerPath = Root + "/Prefabs/Net_SessionManager.prefab";
         public const string LobbyScenePath = Root + "/Scenes/SP_Lobby.unity";
+        public const string BootScenePath = Root + "/Scenes/SP_Boot.unity";
 
         [MenuItem("ShooterParty/Rebuild core assets")]
         public static void BuildAll()
@@ -30,8 +31,9 @@ namespace ShooterParty.EditorTools
             var catalog = BuildCatalog();
             SaveSingleton<ShotSystem>(ShotSystemPath);
             SaveSingleton<SessionManager>(SessionManagerPath, sm => sm.catalog = catalog);
-            BuildNetPrefabs();
+            var prefabs = BuildNetPrefabs();
             BuildLobbyScene();
+            BuildBootScene(prefabs);
             AssetDatabase.SaveAssets();
             Debug.Log("[ShooterParty] core assets rebuilt");
         }
@@ -85,12 +87,33 @@ namespace ShooterParty.EditorTools
             EnsureInBuildSettings(LobbyScenePath);
         }
 
+        // First scene of every build: PartyNet (prefab list + server singletons) and the Bootstrap that picks
+        // server / autopilot / menu from the command line. Task 14 adds the UI root here.
+        public static void BuildBootScene(NetworkPrefabsList prefabs)
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var go = new GameObject("PartyNet");
+            var net = go.AddComponent<PartyNet>();
+            net.prefabs = prefabs;
+            net.serverSingletons = new[]
+            {
+                AssetDatabase.LoadAssetAtPath<GameObject>(ShotSystemPath).GetComponent<NetworkObject>(),
+                AssetDatabase.LoadAssetAtPath<GameObject>(SessionManagerPath).GetComponent<NetworkObject>(),
+            };
+            go.AddComponent<Bootstrap>();
+            EditorSceneManager.SaveScene(scene, BootScenePath);
+            EnsureInBuildSettings(BootScenePath, first: true);
+        }
+
         // NetworkSceneManager can only load scenes listed in the build settings.
-        public static void EnsureInBuildSettings(string scenePath)
+        public static void EnsureInBuildSettings(string scenePath, bool first = false)
         {
             var scenes = EditorBuildSettings.scenes.ToList();
-            if (scenes.Any(s => s.path == scenePath)) return;
-            scenes.Add(new EditorBuildSettingsScene(scenePath, true));
+            int at = scenes.FindIndex(s => s.path == scenePath);
+            if (at == 0 || (at > 0 && !first)) return;
+            if (at > 0) scenes.RemoveAt(at);
+            var entry = new EditorBuildSettingsScene(scenePath, true);
+            if (first) scenes.Insert(0, entry); else scenes.Add(entry);
             EditorBuildSettings.scenes = scenes.ToArray();
         }
 

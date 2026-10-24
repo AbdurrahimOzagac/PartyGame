@@ -44,6 +44,8 @@ namespace ShooterParty
         protected virtual void OnServerTick(float dt) { }
         protected virtual void OnHit(in ShotHit hit) { }
         protected virtual void OnBotSpawned(NetworkCritter critter) { }          // attach your bot brain here
+        // A self-playing client (tests, soak runs) drives its own critter with the same brain.
+        public virtual void AttachAutopilot(NetworkCritter critter) => OnBotSpawned(critter);
         protected virtual void OnEliminatedClient(int slot, Vector3 position) { } // every machine: your fall FX
         protected virtual IReadOnlyList<RankEntry> RankPlayers() =>
             RankBy(critters.Keys.OrderByDescending(ScoreOf).ToList(), (a, b) => ScoreOf(a) == ScoreOf(b));

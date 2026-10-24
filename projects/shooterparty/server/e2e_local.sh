@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# End-to-end test: a dedicated game server + 3 self-playing clients over WebSocket.
+#
+#   e2e_local.sh [basic|leave-during-load|drop] <desktop game binary>
+#   E2E_REMOTE=ezel@trok E2E_SERVER_DIR=Builds/PiServer e2e_local.sh basic <desktop game binary>
+#
+# Local: the same executable runs as server (-party-server) and clients (-autopilot).
+# Remote: the server build folder is copied to E2E_REMOTE (over SSH) and run there; the clients here reach it
+# through an SSH port forward (private, nothing is opened to the internet). Timers run at 1/4 speed.
+# Exit 0 = the session reached its final with consistent scores (e2e_check.py). Logs stay in $E2E_OUT.
+set -u
+SCENARIO=${1:-basic}
+BIN=${2:-${SHOOTERPARTY_BIN:-}}
+[ -x "$BIN" ] || { echo "usage: $0 [basic|leave-during-load|drop] <game binary>"; exit 2; }
+HERE=$(cd "$(dirname "$0")" && pwd)
+OUT=${E2E_OUT:-$(mktemp -d -t shooterparty-e2e)}
+PORT=${E2E_PORT:-7701}
+REMOTE=${E2E_REMOTE:-}
+REMOTE_DIR=${E2E_REMOTE_DIR:-shooterparty_e2e}
+SECRET=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+ROOM=BCDFG
+NAMES=(Ann Bea Cem)
+PIDS=()
+SERVER_ARGS="-batchmode -nographics -logFile - -party-server -slot 1 -port $PORT -wsPath /g/1 -room $ROOM -minPlayers 3 -timeScale 0.25"
+
+cleanup() {
+  for p in ${PIDS[@]+"${PIDS[@]}"}; do kill "$p" 2>/dev/null; done
+  [ -n "$REMOTE" ] && ssh -o BatchMode=yes "$REMOTE" "pkill -f 'ShooterPartyServer -batchmode' || true"
+}
+trap cleanup EXIT
+echo "logs: $OUT"
+
+if [ -n "$REMOTE" ]; then
+  [ -d "${E2E_SERVER_DIR:-}" ] || { echo "set E2E_SERVER_DIR to the Pi server build folder"; exit 2; }
+  rsync -az --delete --exclude '*_BackUpThisFolder_ButDontShipItWithYourGame' --exclude '*_DoNotShip' \
+    -e "ssh -o BatchMode=yes" "$E2E_SERVER_DIR/" "$REMOTE:$REMOTE_DIR/"
+  ssh -o BatchMode=yes "$REMOTE" "cd $REMOTE_DIR && chmod +x ShooterPartyServer && rm -f server.out && \
+    (PARTY_TICKET_SECRET=$SECRET nohup ./ShooterPartyServer $SERVER_ARGS > server.out 2>&1 &)"
+  LPORT=$((PORT + 10000))
+  ssh -o BatchMode=yes -o ExitOnForwardFailure=yes -N -L "$LPORT:127.0.0.1:$PORT" "$REMOTE" & PIDS+=($!)
+  server_out() { ssh -o BatchMode=yes "$REMOTE" "cat $REMOTE_DIR/server.out" > "$OUT/server.out"; }
+  PEAK_KB=0
+  server_alive() {   # also samples the server's memory (RSS) on the remote
+    local kb; kb=$(ssh -o BatchMode=yes "$REMOTE" "ps -o rss= -p \$(pgrep -f 'ShooterPartyServer -batchmode' | head -1) 2>/dev/null") || return 1
+    kb=${kb//[^0-9]/}; [ -n "$kb" ] || return 1
+    [ "$kb" -gt "$PEAK_KB" ] && PEAK_KB=$kb
+    return 0
+  }
+  URL="ws://127.0.0.1:$LPORT/g/1"
+else
+  # -logFile - : Unity's log and the @@ protocol lines both go to stdout (with a log file Unity swallows stdout)
+  PARTY_TICKET_SECRET=$SECRET "$BIN" $SERVER_ARGS > "$OUT/server.out" 2>&1 &
+  SERVER=$!; PIDS+=($SERVER)
+  server_out() { :; }
+  server_alive() { kill -0 $SERVER 2>/dev/null; }
+  URL="ws://127.0.0.1:$PORT/g/1"
+fi
+
+for _ in $(seq 60); do server_out; grep -q '^@@READY' "$OUT/server.out" && break; sleep 1; done
+grep -q '^@@READY' "$OUT/server.out" || { echo "server never got ready"; tail -20 "$OUT/server.out"; exit 1; }
+
+for i in 0 1 2; do
+  extra=()
+  [ "$i" = 0 ] && lead=--leader || lead=
+  case "$SCENARIO" in
+    leave-during-load) [ "$i" = 2 ] && extra=(-leaveAt Loading) ;;
+    drop) [ "$i" = 1 ] && extra=(-bridge -dropAt 8) ;;
+  esac
+  ticket=$(python3 "$HERE/rooms/make_ticket.py" --secret-hex "$SECRET" --room $ROOM --pid "p$i" --name "${NAMES[$i]}" $lead --ttl 120)
+  "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot \
+    -join "$URL" -ticket "$ticket" -name "${NAMES[$i]}" ${extra[@]+"${extra[@]}"} > /dev/null 2>&1 &
+  PIDS+=($!)
+  sleep 2   # the first to join leads the lobby
+done
+
+for _ in $(seq 120); do server_out; grep -q '^@@END' "$OUT/server.out" && break; server_alive || break; sleep 3; done
+server_out
+grep '^@@STATE' "$OUT/server.out" | sed 's/^/  /'
+grep '^@@STATS' "$OUT/server.out" | tail -3 | sed 's/^/  /'
+[ -n "$REMOTE" ] && echo "  server peak RSS on $REMOTE: $(( PEAK_KB / 1024 )) MB" 
+python3 "$HERE/e2e_check.py" "$OUT/server.out" --humans 3 --rounds 2
+RC=$?
+grep -h -i -E "exception|error" "$OUT"/client*.log "$OUT/server.out" | grep -v -E "Licensing|LogAssemblyErrors|IntegrityCheck|errors=0|0 errors" | sort | uniq -c | head -10
+exit $RC

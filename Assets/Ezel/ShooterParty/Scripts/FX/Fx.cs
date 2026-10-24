@@ -7,9 +7,11 @@ namespace ShooterParty
     // lighter version of it; everything else keeps its own colour (white stars, ice chips).
     public static class Fx
     {
+        public static bool Enabled = true;   // off on a dedicated server: nothing is drawn there
+
         public static ParticleSystem Play(ParticleSystem prefab, Vector3 pos, Quaternion rot, Color tint)
         {
-            if (!prefab) return null;
+            if (!prefab || !Enabled) return null;
             var fx = Object.Instantiate(prefab, pos, rot);
             Tint(fx, tint);
             fx.Play(true);
