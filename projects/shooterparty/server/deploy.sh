@@ -45,6 +45,12 @@ chown root:partyshooter /etc/partyshooter/secret; chmod 0640 /etc/partyshooter/s
 rsync -a --delete --chown=root:root --chmod=D755,F644 "$STAGE/server/" "$APP/server/"
 chmod 755 "$APP/server/ShooterPartyServer"
 rsync -a --delete --chown=root:root --chmod=D755,F644 "$STAGE/rooms/" "$APP/rooms/"
+# network tuning for a game host: quic-go (cloudflared) wants 7 MB UDP buffers, and Wi-Fi power saving
+# adds multi-second latency spikes that arrive at the game as bursts
+printf 'net.core.rmem_max=7500000\nnet.core.wmem_max=7500000\n' > /etc/sysctl.d/90-partyshooter-net.conf
+sysctl -q -p /etc/sysctl.d/90-partyshooter-net.conf
+if [ -d /etc/NetworkManager/conf.d ]; then printf '[connection]\nwifi.powersave = 2\n' > /etc/NetworkManager/conf.d/90-partyshooter-wifi.conf; fi
+if command -v iw >/dev/null; then for w in $(iw dev | awk '/Interface/ {print $2}'); do iw dev "$w" set power_save off || true; done; fi
 install -m 644 "$STAGE/systemd/partyshooter-rooms.service" /etc/systemd/system/partyshooter-rooms.service
 install -m 755 "$STAGE/partyshooter-status" /usr/local/bin/partyshooter-status
 systemctl daemon-reload

@@ -46,6 +46,10 @@ namespace ShooterParty
         static bool ForceBridge => Argv.Contains("-bridge");           // dev/test: route ws:// through the bridge too
         static int NetDelayMs { get { int i = Array.IndexOf(Argv, "-netDelay"); return i >= 0 && i + 1 < Argv.Length && int.TryParse(Argv[i + 1], out var d) ? d : 0; } }
 
+        // Unity Transport's send/receive queues (default 128 packets). Through Cloudflare the WebSocket is TCP, so a
+        // few seconds of stall arrive as one burst; a small queue drops packets and the connection dies.
+        public const int PacketQueue = 1024;
+
         public static PartyNet Ensure() => Instance ? Instance : new GameObject("PartyNet").AddComponent<PartyNet>();
 
         void Awake()
@@ -54,6 +58,7 @@ namespace ShooterParty
             Instance = this;
             DontDestroyOnLoad(gameObject);
             Transport = gameObject.AddComponent<UnityTransport>();
+            Transport.MaxPacketQueueSize = PacketQueue;
             Net = gameObject.AddComponent<NetworkManager>();
             Net.NetworkConfig = new NetworkConfig
             {
