@@ -37,7 +37,6 @@ namespace ShooterParty.UI
 
         SessionManager bound;
         string copyText;
-        readonly List<PlayerState> seats = new List<PlayerState>(4);
 
         public override bool ShowsIn(SessionPhase phase) => phase == SessionPhase.Lobby;
 
@@ -159,9 +158,7 @@ namespace ShooterParty.UI
 
             startButton.gameObject.SetActive(c.start);
             readyButton.gameObject.SetActive(c.ready);
-            seats.Clear();
-            for (int i = 0; i < s.Players.Count; i++) seats.Add(s.Players[i]);
-            var blocker = SessionFlow.StartBlocker(seats, s.MinPlayers.Value, s.PlaylistIds.Count);
+            var blocker = SessionFlow.StartBlocker(s.Seats(), s.MinPlayers.Value, s.PlaylistIds.Count);
             startButton.interactable = blocker == null;
             readyLabel.text = me.ready ? "NOT READY" : "READY!";
             statusText.text = c.start ? blocker ?? "Everyone's in. Start when you like!"

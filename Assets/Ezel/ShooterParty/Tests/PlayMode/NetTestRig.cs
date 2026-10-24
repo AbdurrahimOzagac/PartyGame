@@ -1,9 +1,12 @@
 #if UNITY_EDITOR   // loads prefabs through the AssetDatabase
 using System.Collections;
 using NUnit.Framework;
+using ShooterParty.UI;
 using Unity.Netcode;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ShooterParty.Tests
 {
@@ -65,6 +68,23 @@ namespace ShooterParty.Tests
             return net;
         }
 
+        // The real boot path into a Practice room: SP_Boot -> menu -> name dialog -> SP_Lobby with 1 human + 3 bots.
+        public static IEnumerator BootToPracticeLobby(string name = "Tester")
+        {
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity",
+                new LoadSceneParameters(LoadSceneMode.Single));
+            for (float t = 0f; t < 10f && !(UiRoot.Instance && SceneManager.GetActiveScene().name == "SP_Menu"); t += Time.unscaledDeltaTime) yield return null;
+            var ui = UiRoot.Instance;
+            Assert.IsNotNull(ui, "UI root from SP_Boot");
+            ui.nameDialog.Open(NameCodeDialog.Mode.Practice);
+            ui.nameDialog.nameField.text = name;
+            ui.nameDialog.Confirm();
+            for (float t = 0f; t < 10f && !(ui.lobby.IsShown && SessionManager.Instance && SessionManager.Instance.Players.Count == 4
+                && SceneManager.GetActiveScene().name == SessionManager.LobbyScene); t += Time.unscaledDeltaTime) yield return null;
+            Assert.IsTrue(ui.lobby.IsShown, "the lobby view shows in the Lobby phase");
+            yield return null;
+        }
+
         public static NetworkCritter Spawn(int slot, bool bot, ulong owner = NetworkManager.ServerClientId, Vector3 pos = default)
         {
             var go = Object.Instantiate(Load(CritterPrefab), pos, Quaternion.identity);
@@ -86,7 +106,7 @@ namespace ShooterParty.Tests
                 PartyNet.Instance.Leave();
                 Object.Destroy(PartyNet.Instance.gameObject);
             }
-            foreach (var p in Object.FindObjectsByType<ShooterParty.UI.Persistent>(FindObjectsSortMode.None)) Object.Destroy(p.gameObject);
+            foreach (var p in Object.FindObjectsByType<Persistent>(FindObjectsSortMode.None)) Object.Destroy(p.gameObject);
             yield return null;
             yield return null;
         }

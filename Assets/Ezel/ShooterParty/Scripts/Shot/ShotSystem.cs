@@ -22,6 +22,7 @@ namespace ShooterParty
         public int Epoch { get; set; } = 1;
         public int ServerShots { get; private set; }    // physical blobs launched (tests, stats)
         public event Action<ShotHit> ServerHit;         // after the effect ran (mini-games credit KOs here)
+        public event Action<NetworkCritter> HitConfirmed;   // this client's own shot landed on that critter (HUD hit marker)
 
         class ServerShot
         {
@@ -152,7 +153,7 @@ namespace ShooterParty
                 if (!victim.Eliminated.Value && Effect) Effect.ApplyServer(hit, new ShotContext(this, shot.id));
                 ServerHit?.Invoke(hit);
                 if (!shot.shooter.IsOwner)
-                    BlobHitRpc(shot.id, hit.victimSlot, contact.point, contact.normal, RpcTarget.Single(shot.shooter.OwnerClientId, RpcTargetUse.Temp));
+                    BlobHitRpc(shot.id, shot.shooter.Slot.Value, hit.victimSlot, contact.point, contact.normal, RpcTarget.Single(shot.shooter.OwnerClientId, RpcTargetUse.Temp));
                 // a remote victim confirms first (OnKnockbackApplied); everything else can be shown now
                 if (!shot.notified && !(shot.knocked && !victim.IsOwner)) NotifyObservers(shot);
             }
@@ -182,7 +183,7 @@ namespace ShooterParty
             if (shot.victim && !shot.victim.IsOwner) skip.Add(shot.victim.OwnerClientId);
             var ids = NetworkManager.ConnectedClientsIds.Where(id => !skip.Contains(id)).ToList();
             if (ids.Count > 0)
-                BlobHitRpc(shot.id, shot.victim ? shot.victim.Slot.Value : -1, shot.point, shot.normal, RpcTarget.Group(ids, RpcTargetUse.Temp));
+                BlobHitRpc(shot.id, shot.shooter ? shot.shooter.Slot.Value : -1, shot.victim ? shot.victim.Slot.Value : -1, shot.point, shot.normal, RpcTarget.Group(ids, RpcTargetUse.Temp));
         }
 
         void Update()
@@ -215,9 +216,11 @@ namespace ShooterParty
         }
 
         [Rpc(SendTo.SpecifiedInParams, InvokePermission = RpcInvokePermission.Server)]
-        void BlobHitRpc(int id, int victimSlot, Vector3 point, Vector3 normal, RpcParams rpcParams = default)
+        void BlobHitRpc(int id, int shooterSlot, int victimSlot, Vector3 point, Vector3 normal, RpcParams rpcParams = default)
         {
             var victim = CritterBySlot(victimSlot);
+            var shooter = CritterBySlot(shooterSlot);
+            if (victim && shooter && shooter.IsOwner && !shooter.IsBot.Value) HitConfirmed?.Invoke(victim);
             if (cosmetic.TryGetValue(id, out var blob) && blob) blob.ForceImpact(point, normal, victim ? victim.transform : null);
             cosmetic.Remove(id);
             if (victim && !victim.IsOwner)

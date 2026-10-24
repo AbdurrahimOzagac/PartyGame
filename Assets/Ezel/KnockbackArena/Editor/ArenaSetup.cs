@@ -99,12 +99,10 @@ namespace KnockbackArena.EditorTools
                 var n = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(kit));
                 ModelPrefab(n, "Arena", ice, null);   // modular pieces for custom layouts (add your own floor collider)
             }
-            Vector3[] stands = null;
-            var podium = ModelPrefab("Podium_Ice", "Arena", ice, go =>
+            ModelPrefab("Podium_Ice", "Arena", ice, go =>   // SP_Lobby's final podium (LobbyBuilder reads its stand points)
             {
                 var mf = go.GetComponentInChildren<MeshFilter>();
                 mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
-                stands = PodiumStands(mf);
             });
             BuildCrown();
             var pickup = BuildPickup();
@@ -192,23 +190,6 @@ namespace KnockbackArena.EditorTools
             var p = PrefabUtility.SaveAsPrefabAsset(go, $"{Root}/Prefabs/{sub}/{name}.prefab");
             Object.DestroyImmediate(go);
             return p;
-        }
-
-        // top centre of each octagonal column, ranked by height (tallest = 1st); read from the mesh so the
-        // Blender -> Unity axis mapping never matters
-        static Vector3[] PodiumStands(MeshFilter mf)
-        {
-            // the flat column tops are the only exactly-upward faces; group them by height level
-            var mesh = mf.sharedMesh;
-            var v = mesh.vertices; var n = mesh.normals;
-            var tops = Enumerable.Range(0, v.Length)
-                .Where(i => mf.transform.TransformDirection(n[i]).y > 0.9995f)
-                .Select(i => mf.transform.TransformPoint(v[i]) - mf.transform.root.position).ToArray();
-            var cols = tops.GroupBy(p => Mathf.Round(p.y * 20f))
-                .Select(g => new Vector3(g.Average(p => p.x), g.Max(p => p.y), g.Average(p => p.z)))
-                .OrderByDescending(p => p.y).Take(4).ToArray();
-            Debug.Log("[Arena] podium stands: " + string.Join(", ", cols.Select(c => c.ToString("F2"))));
-            return cols;
         }
 
         static GameObject BuildCrown()
@@ -315,6 +296,7 @@ namespace KnockbackArena.EditorTools
             def.critter = CritterConfig.Default;
             def.shotEffect = effect;
             def.icon = AssetDatabase.LoadAssetAtPath<Sprite>(Root + "/UI/Sprites/UI_IconSpring.png");
+            def.hudWidget = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/HUD_KnockbackWidget.prefab");   // UiSetup builds it first
 
             var go = new GameObject("Net_KnockbackArenaGame");
             go.AddComponent<NetworkObject>();

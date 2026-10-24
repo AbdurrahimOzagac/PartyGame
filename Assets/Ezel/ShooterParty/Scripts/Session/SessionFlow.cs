@@ -245,7 +245,7 @@ namespace ShooterParty
             for (int i = 0; i < players.Count; i++)
             {
                 var p = players[i];
-                p.total = 0; p.wins = 0; p.lastRank = 0; p.roundScore = 0; p.eligible = true;
+                p.total = 0; p.wins = 0; p.lastRank = 0; p.lastPoints = 0; p.roundScore = 0; p.eligible = true;
                 players[i] = p;
             }
             rankings.Clear();
@@ -312,6 +312,7 @@ namespace ShooterParty
             {
                 var p = players[i];
                 p.total += points[p.slot];
+                p.lastPoints = points[p.slot];
                 var e = ranking.FirstOrDefault(r => r.slot == p.slot);
                 p.lastRank = e.rank > 0 ? e.rank : players.Count;
                 if (e.rank == 1) p.wins++;
@@ -333,8 +334,11 @@ namespace ShooterParty
             if (any) Changed?.Invoke();
         }
 
-        public IReadOnlyList<SlotTotals> Standings() =>
-            players.Select(p => new SlotTotals { slot = p.slot, total = p.total, wins = p.wins, lastRoundRank = p.lastRank == 0 ? 99 : p.lastRank, eligible = p.eligible }).ToList();
+        public IReadOnlyList<SlotTotals> Standings() => TotalsOf(players);
+
+        // The seats as ScoreRules sees them; clients use it on the replicated seats to name the champion.
+        public static List<SlotTotals> TotalsOf(IEnumerable<PlayerState> seats) =>
+            seats.Select(p => new SlotTotals { slot = p.slot, total = p.total, wins = p.wins, lastRoundRank = p.lastRank == 0 ? 99 : p.lastRank, eligible = p.eligible }).ToList();
 
         public IReadOnlyList<int> Champions() => ScoreRules.Champions(Standings());
 

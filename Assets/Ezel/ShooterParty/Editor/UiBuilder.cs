@@ -13,7 +13,8 @@ using static ShooterParty.EditorTools.UiKit;
 namespace ShooterParty.EditorTools
 {
     // Builds the core UI from code (like every other generated asset here):
-    //   Prefabs/UI_Root.prefab   menu, join dialog + progress, dialog, toasts, settings, pause, loading curtain
+    //   Prefabs/UI_Root.prefab   menu, lobby (LobbyBuilder), in-game views (HudBuilder), join dialog + progress,
+    //                            dialog, toasts, settings, pause, loading curtain
     //   Scenes/SP_Menu.unity     the menu's living backdrop (ice floe, critters, drifting camera)
     // Layout reference: 1920 x 1080, scaled by height.
     public static class UiBuilder
@@ -32,6 +33,11 @@ namespace ShooterParty.EditorTools
             var t = go.transform;
             root.menu = BuildMenu(t);
             root.lobby = LobbyBuilder.BuildLobbyView(t, catalog);
+            root.hud = HudBuilder.BuildHud(t);
+            root.intro = HudBuilder.BuildIntro(t);
+            root.results = HudBuilder.BuildResults(t);
+            root.standings = HudBuilder.BuildStandings(t);
+            root.final = HudBuilder.BuildFinal(t);
             root.loadingCurtain = BuildCurtain(t, out root.loadingLabel);
             root.nameDialog = BuildNameDialog(t);
             root.progress = BuildProgress(t);

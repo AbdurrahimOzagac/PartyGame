@@ -13,6 +13,11 @@ namespace ShooterParty.UI
 
         public MenuScreen menu;
         public LobbyView lobby;
+        public PartyHud hud;
+        public IntroCard intro;
+        public RoundResultsView results;
+        public StandingsView standings;
+        public FinalView final;
         public NameCodeDialog nameDialog;
         public JoinProgressView progress;
         public Dialog dialog;

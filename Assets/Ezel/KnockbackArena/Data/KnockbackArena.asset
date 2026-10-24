@@ -38,4 +38,4 @@ MonoBehaviour:
     shotCooldown: 0.33333334
     chargeTime: 0
   shotEffect: {fileID: 11400000, guid: 2057509402f564775a6e6d60e132550d, type: 2}
-  hudWidget: {fileID: 0}
+  hudWidget: {fileID: 8083060359753506684, guid: b17f1f86fefa346dea541bdd7a0e06a8, type: 3}

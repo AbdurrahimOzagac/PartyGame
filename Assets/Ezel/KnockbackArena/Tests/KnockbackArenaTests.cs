@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using ShooterParty;
 using ShooterParty.UI;
+using ShooterParty.Tests;
 
 namespace KnockbackArena.Tests
 {
@@ -108,24 +109,29 @@ namespace KnockbackArena.Tests
             Assert.IsTrue(bank.entries.First(e => e.id == "MusicGameplay").clips[0].length > 10f, "music is a loop, not a sting");
         }
 
+        // The Knockback widget turns each critter's networked Mass into its card's stat line.
         [UnityTest]
         public IEnumerator HudCardShowsMassDroppingOnHit()
         {
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ground.transform.position = new Vector3(-20f, -0.5f, 0f); ground.transform.localScale = new Vector3(10f, 1f, 10f);
-            var c = Spawn("Prefabs/CubeCritter_Teal.prefab", new Vector3(-20f, 0f, 0f));
-            var m = c.GetComponent<CritterMotor>(); m.massLossPerHit = 0.35f;
-            var hud = Object.Instantiate(Load<GameObject>("UI/HUD_KnockbackArena.prefab")).GetComponent<PartyHud>();
-            hud.Bind(new[] { new PartyHud.Player { motor = m, name = "MOCHI", colour = Color.cyan, faces = null } }, 0);
-            yield return null;
-            Assert.AreEqual("100%", hud.cards[0].massText.text);
-            m.Knockback(Vector3.right);
+            NetTestRig.StartNetworked();
+            var c = NetTestRig.Spawn(0, bot: true, pos: new Vector3(-20f, 0f, 0f));
+            c.GetComponent<Rigidbody>().isKinematic = true;
+            var root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Ezel/ShooterParty/Prefabs/UI_Root.prefab"));
+            var hud = root.GetComponentInChildren<PartyHud>(true);
+            hud.BindSeat(0, 0, "MOCHI", 1, false);
+            Object.Instantiate(Load<GameObject>("UI/HUD_KnockbackWidget.prefab"), hud.widgetSlot);
+            yield return null; yield return null;
+            var card = hud.CardFor(0);
+            Assert.AreEqual("100%", card.statText.text);
+            c.Mass.Value = 0.65f * c.StartMass;
             yield return new WaitForSeconds(0.5f);
-            Assert.AreEqual("65%", hud.cards[0].massText.text, "the number rolls to the new mass");
-            Assert.AreEqual(HudCard.Amber, hud.cards[0].massText.color, "below 70 % turns amber");
+            Assert.AreEqual("65%", card.statText.text, "the number rolls to the new mass");
+            Assert.AreEqual(HudCard.Amber, card.statText.color, "below 70 % turns amber");
             Assert.IsFalse(hud.cards[1].gameObject.activeSelf, "unused cards hide");
-            Object.Destroy(hud.gameObject); Object.Destroy(c); Object.Destroy(ground);
+            Object.Destroy(root);
         }
+
+        [UnityTearDown] public IEnumerator TearDown() => NetTestRig.Teardown();   // also after a failed network test
     }
 }
 #endif

@@ -15,7 +15,7 @@ namespace ShooterParty
         public FixedString64Bytes name;
         public ulong clientId;
         public bool isBot, connected, ready, leader, eligible;
-        public int total, roundScore, wins, lastRank;
+        public int total, roundScore, wins, lastRank, lastPoints;   // lastPoints: what the last round added to total
         public double joinedAt, disconnectedAt;
         public ushort rttMs;
 
@@ -25,14 +25,14 @@ namespace ShooterParty
             s.SerializeValue(ref pid); s.SerializeValue(ref name); s.SerializeValue(ref clientId);
             s.SerializeValue(ref isBot); s.SerializeValue(ref connected); s.SerializeValue(ref ready);
             s.SerializeValue(ref leader); s.SerializeValue(ref eligible);
-            s.SerializeValue(ref total); s.SerializeValue(ref roundScore); s.SerializeValue(ref wins); s.SerializeValue(ref lastRank);
+            s.SerializeValue(ref total); s.SerializeValue(ref roundScore); s.SerializeValue(ref wins); s.SerializeValue(ref lastRank); s.SerializeValue(ref lastPoints);
             s.SerializeValue(ref joinedAt); s.SerializeValue(ref disconnectedAt); s.SerializeValue(ref rttMs);
         }
 
         public bool Equals(PlayerState o) =>
             slot == o.slot && colour == o.colour && pid == o.pid && name == o.name && clientId == o.clientId &&
             isBot == o.isBot && connected == o.connected && ready == o.ready && leader == o.leader && eligible == o.eligible &&
-            total == o.total && roundScore == o.roundScore && wins == o.wins && lastRank == o.lastRank &&
+            total == o.total && roundScore == o.roundScore && wins == o.wins && lastRank == o.lastRank && lastPoints == o.lastPoints &&
             joinedAt == o.joinedAt && disconnectedAt == o.disconnectedAt && rttMs == o.rttMs;
 
         public override bool Equals(object obj) => obj is PlayerState o && Equals(o);

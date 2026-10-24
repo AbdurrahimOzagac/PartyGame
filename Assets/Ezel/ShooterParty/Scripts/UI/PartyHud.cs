@@ -6,83 +6,192 @@ using UnityEngine.UI;
 
 namespace ShooterParty.UI
 {
-    // Screen HUD for Knockback Arena (U2, U4-U7 + dash/jump): built by Knockback Arena/Rebuild into
-    // UI/HUD_KnockbackArena.prefab. Game code feeds it; it never decides rules. Timings from the UI brief.
-    public class PartyHud : MonoBehaviour
+    // The in-round HUD (countdown and play), the same for every mini-game: a card per seat, timer and game name,
+    // crosshair + spit cooldown, dash pips, jump slot, 3-2-1-GO, OUT! banner and toasts, the spectate label.
+    // It only reads SessionManager, the round's MiniGameController and the NetworkCritters; it never decides rules.
+    // A mini-game adds its own widget under the cards (MiniGameDefinition.hudWidget, e.g. Knockback's mass line).
+    public class PartyHud : SessionView
     {
-        [System.Serializable]
-        public class ResultRow
-        {
-            public RectTransform root;
-            public Image badge, portrait, crown;
-            public TMP_Text place, playerName, plus, total;
-            public GameObject comeback;
-        }
-
-        public struct Player
-        {
-            public CritterMotor motor; public string name; public Color colour; public Sprite[] faces;
-        }
-
-        public struct Result
-        {
-            public int player, place, plus, total; public bool comeback;
-        }
-
-        [Header("Cards")] public HudCard[] cards;
+        [Header("Cards")] public HudCard[] cards; public RectTransform widgetSlot;
+        [Header("Top")] public TMP_Text timer, gameName;
         [Header("Aim")] public RectTransform crosshair; public Image crosshairImage, cooldownRing, cooldownTrack;
         [Header("Dash + jump")] public Image[] dashPips, dashFills; public CanvasGroup jumpSlot; public Image jumpIcon; public TMP_Text jumpHint;
         [Header("Countdown")] public TMP_Text countdown;
         [Header("OUT")] public RectTransform banner; public Image bannerBg; public TMP_Text bannerTitle, bannerPlace;
         public RectTransform toast; public Image toastPortrait; public TMP_Text toastText;
-        [Header("Results")] public RectTransform results; public ResultRow[] rows; public TMP_Text resultsHint;
+        public TMP_Text spectateLabel;
+        public Sprite[] faces = new Sprite[16];   // colour * 4 + (int)HudCard.Face
 
         public static readonly Color Ink = new Color32(0x16, 0x1A, 0x3A, 0xFF);
+        static readonly Color Go = new Color32(0xD4, 0xF2, 0x1C, 0xFF);
         static readonly string[] Places = { "1st", "2nd", "3rd", "4th" };
 
-        readonly List<Player> players = new List<Player>();
-        CritterMotor localMotor; CritterSpit localSpit;
-        int lastDash = -1; float readyPopT = -1f, hitT = -1f, cooldownStart; bool wasReady = true;
+        SessionManager session;
+        ShotSystem boundShots;
+        NetworkCritter local;
+        CritterSpit localSpit;
+        readonly HashSet<NetworkCritter> outSeen = new HashSet<NetworkCritter>();
+        readonly string[] bound = new string[4];
+        readonly List<PlayerState> seats = new List<PlayerState>(4);
+        string widgetFor;
+        GameObject widget;
+        SessionPhase lastPhase;
+        int lastDash = -1, shownCount;
+        float readyPopT = -1f, hitT = -1f, cooldownStart, countT = -1f, goT = -1f, countdownTotal;
+        bool wasReady = true;
         Color hitColour;
 
-        void Awake()
+        public override bool ShowsIn(SessionPhase p) => p == SessionPhase.Countdown || p == SessionPhase.Playing;
+
+        protected override void Awake()
         {
+            base.Awake();
             countdown.alpha = 0f;
-            banner.gameObject.SetActive(false); toast.gameObject.SetActive(false); results.gameObject.SetActive(false);
+            banner.gameObject.SetActive(false);
+            toast.gameObject.SetActive(false);
+            spectateLabel.transform.parent.gameObject.SetActive(false);
+            foreach (var c in cards) c.gameObject.SetActive(false);
         }
 
-        public void Bind(IList<Player> list, int localIndex)
+        protected override void OnShown() => BindSession(SessionManager.Instance);
+
+        public void BindSession(SessionManager s)
         {
-            players.Clear(); players.AddRange(list);
-            for (int i = 0; i < cards.Length; i++)
-            {
-                cards[i].gameObject.SetActive(i < list.Count);
-                if (i < list.Count) cards[i].Bind(list[i].motor, list[i].name, list[i].colour, list[i].faces, i == localIndex);
-            }
-            if (localIndex >= 0 && localIndex < list.Count)
-            {
-                localMotor = list[localIndex].motor;
-                localSpit = localMotor ? localMotor.GetComponent<CritterSpit>() : null;
-            }
+            session = s;
+            local = null; localSpit = null;
+            outSeen.Clear();
+            for (int i = 0; i < bound.Length; i++) bound[i] = null;
+            lastDash = -1;
         }
 
-        public void SetScores(IList<int> totals, int leader)
+        public HudCard CardFor(int slot)
         {
-            for (int i = 0; i < players.Count && i < cards.Length; i++)
-            {
-                cards[i].SetScore(totals[i]);
-                cards[i].SetCrown(i == leader);
-            }
+            foreach (var c in cards) if (c.gameObject.activeSelf && c.Slot == slot) return c;
+            return null;
+        }
+
+        public Sprite[] FacesFor(int colour)
+        {
+            var f = new Sprite[4];
+            for (int i = 0; i < 4; i++) f[i] = faces[Mathf.Clamp(colour, 0, 3) * 4 + i];
+            return f;
+        }
+
+        // Card i shows this seat; the session binding calls it, and tools and tests can too.
+        public void BindSeat(int card, int slot, string playerName, int colour, bool isLocal)
+        {
+            cards[card].gameObject.SetActive(true);
+            cards[card].Bind(slot, playerName, CritterLook.Colours[Mathf.Clamp(colour, 0, 3)], FacesFor(colour), isLocal);
         }
 
         public void HitConfirm(Color target) { hitT = 0f; hitColour = target; }
 
-        void Update()
+        protected override void Update()
         {
+            base.Update();
             float dt = Time.unscaledDeltaTime;
-            // cooldown ring: only while cooling, radial from the top, then a 120 ms pop when ready
+            var shots = ShotSystem.Instance;
+            if (shots != boundShots)
+            {
+                if (boundShots) boundShots.HitConfirmed -= OnHitConfirmed;
+                boundShots = shots;
+                if (shots) shots.HitConfirmed += OnHitConfirmed;
+            }
+            UpdateWidget();
+            if (session && session.IsSpawned) UpdateSession();
+            UpdateAim(dt);
+            UpdateCountdown(dt);
+        }
+
+        // ------------------------------------------------------------------ seats, timer, OUT
+        void UpdateSession()
+        {
+            var phase = session.Phase.Value;
+            seats.Clear();
+            for (int i = 0; i < session.Players.Count; i++) { var p = session.Players[i]; if (p.isBot || p.connected || p.total > 0) seats.Add(p); }
+            seats.Sort((a, b) => a.slot.CompareTo(b.slot));
+            ulong me = session.NetworkManager.LocalClientId;
+            bool practice = PartyNet.Instance && PartyNet.Instance.Mode == PartyMode.Practice;
+            for (int i = 0; i < cards.Length; i++)
+            {
+                if (i >= seats.Count) { cards[i].gameObject.SetActive(false); bound[i] = null; continue; }
+                var p = seats[i];
+                bool mine = !p.isBot && p.clientId == me;
+                var key = $"{p.slot}|{p.name}|{p.colour}|{mine}";
+                if (bound[i] != key) { BindSeat(i, p.slot, p.name.ToString(), p.colour, mine); bound[i] = key; }
+                var card = cards[i];
+                card.SetScore(p.roundScore);
+                card.SetCrown(p.slot == session.CrownSlot.Value);
+                card.SetConnection(p.isBot || practice || !p.connected ? -1 : p.rttMs);
+            }
+
+            var game = session.CurrentGame;
+            gameName.text = game ? game.displayName.ToUpperInvariant() : "";
+            var ctl = MiniGameController.Current;
+            if (phase == SessionPhase.Playing && ctl && ctl.IsSpawned && ctl.EndsAt.Value > 0)
+            {
+                double left = System.Math.Max(0, ctl.EndsAt.Value - session.NetworkManager.ServerTime.Time);
+                int secs = Mathf.CeilToInt((float)left);
+                timer.text = $"{secs / 60}:{secs % 60:00}";
+                timer.color = secs <= 10 ? Color.Lerp(HudCard.Pink, Color.white, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f)) : Color.white;
+            }
+            else timer.text = phase == SessionPhase.Countdown && game ? $"{(int)game.durationSeconds / 60}:{(int)game.durationSeconds % 60:00}" : "";
+
+            if (!local)
+            {
+                foreach (var c in NetworkCritter.All)
+                    if (c && !c.IsBot.Value && c.HumanClientId.Value == me) { local = c; localSpit = c.GetComponent<CritterSpit>(); break; }
+            }
+            int alive = 0;
+            foreach (var c in NetworkCritter.All) if (c && !c.Eliminated.Value) alive++;
+            foreach (var c in NetworkCritter.All)
+            {
+                if (!c) continue;
+                var card = CardFor(c.Slot.Value);
+                if (card) card.SetOut(c.Eliminated.Value);
+                if (!c.Eliminated.Value || !outSeen.Add(c)) continue;
+                if (phase != SessionPhase.Playing) continue;
+                if (c == local) StartCoroutine(Banner(c.ColourIndex.Value, alive + 1));
+                else if (session.TryGetPlayer(c.Slot.Value, out var p)) StartCoroutine(Toast(p.name.ToString(), p.colour, alive));
+            }
+            bool spectating = local && local.Eliminated.Value;
+            spectateLabel.transform.parent.gameObject.SetActive(spectating);   // the pill with its label
+            if (spectating)
+            {
+                var cam = OverShoulderCamera.Main;
+                var watched = cam && cam.target ? cam.target.GetComponent<NetworkCritter>() : null;
+                spectateLabel.text = watched && watched != local && session.TryGetPlayer(watched.Slot.Value, out var w)
+                    ? $"YOU'RE OUT  <alpha=#AA>· watching {w.name}" : "YOU'RE OUT";
+            }
+            if (lastPhase == SessionPhase.Countdown && phase == SessionPhase.Playing) { goT = 0f; Sfx.Ui("Go"); }
+            if (phase == SessionPhase.Countdown)
+            {
+                double left = session.PhaseEndsAt.Value - session.NetworkManager.ServerTime.Time;
+                if (lastPhase != SessionPhase.Countdown) { countdownTotal = Mathf.Max(0.1f, (float)left); shownCount = 0; }
+                int n = Mathf.Clamp(Mathf.CeilToInt(3f * (float)left / countdownTotal), 1, 3);
+                if (n != shownCount) { shownCount = n; countT = 0f; Sfx.Ui("Beep"); }
+            }
+            lastPhase = phase;
+        }
+
+        void OnHitConfirmed(NetworkCritter victim) => HitConfirm(CritterLook.Colours[Mathf.Clamp(victim.ColourIndex.Value, 0, 3)]);
+
+        void UpdateWidget()
+        {
+            var game = session && session.IsSpawned ? session.CurrentGame : null;
+            var id = game ? game.id : null;
+            if (id == widgetFor) return;
+            widgetFor = id;
+            if (widget) Destroy(widget);
+            widget = game && game.hudWidget ? Instantiate(game.hudWidget, widgetSlot) : null;
+        }
+
+        // ------------------------------------------------------------------ aim, dash, jump (the local critter)
+        void UpdateAim(float dt)
+        {
             if (localSpit)
             {
+                // cooldown ring: only while cooling, radial from the top, then a 120 ms pop when ready
                 bool ready = localSpit.Ready;
                 if (!ready && wasReady) cooldownStart = Time.time;
                 if (ready && !wasReady) readyPopT = 0f;
@@ -104,26 +213,29 @@ namespace ShooterParty.UI
                 crosshairImage.color = Color.Lerp(hitColour, Color.white, k);
                 if (k >= 1f) hitT = -1f;
             }
-            if (localMotor)
+            bool playing = local && !local.Eliminated.Value;
+            crosshair.gameObject.SetActive(playing);
+            jumpSlot.gameObject.SetActive(playing);
+            dashPips[0].transform.parent.gameObject.SetActive(playing);
+            var motor = local ? local.Motor : null;
+            if (!playing || !motor) return;
+            // dash pips: full = white, spent = dim ink, the recharging one fills radially
+            int c = Mathf.Max(0, motor.dashCharges);
+            for (int i = 0; i < dashPips.Length; i++)
             {
-                // dash pips: full = white, spent = dim ink, the recharging one fills radially in the player colour
-                int c = Mathf.Max(0, localMotor.dashCharges);
-                for (int i = 0; i < dashPips.Length; i++)
-                {
-                    bool full = i < c, charging = i == c && c < localMotor.maxDashCharges;
-                    dashPips[i].color = full ? Color.white : new Color(Ink.r, Ink.g, Ink.b, 0.4f);
-                    dashFills[i].enabled = charging;
-                    if (charging) dashFills[i].fillAmount = localMotor.DashRechargeProgress;
-                }
-                if (lastDash >= 0 && c > lastDash && c <= dashPips.Length) StartCoroutine(Punch(dashPips[c - 1].rectTransform, 1.3f, 0.14f));
-                if (lastDash >= 0 && c > lastDash) Sfx.Ui("DashReady");
-                lastDash = c;
-                // jump slot: dashed/dim when empty, bobs when a charge is held
-                bool held = localMotor.jumpCharges != 0;
-                jumpSlot.alpha = held ? 1f : 0.35f;
-                jumpIcon.enabled = held; jumpHint.enabled = held;
-                jumpIcon.rectTransform.anchoredPosition = new Vector2(0f, held ? 3f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2.4f) : 0f);
+                bool full = i < c, charging = i == c && c < motor.maxDashCharges;
+                dashPips[i].color = full ? Color.white : new Color(Ink.r, Ink.g, Ink.b, 0.4f);
+                dashFills[i].enabled = charging;
+                if (charging) dashFills[i].fillAmount = motor.DashRechargeProgress;
             }
+            if (lastDash >= 0 && c > lastDash && c <= dashPips.Length) StartCoroutine(Punch(dashPips[c - 1].rectTransform, 1.3f, 0.14f));
+            if (lastDash >= 0 && c > lastDash) Sfx.Ui("DashReady");
+            lastDash = c;
+            // jump slot: dim when empty, bobs when a charge is held
+            bool held = motor.jumpCharges != 0;
+            jumpSlot.alpha = held ? 1f : 0.35f;
+            jumpIcon.enabled = held; jumpHint.enabled = held;
+            jumpIcon.rectTransform.anchoredPosition = new Vector2(0f, held ? 3f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2.4f) : 0f);
         }
 
         IEnumerator Punch(RectTransform rt, float peak, float time)
@@ -136,56 +248,44 @@ namespace ShooterParty.UI
             rt.localScale = Vector3.one;
         }
 
-        // ------------------------------------------------------------------ countdown (U5)
-        public IEnumerator Countdown(System.Action onGo)
+        // ------------------------------------------------------------------ 3-2-1-GO (U5), paced by the server's countdown
+        void UpdateCountdown(float dt)
         {
-            countdown.color = Color.white;
-            for (int n = 3; n >= 1; n--)
+            if (goT >= 0f)
             {
-                countdown.text = n.ToString();
-                Sfx.Ui("Beep");
-                for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime)
-                {
-                    float s, a, r;
-                    if (t < 0.22f) { float k = t / 0.22f; s = Mathf.Lerp(2.2f, 1f, Ease.OutBack(k)); a = k; r = Mathf.Lerp(-8f, 0f, k); }
-                    else if (t < 0.8f) { s = 1f; a = 1f; r = 0f; }
-                    else { float k = Ease.InQuad((t - 0.8f) / 0.2f); s = Mathf.Lerp(1f, 0.6f, k); a = 1f - k; r = 0f; }
-                    countdown.rectTransform.localScale = Vector3.one * s;
-                    countdown.rectTransform.localRotation = Quaternion.Euler(0f, 0f, r);
-                    countdown.alpha = a;
-                    yield return null;
-                }
-            }
-            countdown.text = "GO!";
-            countdown.color = new Color32(0xD4, 0xF2, 0x1C, 0xFF);
-            Sfx.Ui("Go");
-            onGo?.Invoke();
-            for (float t = 0f; t < 1.05f; t += Time.unscaledDeltaTime)
-            {
-                float s, a = 1f;
+                goT += dt;
+                float t = goT, s, a = 1f;
                 if (t < 0.35f) s = t < 0.2f ? Mathf.Lerp(0f, 1.25f, Ease.OutQuad(t / 0.2f)) * 1.15f : Mathf.Lerp(1.25f, 1f, (t - 0.2f) / 0.15f) * 1.15f;
                 else if (t < 0.8f) s = 1.15f;
-                else { float k = (t - 0.8f) / 0.25f; s = Mathf.Lerp(1.15f, 2f, k); a = 1f - k; }
+                else { float k = Mathf.Clamp01((t - 0.8f) / 0.25f); s = Mathf.Lerp(1.15f, 2f, k); a = 1f - k; }
+                countdown.text = "GO!";
+                countdown.color = Go;
                 countdown.rectTransform.localScale = Vector3.one * s;
                 countdown.rectTransform.localRotation = Quaternion.identity;
                 countdown.alpha = a;
-                yield return null;
+                if (t > 1.05f) { goT = -1f; countdown.alpha = 0f; }
+                return;
             }
-            countdown.alpha = 0f;
+            if (countT < 0f) return;
+            countT += dt;
+            float step = Mathf.Max(0.1f, countdownTotal / 3f), u = countT / step, sc, al, r;
+            if (u < 0.22f) { float k = u / 0.22f; sc = Mathf.Lerp(2.2f, 1f, Ease.OutBack(k)); al = k; r = Mathf.Lerp(-8f, 0f, k); }
+            else if (u < 0.8f) { sc = 1f; al = 1f; r = 0f; }
+            else { float k = Ease.InQuad(Mathf.Clamp01((u - 0.8f) / 0.2f)); sc = Mathf.Lerp(1f, 0.6f, k); al = 1f - k; r = 0f; }
+            countdown.text = shownCount.ToString();
+            countdown.color = Color.white;
+            countdown.rectTransform.localScale = Vector3.one * sc;
+            countdown.rectTransform.localRotation = Quaternion.Euler(0f, 0f, r);
+            countdown.alpha = al;
+            if (u >= 1f) countT = -1f;
         }
 
         // ------------------------------------------------------------------ OUT (U6)
-        public void ShowOut(int player, int place, int remaining, bool isLocal)
+        IEnumerator Banner(int colour, int place)
         {
-            if (player >= 0 && player < cards.Length) cards[player].SetOut();
-            StartCoroutine(isLocal ? Banner(player, place) : Toast(player, remaining));
-        }
-
-        IEnumerator Banner(int player, int place)
-        {
-            var p = players[player];
-            bannerBg.color = p.colour;
-            var light = p.colour.r * 0.299f + p.colour.g * 0.587f + p.colour.b * 0.114f > 0.6f;   // ink text on Chartreuse/Teal
+            var c = CritterLook.Colours[Mathf.Clamp(colour, 0, 3)];
+            bannerBg.color = c;
+            var light = c.r * 0.299f + c.g * 0.587f + c.b * 0.114f > 0.6f;   // ink text on Chartreuse/Teal
             bannerTitle.color = bannerPlace.color = light ? Ink : Color.white;
             bannerTitle.text = "OUT!";
             bannerPlace.text = Places[Mathf.Clamp(place - 1, 0, 3)];
@@ -199,11 +299,10 @@ namespace ShooterParty.UI
             banner.gameObject.SetActive(false);
         }
 
-        IEnumerator Toast(int player, int remaining)
+        IEnumerator Toast(string playerName, int colour, int remaining)
         {
-            var p = players[player];
-            toastPortrait.sprite = p.faces != null && p.faces.Length > 3 ? p.faces[3] : null;
-            toastText.text = $"<b>{p.name}</b> is OUT!  <alpha=#99>· {remaining} left";
+            toastPortrait.sprite = faces[Mathf.Clamp(colour, 0, 3) * 4 + (int)HudCard.Face.Sad];
+            toastText.text = $"<b>{playerName}</b> is OUT!  <alpha=#99>· {remaining} left";
             toast.gameObject.SetActive(true);
             var cg = toast.GetComponent<CanvasGroup>();
             Sfx.Ui("KO");
@@ -212,63 +311,6 @@ namespace ShooterParty.UI
             yield return new WaitForSecondsRealtime(1.6f);
             for (float t = 0f; t < 0.2f; t += Time.unscaledDeltaTime) { cg.alpha = 1f - t / 0.2f; yield return null; }
             toast.gameObject.SetActive(false);
-        }
-
-        // ------------------------------------------------------------------ results (U7)
-        public void ShowResults(IList<Result> order)   // order[0] = 1st
-        {
-            SetPlayControls(false);
-            results.gameObject.SetActive(true);
-            StartCoroutine(RevealResults(order));
-        }
-
-        public void HideResults() { results.gameObject.SetActive(false); SetPlayControls(true); }
-
-        void SetPlayControls(bool on)
-        {
-            crosshair.gameObject.SetActive(on);
-            jumpSlot.gameObject.SetActive(on);
-            dashPips[0].transform.parent.gameObject.SetActive(on);
-        }
-
-        IEnumerator RevealResults(IList<Result> order)
-        {
-            foreach (var r in rows) r.root.gameObject.SetActive(false);
-            resultsHint.alpha = 0f;
-            for (int i = order.Count - 1; i >= 0; i--)   // 4th -> 1st, 150 ms apart
-            {
-                var res = order[i]; var row = rows[i]; var p = players[res.player];
-                row.place.text = Places[Mathf.Clamp(res.place - 1, 0, 3)];
-                row.badge.color = i == 0 ? new Color32(0xFF, 0xD2, 0x3F, 0xFF) : Color.Lerp(p.colour, Color.white, 0.15f);
-                row.portrait.sprite = p.faces != null && p.faces.Length > 1 ? p.faces[i == 0 ? 1 : i == order.Count - 1 ? 3 : 0] : null;
-                row.playerName.text = p.name;
-                row.plus.text = "+" + res.plus;
-                row.comeback.SetActive(res.comeback);
-                row.crown.enabled = false;
-                row.root.gameObject.SetActive(true);
-                StartCoroutine(SlideIn(row.root));
-                StartCoroutine(CountUp(row.total, res.total - res.plus - (res.comeback ? 1 : 0), res.total));
-                Sfx.Ui("UiClick");
-                yield return new WaitForSecondsRealtime(0.15f);
-            }
-            yield return new WaitForSecondsRealtime(0.5f);
-            rows[0].crown.enabled = true;            // the crown lands last, with the fanfare
-            StartCoroutine(Punch(rows[0].crown.rectTransform, 1.6f, 0.3f));
-            Sfx.Ui("Fanfare");
-            for (float t = 0f; t < 0.4f; t += Time.unscaledDeltaTime) { resultsHint.alpha = t / 0.4f; yield return null; }
-        }
-
-        IEnumerator SlideIn(RectTransform rt)
-        {
-            var end = rt.anchoredPosition; end.x = 0f;
-            for (float t = 0f; t < 0.25f; t += Time.unscaledDeltaTime) { rt.anchoredPosition = new Vector2(Mathf.Lerp(700f, 0f, Ease.OutBack(t / 0.25f)), end.y); yield return null; }
-            rt.anchoredPosition = end;
-        }
-
-        static IEnumerator CountUp(TMP_Text text, int from, int to)
-        {
-            for (float t = 0f; t < 0.6f; t += Time.unscaledDeltaTime) { text.text = Mathf.RoundToInt(Mathf.Lerp(from, to, Ease.OutQuad(t / 0.6f))).ToString(); yield return null; }
-            text.text = to.ToString();
         }
     }
 }

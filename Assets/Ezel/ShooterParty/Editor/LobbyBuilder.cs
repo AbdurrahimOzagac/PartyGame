@@ -200,7 +200,43 @@ namespace ShooterParty.EditorTools
                 stage.pedestals[i] = pedestal;
                 stage.critters[i] = g.GetComponentInChildren<CritterAnimator>();
             }
+            BuildPodium(stage, cam.transform.position);
             UiBuilder.SaveBackdropScene(scene, LobbyScenePath, "LS_SP_Lobby");
+        }
+
+        // The Final's podium, where the pedestals stand (LobbyStage swaps them): critters by total, crown, confetti.
+        static void BuildPodium(LobbyStage stage, Vector3 camera)
+        {
+            stage.faceTowards = camera;
+            stage.crownPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ArtRoot + "/Prefabs/Props/Crown.prefab")?.GetComponent<LeaderCrown>();
+            stage.confettiPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ArtRoot + "/VFX/VFX_Confetti.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ArtRoot + "/Prefabs/Arena/Podium_Ice.prefab");
+            if (!prefab) { Debug.LogWarning("[Lobby] no Podium_Ice prefab; the final has no podium"); return; }
+            var podium = (GameObject)PrefabUtility.InstantiatePrefab(prefab, stage.transform);
+            podium.transform.localPosition = new Vector3(0f, 0f, 0.3f);
+            stage.podium = podium;
+            var tops = PodiumStands(podium.GetComponentInChildren<MeshFilter>());
+            stage.stands = new Vector3[4];
+            for (int i = 0; i < 4; i++)
+                stage.stands[i] = i < tops.Length ? tops[i]
+                    : podium.transform.position + new Vector3(2.4f + 0.9f * (i - tops.Length), 0f, -1.2f);   // off the podium, on the ice
+        }
+
+        // Top centre of each podium column, tallest (1st) first, read from the mesh so the Blender -> Unity axis
+        // mapping never matters. World positions.
+        public static Vector3[] PodiumStands(MeshFilter mf)
+        {
+            // the flat column tops are the only exactly-upward faces; group them by height level
+            var mesh = mf.sharedMesh;
+            var v = mesh.vertices; var n = mesh.normals;
+            var tops = Enumerable.Range(0, v.Length)
+                .Where(i => mf.transform.TransformDirection(n[i]).y > 0.9995f)
+                .Select(i => mf.transform.TransformPoint(v[i])).ToArray();
+            var cols = tops.GroupBy(p => Mathf.Round(p.y * 20f))
+                .Select(g => new Vector3(g.Average(p => p.x), g.Max(p => p.y), g.Average(p => p.z)))
+                .OrderByDescending(p => p.y).Take(4).ToArray();
+            Debug.Log("[Lobby] podium stands: " + string.Join(", ", cols.Select(c => c.ToString("F2"))));
+            return cols;
         }
     }
 }

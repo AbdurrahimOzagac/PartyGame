@@ -62,6 +62,35 @@ namespace ShooterParty
             return false;
         }
 
+        // ------------------------------------------------------------------ the seats, as every client sees them
+        public List<PlayerState> Seats()
+        {
+            var list = new List<PlayerState>(Players.Count);
+            for (int i = 0; i < Players.Count; i++) list.Add(Players[i]);
+            return list;
+        }
+
+        // Highest total first (before: without the last round's points); ties by round wins, then seat.
+        public List<PlayerState> SeatsByTotal(bool before = false)
+        {
+            int Score(PlayerState p) => before ? p.total - p.lastPoints : p.total;
+            var list = Seats();
+            list.Sort((a, b) => Score(a) != Score(b) ? Score(b).CompareTo(Score(a)) : a.wins != b.wins ? b.wins.CompareTo(a.wins) : a.slot.CompareTo(b.slot));
+            return list;
+        }
+
+        // The last round's finishing order: rank, then seat. Seats without a rank (left before it) go last.
+        public List<PlayerState> SeatsByRoundRank()
+        {
+            int Rank(PlayerState p) => p.lastRank == 0 ? 99 : p.lastRank;
+            var list = Seats();
+            list.Sort((a, b) => Rank(a) != Rank(b) ? Rank(a).CompareTo(Rank(b)) : a.slot.CompareTo(b.slot));
+            return list;
+        }
+
+        // The champion seat(s), by the server's own rules (ScoreRules.Champions).
+        public IReadOnlyList<int> ChampionSlots() => ScoreRules.Champions(SessionFlow.TotalsOf(Seats()));
+
         public bool TryGetLocalPlayer(out PlayerState p)
         {
             ulong me = NetworkManager.LocalClientId;

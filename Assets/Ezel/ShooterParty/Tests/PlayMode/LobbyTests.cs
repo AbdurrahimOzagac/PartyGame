@@ -14,25 +14,15 @@ namespace ShooterParty.Tests
     // The lobby through its own view API, in a Practice room (1 human leader + 3 bots) reached from the real menu.
     public class LobbyTests
     {
-        const string BootScene = "Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity";
         LobbyView lobby;
         SessionManager session;
 
         [UnitySetUp]
         public IEnumerator EnterPracticeLobby()
         {
-            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(BootScene, new LoadSceneParameters(LoadSceneMode.Single));
-            for (float t = 0f; t < 10f && !(UiRoot.Instance && SceneManager.GetActiveScene().name == "SP_Menu"); t += Time.unscaledDeltaTime) yield return null;
-            var ui = UiRoot.Instance;
-            ui.nameDialog.Open(NameCodeDialog.Mode.Practice);
-            ui.nameDialog.nameField.text = "Tester";
-            ui.nameDialog.Confirm();
-            lobby = ui.lobby;
-            for (float t = 0f; t < 10f && !(lobby.IsShown && SessionManager.Instance && SessionManager.Instance.Players.Count == 4
-                && SceneManager.GetActiveScene().name == SessionManager.LobbyScene); t += Time.unscaledDeltaTime) yield return null;
+            yield return NetTestRig.BootToPracticeLobby();
+            lobby = UiRoot.Instance.lobby;
             session = SessionManager.Instance;
-            Assert.IsTrue(lobby.IsShown, "the lobby view shows in the Lobby phase");
-            yield return null;
         }
 
         [UnityTearDown]
