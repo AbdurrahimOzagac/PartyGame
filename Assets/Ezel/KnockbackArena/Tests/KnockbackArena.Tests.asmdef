@@ -3,6 +3,7 @@
     "rootNamespace": "KnockbackArena.Tests",
     "references": [
         "ShooterParty.Runtime",
+        "ShooterParty.PlayModeTests",
         "Unity.Netcode.Runtime",
         "KnockbackArena.Runtime",
         "UnityEngine.TestRunner",

@@ -34,6 +34,23 @@ namespace ShooterParty.Tests
             return net;
         }
 
+        public const string NetPrefabs = "Assets/Ezel/ShooterParty/Data/NetPrefabs.asset";
+        public const string ShotSystemPrefab = "Assets/Ezel/ShooterParty/Prefabs/Net_ShotSystem.prefab";
+
+        // Practice host with the real prefab list and server singletons (ShotSystem, ...), as SP_Boot configures it.
+        public static PartyNet StartNetworked()
+        {
+            foreach (var stray in Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+                if (!stray.IsSpawned && stray.gameObject.scene.IsValid()) Object.DestroyImmediate(stray.gameObject);
+            var net = PartyNet.Ensure();
+            net.prefabs = AssetDatabase.LoadAssetAtPath<NetworkPrefabsList>(NetPrefabs);
+            Assert.IsNotNull(net.prefabs, "missing " + NetPrefabs);
+            net.serverSingletons = new[] { Load(ShotSystemPrefab).GetComponent<NetworkObject>() };
+            Assert.IsTrue(net.StartPractice("Tester"), "practice host failed to start");
+            Assert.IsNotNull(ShotSystem.Instance, "ShotSystem spawned on server start");
+            return net;
+        }
+
         public static NetworkCritter Spawn(int slot, bool bot, ulong owner = NetworkManager.ServerClientId, Vector3 pos = default)
         {
             var go = Object.Instantiate(Load(CritterPrefab), pos, Quaternion.identity);
@@ -48,6 +65,8 @@ namespace ShooterParty.Tests
         public static IEnumerator Teardown()
         {
             foreach (var nc in Object.FindObjectsByType<NetworkCritter>(FindObjectsSortMode.None)) Object.Destroy(nc.gameObject);
+            foreach (var b in Object.FindObjectsByType<SpitBlob>(FindObjectsSortMode.None)) Object.Destroy(b.gameObject);
+            yield return null;   // let critters go before the network does, so no event fires an RPC mid-shutdown
             if (PartyNet.Instance)
             {
                 PartyNet.Instance.Leave();

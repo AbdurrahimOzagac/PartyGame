@@ -66,6 +66,7 @@ namespace KnockbackArena.EditorTools
             CubeCritterSetup.RebuildAll();
             UiSetup.BuildAll();
             BuildAll();
+            ShooterParty.EditorTools.ShooterPartySetup.BuildAll();   // core assets last: it registers every network prefab
             AssetDatabase.SaveAssets();
             Debug.Log("[KnockbackArena] everything rebuilt");
         }

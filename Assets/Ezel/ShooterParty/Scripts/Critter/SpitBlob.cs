@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ShooterParty
@@ -30,6 +31,12 @@ namespace ShooterParty
 
         public bool Splatted => state != State.Flying;
         public Color Colour => colour;
+        public Vector3 LastVelocity => lastVelocity;
+
+        // Online, a cosmetic blob only shows a shot (critters pass through it); the server's blob decides, and
+        // Impacted hands its contacts to ShotSystem instead of applying knockback here.
+        public bool Cosmetic { get; set; }
+        public event Action<SpitBlob, Collision> Impacted;
 
         void Awake()
         {
@@ -54,6 +61,9 @@ namespace ShooterParty
             var col = GetComponent<Collider>();
             if (ignore != null && col)
                 foreach (var c in ignore) if (c) Physics.IgnoreCollision(col, c);
+            if (Cosmetic && col)
+                foreach (var m in FindObjectsByType<CritterMotor>(FindObjectsSortMode.None))
+                    foreach (var c in m.GetComponentsInChildren<Collider>()) Physics.IgnoreCollision(col, c);
             colour = Fx.ColourOf(mat);
             foreach (var r in GetComponentsInChildren<SkinnedMeshRenderer>()) if (mat) r.sharedMaterial = mat;
             if (trail) Fx.Tint(trail, colour);
@@ -159,23 +169,34 @@ namespace ShooterParty
         void OnCollisionEnter(Collision c)
         {
             if (state != State.Flying) return;
+            if (Impacted != null) { Impacted(this, c); return; }
             var contact = c.GetContact(0);
+            if (Cosmetic) { ForceImpact(contact.point, contact.normal, null); return; }   // world geometry only
             var dir = lastVelocity; dir.y = 0f;
             dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : transform.forward;
             var motor = c.collider.GetComponentInParent<CritterMotor>();
             bool critter = motor && motor.gameObject != owner;
+            if (critter) motor.Knockback(dir * knockback + Vector3.up * knockback * 0.25f);
+            ForceImpact(contact.point, contact.normal, critter ? motor.transform : null);
+        }
+
+        // The visible end of a shot: absorbed into a critter (rideOn) or splatted on the world. Online, the server's
+        // events call this for the cosmetic copies; offline the collision above does.
+        public void ForceImpact(Vector3 point, Vector3 normal, Transform rideOn)
+        {
+            if (state != State.Flying) return;
+            bool critter = rideOn;
             if (critter)
             {
-                motor.Knockback(dir * knockback + Vector3.up * knockback * 0.25f);
                 CameraShake.Report(owner ? owner.transform : null, 0.08f);
-                CameraShake.Report(motor, 0.45f);
-                Sfx.Play("Hit", contact.point);
+                CameraShake.Report(rideOn, 0.45f);
+                Sfx.Play("Hit", point);
             }
-            else Sfx.Play("Splat", contact.point, 0.8f);
-            Fx.Play(impactFx, contact.point, Quaternion.LookRotation(contact.normal), colour);
-            transform.SetPositionAndRotation(contact.point, Quaternion.LookRotation(-contact.normal));
-            sinkDir = -contact.normal;
-            if (critter) transform.SetParent(motor.transform, true);   // ride along while it sinks in
+            else Sfx.Play("Splat", point, 0.8f);
+            Fx.Play(impactFx, point, Quaternion.LookRotation(normal), colour);
+            transform.SetPositionAndRotation(point, Quaternion.LookRotation(-normal));
+            sinkDir = -normal;
+            if (critter) transform.SetParent(rideOn, true);   // ride along while it sinks in
             Begin(critter ? State.Absorb : State.Splat, 0.18f);
         }
     }

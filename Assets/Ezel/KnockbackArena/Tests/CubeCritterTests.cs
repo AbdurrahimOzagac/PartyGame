@@ -40,6 +40,19 @@ namespace KnockbackArena.Tests
             Assert.AreEqual(1.2f, b.max.y, 0.05f, "about 1.2 m tall including the curl");
         }
 
+        [Test]
+        public void EveryCritterPrefabHasTheAnimatorController()
+        {
+            var ac = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Ezel/KnockbackArena/Animation/CubeCritter.controller");
+            Assert.IsNotNull(ac);
+            foreach (var name in new[] { "CubeCritter", "CubeCritter_Tomato", "CubeCritter_Teal", "CubeCritter_Chartreuse", "CubeCritter_Violet", "CubeCritter_Net" })
+            {
+                var go = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Ezel/KnockbackArena/Prefabs/{name}.prefab");
+                Assert.IsNotNull(go, name);
+                Assert.AreEqual(ac, go.GetComponentInChildren<Animator>().runtimeAnimatorController, name + " lost its animator controller");
+            }
+        }
+
         [UnityTest]
         public IEnumerator SpitAnimatesTheFace()
         {

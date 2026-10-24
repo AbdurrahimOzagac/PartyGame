@@ -3,6 +3,7 @@
     "rootNamespace": "KnockbackArena.EditorTools",
     "references": [
         "ShooterParty.Runtime",
+        "ShooterParty.Editor",
         "Unity.Netcode.Runtime",
         "KnockbackArena.Runtime",
         "Unity.RenderPipelines.Universal.Runtime",

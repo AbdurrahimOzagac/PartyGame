@@ -1,0 +1,11 @@
+{
+    "name": "ShooterParty.Editor",
+    "rootNamespace": "ShooterParty.EditorTools",
+    "references": [
+        "ShooterParty.Runtime",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ]
+}

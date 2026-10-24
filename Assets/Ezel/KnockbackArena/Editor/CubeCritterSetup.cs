@@ -446,6 +446,8 @@ namespace KnockbackArena.EditorTools
             {
                 var inst = (GameObject)PrefabUtility.InstantiatePrefab(baseAsset);
                 ApplyPlayerMaterials(inst, name, mats);
+                // the controller asset was just recreated: set it explicitly, or the variant can record a stale null
+                inst.GetComponentInChildren<Animator>().runtimeAnimatorController = ac;
                 inst.GetComponent<CritterSpit>().blobMaterial = mats["Goo_" + name];
                 inst.name = "CubeCritter_" + name;
                 outp[name] = PrefabUtility.SaveAsPrefabAsset(inst, $"{Root}/Prefabs/CubeCritter_{name}.prefab");   // variant of the base
@@ -454,6 +456,7 @@ namespace KnockbackArena.EditorTools
             // networked variant (ShooterParty core): only this prefab carries Netcode components. NetworkRigidbody keeps a
             // body kinematic until spawned, and a host start rejects loose NetworkObjects, so offline uses stay on the above.
             var net = (GameObject)PrefabUtility.InstantiatePrefab(baseAsset);
+            net.GetComponentInChildren<Animator>().runtimeAnimatorController = ac;
             var no = net.AddComponent<NetworkObject>();
             no.DontDestroyWithOwner = true;          // a leaver's critter stays until the round handles it
             var nt = net.AddComponent<CritterNetworkTransform>();

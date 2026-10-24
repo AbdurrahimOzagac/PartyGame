@@ -170,11 +170,19 @@ namespace ShooterParty
             if (epoch != Epoch.Value) return;   // a hit from an earlier round arriving late
             Motor.SetMass(newMass);
             Motor.ApplyVelocityChange(dv);
+            if (ShotSystem.Instance) ShotSystem.Instance.LocalVictimImpact(blobId, this, dv);
             KnockbackAppliedRpc(blobId);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         void KnockbackAppliedRpc(int blobId) => KnockbackApplied?.Invoke(this, blobId);
+
+        // Owner -> server: "I spat". The critter is the RPC's object, so nobody can fire as someone else.
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        public void FireRpc(Vector3 origin, Vector3 dir, double clientTime)
+        {
+            if (ShotSystem.Instance) ShotSystem.Instance.ValidateAndFire(this, origin, dir, clientTime);
+        }
 
         public void ServerTeleport(Vector3 pos, Quaternion rot)
         {
@@ -194,9 +202,9 @@ namespace ShooterParty
         }
 
         // ------------------------------------------------------------------ one-shot actions for other copies
-        void OnDashed() => ActionRpc(CritterAction.Dash, 0f);
-        void OnJumped() => ActionRpc(CritterAction.Jump, 0f);
-        void OnLanded(float speed) { if (speed >= 2f) ActionRpc(CritterAction.Land, speed); }
+        void OnDashed() { if (IsSpawned) ActionRpc(CritterAction.Dash, 0f); }
+        void OnJumped() { if (IsSpawned) ActionRpc(CritterAction.Jump, 0f); }
+        void OnLanded(float speed) { if (IsSpawned && speed >= 2f) ActionRpc(CritterAction.Land, speed); }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         void ActionRpc(CritterAction a, float value)

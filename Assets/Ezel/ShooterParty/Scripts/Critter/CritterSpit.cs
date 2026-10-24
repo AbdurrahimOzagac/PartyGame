@@ -17,6 +17,7 @@ namespace ShooterParty
 
         CritterAnimator anim;
         CritterMotor motor;
+        NetworkCritter net;
         Collider[] own;
         float readyAt;
 
@@ -26,6 +27,7 @@ namespace ShooterParty
         {
             anim = GetComponentInChildren<CritterAnimator>();
             motor = GetComponent<CritterMotor>();
+            net = GetComponent<NetworkCritter>();
             own = GetComponentsInChildren<Collider>();
         }
 
@@ -33,6 +35,7 @@ namespace ShooterParty
         {
             aimDir.y = 0f;
             if (!Ready || !blobPrefab || aimDir.sqrMagnitude < 1e-4f) return false;
+            if (net && net.IsSpawned && (!net.Simulated || net.Eliminated.Value)) return false;   // online: only the owner shoots
             aimDir.Normalize();
             readyAt = Time.time + cooldown;
             if (motor) motor.FaceTowards(aimDir, true);
@@ -46,11 +49,12 @@ namespace ShooterParty
             yield return new WaitForSeconds(CritterAnimator.SpitReleaseTime);
             var muzzle = anim ? anim.Muzzle : null;
             var pos = muzzle ? muzzle.position + dir * 0.08f : transform.position + Vector3.up * 0.4f + dir * 0.6f;
+            Fx.Play(popFx, pos, Quaternion.LookRotation(dir), Fx.ColourOf(blobMaterial));
+            Sfx.Play("Spit", pos);
+            if (net && net.IsSpawned && ShotSystem.Instance) { ShotSystem.Instance.Fire(net, pos, dir); yield break; }
             var blob = Instantiate(blobPrefab, pos, Quaternion.LookRotation(dir));
             blob.gravity = gravity;
             blob.Launch(gameObject, dir * speed + Vector3.up * 0.8f, knockback, blobMaterial, own);
-            Fx.Play(popFx, pos, Quaternion.LookRotation(dir), Fx.ColourOf(blobMaterial));
-            Sfx.Play("Spit", pos);
         }
     }
 }
