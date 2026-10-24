@@ -44,7 +44,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0ef7749076d9e448fbacfb6b54b106f5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.LeaderCrown
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.LeaderCrown
   boneLocalPosition: {x: 0.01, y: 0.38499987, z: -0.009999999}
   boneLocalRotation: {x: -0.034791917, y: 0.0027381831, z: 0.07841131, w: 0.99631006}
   boneLocalScale: {x: 1, y: 0.9999999, z: 0.9999999}

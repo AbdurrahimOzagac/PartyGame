@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using KnockbackArena.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.Playground
 {
@@ -25,7 +27,7 @@ namespace KnockbackArena.Playground
 
         public Slot[] slots;
         public OverShoulderCamera cam;
-        public KnockbackHud hud;
+        public PartyHud hud;
         public LobbyPanel lobby;
         public MassRing ringPrefab;
         public Transform podium;
@@ -108,7 +110,7 @@ namespace KnockbackArena.Playground
                 m.respawnBelowY = float.NegativeInfinity;  // falling off is final here
                 if (s.human)
                 {
-                    var input = live[i].AddComponent<PlaygroundPlayerInput>();
+                    var input = live[i].AddComponent<LocalCritterInput>();
                     input.cam = cam; input.showHelp = false; input.enabled = active;
                 }
                 else live[i].AddComponent<ArenaBotAI>().enabled = active;
@@ -135,9 +137,9 @@ namespace KnockbackArena.Playground
             outOrder.Clear();
             lobby.gameObject.SetActive(false);
             hud.gameObject.SetActive(true);
-            var list = new List<KnockbackHud.Player>();
+            var list = new List<PartyHud.Player>();
             for (int i = 0; i < slots.Length; i++)
-                list.Add(new KnockbackHud.Player { motor = motors[i], name = slots[i].name, colour = slots[i].colour, faces = slots[i].faces });
+                list.Add(new PartyHud.Player { motor = motors[i], name = slots[i].name, colour = slots[i].colour, faces = slots[i].faces });
             hud.Bind(list, human);
             int leader = Leader();
             hud.SetScores(totals, leader);
@@ -150,7 +152,7 @@ namespace KnockbackArena.Playground
                 phase = Phase.Playing;
                 foreach (var g in live)
                 {
-                    var input = g.GetComponent<PlaygroundPlayerInput>(); if (input) input.enabled = true;
+                    var input = g.GetComponent<LocalCritterInput>(); if (input) input.enabled = true;
                     var ai = g.GetComponent<ArenaBotAI>(); if (ai) ai.enabled = true;
                 }
                 Sfx.Music("MusicGameplay");
@@ -197,9 +199,9 @@ namespace KnockbackArena.Playground
             int last = 0;                                                    // comeback: last place overall gets +1
             for (int i = 1; i < totals.Length; i++) if (totals[i] < totals[last]) last = i;
             totals[last] += 1;
-            var rows = new List<KnockbackHud.Result>();
+            var rows = new List<PartyHud.Result>();
             for (int r = 0; r < order.Count; r++)
-                rows.Add(new KnockbackHud.Result { player = order[r], place = r + 1, plus = plus[order[r]], comeback = order[r] == last, total = totals[order[r]] });
+                rows.Add(new PartyHud.Result { player = order[r], place = r + 1, plus = plus[order[r]], comeback = order[r] == last, total = totals[order[r]] });
             hud.SetScores(totals, Leader());
 
             // the podium rises out of the ice; everyone stands on it facing the results camera
@@ -210,7 +212,7 @@ namespace KnockbackArena.Playground
                 var g = live[order[r]];
                 g.SetActive(true);
                 foreach (var ring in g.GetComponentsInChildren<MassRing>(true)) ring.gameObject.SetActive(false);
-                var input = g.GetComponent<PlaygroundPlayerInput>(); if (input) input.enabled = false;
+                var input = g.GetComponent<LocalCritterInput>(); if (input) input.enabled = false;
                 var ai = g.GetComponent<ArenaBotAI>(); if (ai) ai.enabled = false;
                 var rb = g.GetComponent<Rigidbody>(); rb.isKinematic = true;
                 g.GetComponent<CritterMotor>().enabled = false;

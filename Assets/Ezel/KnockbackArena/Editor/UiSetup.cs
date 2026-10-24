@@ -6,6 +6,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.TextCore.LowLevel;
 using UnityEngine.UI;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.EditorTools
 {
@@ -202,7 +204,7 @@ namespace KnockbackArena.EditorTools
         {
             var go = new GameObject("HUD_KnockbackArena", typeof(RectTransform));
             OverlayCanvas(go, 10);
-            var hud = go.AddComponent<KnockbackHud>();
+            var hud = go.AddComponent<PartyHud>();
             var top = new Vector2(0.5f, 1f); var mid = new Vector2(0.5f, 0.5f);
 
             // cards: 4 x 300x100, 16 px gaps, 32 px from the top
@@ -230,7 +232,7 @@ namespace KnockbackArena.EditorTools
                 hc.crown = I(card, "Crown", S("UI_IconCrown"), Gold, mid, new Vector2(-122f, 44f), new Vector2(44f, 44f));
                 hc.crown.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 12f);
                 hc.crown.enabled = false;
-                hc.deltaText = T(card, "Delta", "-8", 28f, KnockbackArena.UI.HudCard.Pink, mid, new Vector2(70f, 22f), new Vector2(60f, 34f));
+                hc.deltaText = T(card, "Delta", "-8", 28f, ShooterParty.UI.HudCard.Pink, mid, new Vector2(70f, 22f), new Vector2(60f, 34f));
                 hud.cards[i] = hc;
             }
 
@@ -276,12 +278,12 @@ namespace KnockbackArena.EditorTools
             // results (right 40 %): rows reveal 4th -> 1st
             hud.results = Panel(go.transform, "Results", new Vector2(1f, 0.5f), new Vector2(-400f, 0f), new Vector2(720f, 700f), new Color(Ink.r, Ink.g, Ink.b, 0.9f));
             T(hud.results, "Title", "RESULTS", 64f, Color.white, mid, new Vector2(0f, 290f), new Vector2(600f, 80f));
-            hud.rows = new KnockbackHud.ResultRow[4];
+            hud.rows = new PartyHud.ResultRow[4];
             for (int i = 0; i < 4; i++)
             {
                 var row = R(hud.results, "Row" + i, mid, new Vector2(0f, 170f - 122f * i), new Vector2(640f, 110f));
                 I(row, "Bg", S("UI_Panel"), new Color(1f, 1f, 1f, i == 0 ? 0.16f : 0.08f), mid, Vector2.zero, new Vector2(640f, 110f), Image.Type.Sliced);
-                var r = new KnockbackHud.ResultRow { root = row };
+                var r = new PartyHud.ResultRow { root = row };
                 r.badge = I(row, "Badge", S("UI_Circle"), Color.white, mid, new Vector2(-262f, 0f), new Vector2(84f, 84f));
                 r.place = T(row, "Place", "1st", 30f, Ink, mid, new Vector2(-262f, 0f), new Vector2(84f, 40f), TextAlignmentOptions.Center, true, false);
                 r.crown = I(row, "Crown", S("UI_IconCrown"), Gold, mid, new Vector2(-290f, 46f), new Vector2(50f, 50f));

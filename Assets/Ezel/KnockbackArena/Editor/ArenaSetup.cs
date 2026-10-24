@@ -10,6 +10,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.EditorTools
 {
@@ -326,7 +328,7 @@ namespace KnockbackArena.EditorTools
             new GameObject("Post FX").AddComponent<Volume>().sharedProfile = PostProfile();
 
             // UI
-            var hud = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/HUD_KnockbackArena.prefab"))).GetComponent<KnockbackHud>();
+            var hud = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/HUD_KnockbackArena.prefab"))).GetComponent<PartyHud>();
             var lobby = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/Lobby_KnockbackArena.prefab"))).GetComponent<LobbyPanel>();
             var es = new GameObject("EventSystem", typeof(EventSystem)).AddComponent<InputSystemUIInputModule>();
             es.AssignDefaultActions();

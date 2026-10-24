@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Physical spit projectile: a glossy candy-goo ball in the shooter's colour. SpitBlob.fbx blend shapes:
     // "Stretch" (convex egg along travel, +Z) and "Squash" (pancake). Timings follow the VFX brief:

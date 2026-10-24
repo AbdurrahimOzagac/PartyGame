@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena.UI
+namespace ShooterParty.UI
 {
     // The handful of easing curves the UI brief calls for (easings.net definitions), t in 0..1.
     public static class Ease

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Movement feel for one critter: speed lines + snow spray while knocked back fast (V4), snow puff on landing
     // (V5), dash burst, footsteps. Listens to CritterMotor events; purely local presentation.

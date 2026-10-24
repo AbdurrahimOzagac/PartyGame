@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace KnockbackArena.UI
+namespace ShooterParty.UI
 {
     // Hover tick on buttons (SFX9). Clicks are played by the views that own the buttons.
     public class UiHoverSound : MonoBehaviour, IPointerEnterHandler

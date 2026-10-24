@@ -2,6 +2,8 @@
     "name": "KnockbackArena.Runtime",
     "rootNamespace": "KnockbackArena",
     "references": [
+        "ShooterParty.Runtime",
+        "Unity.Netcode.Runtime",
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.TextMeshPro"

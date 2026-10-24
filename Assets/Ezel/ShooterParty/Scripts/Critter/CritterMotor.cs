@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Rigidbody locomotion for a critter: in-place clips, so this is what actually moves it.
-    // Inputs come from a player (PlaygroundPlayerInput) or an AI; hits arrive through Knockback().
+    // Inputs come from a player (LocalCritterInput) or an AI; hits arrive through Knockback().
     // Pitch rules wired here: every hit lowers mass (not size), Shift dash with charges, jump as a pickup charge.
     [RequireComponent(typeof(Rigidbody))]
     public class CritterMotor : MonoBehaviour

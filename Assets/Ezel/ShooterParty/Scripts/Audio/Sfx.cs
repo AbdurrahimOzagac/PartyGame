@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Fire-and-forget sound calls; a no-op when the scene has no SfxPlayer (tests, other mini-games).
     public static class Sfx

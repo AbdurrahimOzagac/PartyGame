@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.EditorTools
 {

@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.EditorTools
 {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Mario-style contact shadow straight under the critter, whatever the sun does, so height reads in jumps and
     // knockback arcs. Shrinks and fades with height; hidden when there is no floor below ("no shadow" = off).

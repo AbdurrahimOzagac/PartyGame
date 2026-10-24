@@ -188,7 +188,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 434ddabbdaed545fe8cb30a181df4e14, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.SpitBlob
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.SpitBlob
   gravity: 3
   lifetime: 2.5
   visual: {fileID: 981343485173073261}

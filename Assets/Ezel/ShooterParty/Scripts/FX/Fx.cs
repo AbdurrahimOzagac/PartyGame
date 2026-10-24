@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // One-shot particle effects. Textures and gradients are white; colour comes from here, so one prefab
     // serves all four players. Child systems opt in by name: "Tint*" takes the player colour, "Pastel*" a

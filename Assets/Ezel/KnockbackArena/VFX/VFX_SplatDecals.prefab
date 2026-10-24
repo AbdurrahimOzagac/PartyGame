@@ -4875,4 +4875,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 33599e084787b4ef2b98f5b168d9c570, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.SplatDecals
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.SplatDecals

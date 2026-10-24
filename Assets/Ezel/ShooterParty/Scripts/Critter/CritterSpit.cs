@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Fires a SpitBlob. The blob leaves on a timer (Spit frame 4), not an animation event: events can
     // double-fire in crossfades and stop when the Animator is culled.

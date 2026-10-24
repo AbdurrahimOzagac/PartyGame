@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Bridges gameplay to the CubeCritter Animator, and layers random blinks on top of whatever the clips do.
     // Clip timings come from the Blender source (projects/game_assets/knockback_arena/blender/v2/clips.py).

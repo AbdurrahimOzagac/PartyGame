@@ -2,6 +2,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.UI
 {

@@ -8,6 +8,8 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.EditorTools
 {
@@ -470,7 +472,7 @@ namespace KnockbackArena.EditorTools
             var player = (GameObject)PrefabUtility.InstantiatePrefab(prefabs["Tomato"]);
             player.name = "Player (Tomato)";
             player.transform.position = new Vector3(0f, 0f, -3.5f);
-            var input = player.AddComponent<PlaygroundPlayerInput>();
+            var input = player.AddComponent<LocalCritterInput>();
 
             var spots = new[] { ("Teal", new Vector3(-3.2f, 0f, 2f)), ("Chartreuse", new Vector3(0f, 0f, 3.6f)), ("Violet", new Vector3(3.2f, 0f, 2f)) };
             foreach (var (name, pos) in spots)

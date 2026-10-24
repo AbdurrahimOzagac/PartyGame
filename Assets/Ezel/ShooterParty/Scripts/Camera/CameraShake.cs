@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Trauma-based camera shake (Eiserloh, GDC 2016): offset = trauma^2 * smooth noise. Local feel only: it
     // never touches networked state, and it runs after the follow camera so aiming (which uses the camera

@@ -2,6 +2,8 @@
     "name": "KnockbackArena.Tests",
     "rootNamespace": "KnockbackArena.Tests",
     "references": [
+        "ShooterParty.Runtime",
+        "Unity.Netcode.Runtime",
         "KnockbackArena.Runtime",
         "UnityEngine.TestRunner",
         "Unity.TextMeshPro"

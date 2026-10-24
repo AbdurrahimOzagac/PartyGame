@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Scene player: a small round-robin pool of AudioSources plus one music source. Sfx.Play is a no-op without
     // one in the scene (tests, other mini-games).

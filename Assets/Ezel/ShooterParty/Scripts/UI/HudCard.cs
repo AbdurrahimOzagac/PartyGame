@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KnockbackArena.UI
+namespace ShooterParty.UI
 {
     // One player's card in the top strip (U2): portrait, name, MASS (Smash-style % + bar with a drain trail),
     // score, crown. Mass is the read the whole mode hangs on, so a hit punches, shakes and floats the loss.

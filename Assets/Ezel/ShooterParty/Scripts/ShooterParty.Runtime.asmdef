@@ -1,0 +1,13 @@
+{
+    "name": "ShooterParty.Runtime",
+    "rootNamespace": "ShooterParty",
+    "references": [
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
+        "Unity.Collections",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "autoReferenced": true
+}

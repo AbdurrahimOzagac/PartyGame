@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Goo splats left on the ice by missed shots: one flat particle system for the whole arena (no URP Decal
     // feature needed). Each splat holds 3 s, then fades and shrinks over 1 s (curves live on the prefab).

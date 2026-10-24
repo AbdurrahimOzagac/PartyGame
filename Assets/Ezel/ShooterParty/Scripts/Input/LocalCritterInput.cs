@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace KnockbackArena.Playground
+namespace ShooterParty
 {
     // Keyboard/mouse + gamepad driver for one critter in the asset playground scene.
     [RequireComponent(typeof(CritterMotor), typeof(CritterSpit))]
-    public class PlaygroundPlayerInput : MonoBehaviour
+    public class LocalCritterInput : MonoBehaviour
     {
         public OverShoulderCamera cam;
 

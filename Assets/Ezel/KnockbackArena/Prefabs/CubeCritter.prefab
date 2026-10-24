@@ -189,7 +189,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 670004d5a1d434df4810d05589ab7d90, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.CritterMotor
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.CritterMotor
   moveSpeed: 3.5
   acceleration: 28
   airControl: 0.35
@@ -216,7 +216,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b968b4345eb3c4d66b04838d87fa4536, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.CritterSpit
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.CritterSpit
   blobPrefab: {fileID: 5306892952176839151, guid: 732f6448815834b3eb3ff0fde9983486, type: 3}
   blobMaterial: {fileID: 2100000, guid: 394e91c009131442a9ee78193c5380c9, type: 2}
   popFx: {fileID: 2013065423592695806, guid: adce06526120c4797998bb309c5bb6ea, type: 3}
@@ -234,7 +234,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b321fa476a09451e9c80ac25357c1b9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.CritterFx
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.CritterFx
   speedLines: {fileID: 4515161049863482464}
   landPuff: {fileID: 6453826408306079452, guid: 488e9a997d2d24a5da61b646d962b7b7, type: 3}
   dashBurst: {fileID: 6003928199359041253, guid: 98e1aa16f42b9497694997d999714438, type: 3}
@@ -250,7 +250,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74d3277e7557041cca5d83bb83a3ca05, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.BlobShadow
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.BlobShadow
   shadow: {fileID: 6543587819431951693}
   fullHeight: 1.6
   maxHeight: 6
@@ -446,4 +446,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac3af0f11a92646a0b8dfa6297ea5f73, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.CritterAnimator
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.CritterAnimator

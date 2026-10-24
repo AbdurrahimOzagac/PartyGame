@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace KnockbackArena.Playground
+namespace ShooterParty
 {
     // Minimal over-the-shoulder orbit camera for the asset playground (not the game's final camera).
     public class OverShoulderCamera : MonoBehaviour

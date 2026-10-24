@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // The session leader's crown (pitch comeback rule: "everyone can see who to catch"). Rides the "Top" bone so
     // it jiggles with the head; sits around the goo curl with a jaunty tilt. Offsets are relative to the bone and

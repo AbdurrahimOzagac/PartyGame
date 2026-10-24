@@ -5,6 +5,8 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.Tests
 {

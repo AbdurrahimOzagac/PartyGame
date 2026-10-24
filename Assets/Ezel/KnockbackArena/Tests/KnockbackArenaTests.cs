@@ -6,6 +6,8 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
+using ShooterParty;
+using ShooterParty.UI;
 
 namespace KnockbackArena.Tests
 {
@@ -113,8 +115,8 @@ namespace KnockbackArena.Tests
             ground.transform.position = new Vector3(-20f, -0.5f, 0f); ground.transform.localScale = new Vector3(10f, 1f, 10f);
             var c = Spawn("Prefabs/CubeCritter_Teal.prefab", new Vector3(-20f, 0f, 0f));
             var m = c.GetComponent<CritterMotor>(); m.massLossPerHit = 0.35f;
-            var hud = Object.Instantiate(Load<GameObject>("UI/HUD_KnockbackArena.prefab")).GetComponent<KnockbackHud>();
-            hud.Bind(new[] { new KnockbackHud.Player { motor = m, name = "MOCHI", colour = Color.cyan, faces = null } }, 0);
+            var hud = Object.Instantiate(Load<GameObject>("UI/HUD_KnockbackArena.prefab")).GetComponent<PartyHud>();
+            hud.Bind(new[] { new PartyHud.Player { motor = m, name = "MOCHI", colour = Color.cyan, faces = null } }, 0);
             yield return null;
             Assert.AreEqual("100%", hud.cards[0].massText.text);
             m.Knockback(Vector3.right);

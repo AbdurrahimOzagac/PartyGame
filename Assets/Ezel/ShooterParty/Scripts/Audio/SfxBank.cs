@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KnockbackArena
+namespace ShooterParty
 {
     // Sound bank: id -> clip variants with volume and pitch jitter. Built by Knockback Arena/Rebuild.
     [CreateAssetMenu(menuName = "Knockback Arena/Sfx Bank")]

@@ -4,11 +4,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace KnockbackArena.UI
+namespace ShooterParty.UI
 {
     // Screen HUD for Knockback Arena (U2, U4-U7 + dash/jump): built by Knockback Arena/Rebuild into
     // UI/HUD_KnockbackArena.prefab. Game code feeds it; it never decides rules. Timings from the UI brief.
-    public class KnockbackHud : MonoBehaviour
+    public class PartyHud : MonoBehaviour
     {
         [System.Serializable]
         public class ResultRow
