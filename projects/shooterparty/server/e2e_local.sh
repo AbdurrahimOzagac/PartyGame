@@ -3,6 +3,7 @@
 #
 #   e2e_local.sh [basic|leave-during-load|drop] <desktop game binary>
 #   E2E_REMOTE=ezel@trok E2E_SERVER_DIR=Builds/PiServer e2e_local.sh basic <desktop game binary>
+#   e2e_local.sh rooms <desktop game binary>     the room service starts the server; joins go through its HTTP API
 #
 # Local: the same executable runs as server (-party-server) and clients (-autopilot).
 # Remote: the server build folder is copied to E2E_REMOTE (over SSH) and run there; the clients here reach it
@@ -30,7 +31,25 @@ cleanup() {
 trap cleanup EXIT
 echo "logs: $OUT"
 
-if [ -n "$REMOTE" ]; then
+if [ "$SCENARIO" = rooms ]; then
+  RPORT=$((PORT + 2000)); mkdir -p "$OUT/rooms"; printf '%s' "$SECRET" > "$OUT/secret"
+  python3 "$HERE/rooms/room_service.py" --server-cmd "'$BIN' -timeScale 0.25" --secret-file "$OUT/secret" \
+    --listen 127.0.0.1:$RPORT --status-listen 127.0.0.1:$((RPORT + 1)) --slot-base-port $PORT \
+    --ws-url-template "ws://127.0.0.1:{port}/g/{slot}" --maintenance-file "$OUT/maintenance" --server-log-dir "$OUT/rooms" \
+    > "$OUT/rooms.log" 2>&1 &
+  PIDS+=($!)
+  sleep 1
+  api() { curl -s -H 'X-ShooterParty-Version: 1' -H 'Content-Type: application/json' -X POST -d "$2" "http://127.0.0.1:$RPORT/api/v1$1"; }
+  field() { python3 -c "import json,sys; print(json.load(sys.stdin).get('$1',''))"; }
+  CREATE=$(api /rooms '{"name":"Ann","replaceLeaversWithBots":false}')
+  CODE=$(echo "$CREATE" | field code); URL=$(echo "$CREATE" | field wsUrl)
+  [ -n "$CODE" ] || { echo "create failed: $CREATE"; cat "$OUT/rooms.log"; exit 1; }
+  TICKETS=("$(echo "$CREATE" | field ticket)")
+  for n in Bea Cem; do TICKETS+=("$(api /rooms/$CODE/join "{\"name\":\"$n\"}" | field ticket)"); done
+  echo "  room $CODE at $URL"
+  server_out() { cat "$OUT"/rooms/*.log > "$OUT/server.out" 2>/dev/null; }
+  server_alive() { ls "$OUT"/rooms/*.log >/dev/null 2>&1 && ! grep -q server_exited "$OUT/rooms.log"; }
+elif [ -n "$REMOTE" ]; then
   [ -d "${E2E_SERVER_DIR:-}" ] || { echo "set E2E_SERVER_DIR to the Pi server build folder"; exit 2; }
   rsync -az --delete --exclude '*_BackUpThisFolder_ButDontShipItWithYourGame' --exclude '*_DoNotShip' \
     -e "ssh -o BatchMode=yes" "$E2E_SERVER_DIR/" "$REMOTE:$REMOTE_DIR/"
@@ -66,7 +85,8 @@ for i in 0 1 2; do
     leave-during-load) [ "$i" = 2 ] && extra=(-leaveAt Loading) ;;
     drop) [ "$i" = 1 ] && extra=(-bridge -dropAt 8) ;;
   esac
-  ticket=$(python3 "$HERE/rooms/make_ticket.py" --secret-hex "$SECRET" --room $ROOM --pid "p$i" --name "${NAMES[$i]}" $lead --ttl 120)
+  if [ "$SCENARIO" = rooms ]; then ticket=${TICKETS[$i]}
+  else ticket=$(python3 "$HERE/rooms/make_ticket.py" --secret-hex "$SECRET" --room $ROOM --pid "p$i" --name "${NAMES[$i]}" $lead --ttl 120); fi
   "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot \
     -join "$URL" -ticket "$ticket" -name "${NAMES[$i]}" ${extra[@]+"${extra[@]}"} > /dev/null 2>&1 &
   PIDS+=($!)
