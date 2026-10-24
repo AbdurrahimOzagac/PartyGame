@@ -13,7 +13,7 @@ SCENARIO=${1:-basic}
 BIN=${2:-${SHOOTERPARTY_BIN:-}}
 [ -x "$BIN" ] || { echo "usage: $0 [basic|leave-during-load|drop] <game binary>"; exit 2; }
 HERE=$(cd "$(dirname "$0")" && pwd)
-OUT=${E2E_OUT:-$(mktemp -d -t shooterparty-e2e)}
+OUT=${E2E_OUT:-$(mktemp -d -t shooterparty-e2e)}; mkdir -p "$OUT"
 PORT=${E2E_PORT:-7701}
 REMOTE=${E2E_REMOTE:-}
 REMOTE_DIR=${E2E_REMOTE_DIR:-shooterparty_e2e}
