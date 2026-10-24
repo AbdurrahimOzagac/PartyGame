@@ -105,6 +105,7 @@ GameObject:
   - component: {fileID: 5553488634368089635}
   - component: {fileID: 6720073962767935500}
   - component: {fileID: 1876271926524808081}
+  - component: {fileID: 8904158913882702031}
   m_Layer: 0
   m_Name: CubeCritter
   m_TagString: Untagged
@@ -221,6 +222,7 @@ MonoBehaviour:
   blobMaterial: {fileID: 2100000, guid: 394e91c009131442a9ee78193c5380c9, type: 2}
   popFx: {fileID: 2013065423592695806, guid: adce06526120c4797998bb309c5bb6ea, type: 3}
   speed: 12
+  gravity: 3
   cooldown: 0.33333334
   knockback: 3.5
 --- !u!114 &6720073962767935500
@@ -258,6 +260,33 @@ MonoBehaviour:
   apexSize: 0.7
   groundAlpha: 0.45
   apexAlpha: 0.2
+--- !u!114 &8904158913882702031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6503099018688546500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73fe28302f68b47829c168b98aeab814, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.CritterLook
+  body:
+  - {fileID: 2100000, guid: 32c0bf07ade744e9ba21a72fee4f22b3, type: 2}
+  - {fileID: 2100000, guid: 2a3a769fa21b542cab90604a5d749eeb, type: 2}
+  - {fileID: 2100000, guid: 44ee0a70e6f60409a9062a5caff2ff30, type: 2}
+  - {fileID: 2100000, guid: a6bc3179a0c664145b55e9aade80d275, type: 2}
+  emblem:
+  - {fileID: 2100000, guid: d3723f1dc8b624247aff9ee3dd8da530, type: 2}
+  - {fileID: 2100000, guid: 0791ab9c1273447fd9df3d016096ac95, type: 2}
+  - {fileID: 2100000, guid: 0752effbdf3df43f7bbfe4ade65d6cbc, type: 2}
+  - {fileID: 2100000, guid: 7a77e61fb08cd451e9380df83ba9f022, type: 2}
+  goo:
+  - {fileID: 2100000, guid: 394e91c009131442a9ee78193c5380c9, type: 2}
+  - {fileID: 2100000, guid: 70eeb682e4a084a9c92adaa9c9db2557, type: 2}
+  - {fileID: 2100000, guid: 87d105d9eb43c4732adfed7e1688533d, type: 2}
+  - {fileID: 2100000, guid: f60389d64439e45ee953f1cc64c7d510, type: 2}
 --- !u!1001 &1687501686695635660
 PrefabInstance:
   m_ObjectHideFlags: 0

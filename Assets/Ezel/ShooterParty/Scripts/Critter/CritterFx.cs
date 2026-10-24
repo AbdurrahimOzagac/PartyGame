@@ -22,10 +22,10 @@ namespace ShooterParty
             var spit = GetComponent<CritterSpit>();
             if (spit) tint = Fx.ColourOf(spit.blobMaterial);
             if (speedLines) lineSystems = speedLines.GetComponentsInChildren<ParticleSystem>();
-            motor.Landed += OnLanded;
-            motor.Dashed += OnDashed;
+            motor.Landed += PlayLand;
+            motor.Dashed += () => PlayDash(motor.DashDirection);
             motor.Knocked += OnKnocked;
-            motor.Jumped += () => Sfx.Play("Jump", transform.position);
+            motor.Jumped += PlayJump;
         }
 
         void Update()
@@ -49,7 +49,10 @@ namespace ShooterParty
             else stepT = 0.05f;
         }
 
-        void OnLanded(float speed)
+        // Public so NetworkCritter can replay them on other players' copies (their motor raises no events here).
+        public void PlayJump() => Sfx.Play("Jump", transform.position);
+
+        public void PlayLand(float speed)
         {
             if (speed < 2f) return;
             float k = Mathf.InverseLerp(2f, 9f, speed);
@@ -59,9 +62,9 @@ namespace ShooterParty
             if (speed > 6f) CameraShake.Report(this, 0.12f);
         }
 
-        void OnDashed()
+        public void PlayDash(Vector3 direction)
         {
-            var back = -motor.DashDirection;
+            var back = -direction;
             Fx.Play(dashBurst, transform.position, back.sqrMagnitude > 0.01f ? Quaternion.LookRotation(back) : transform.rotation, tint);
             Sfx.Play("Whoosh", transform.position, 0.7f, 1.25f);
         }

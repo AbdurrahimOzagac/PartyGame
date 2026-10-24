@@ -11,6 +11,7 @@ namespace ShooterParty
         public Material blobMaterial;         // the shooter's goo material; its colour also tints the FX
         public ParticleSystem popFx;          // little goo burst at the mouth on release
         public float speed = 12f;
+        public float gravity = 3f;            // floaty arc (CritterConfig.shotGravity)
         public float cooldown = 10f / 30f;    // re-spit allowed from Spit frame 10
         public float knockback = 3.5f;        // ~1.2 m slide per hit on PM_Critter; playground value, tune per mode
 
@@ -46,6 +47,7 @@ namespace ShooterParty
             var muzzle = anim ? anim.Muzzle : null;
             var pos = muzzle ? muzzle.position + dir * 0.08f : transform.position + Vector3.up * 0.4f + dir * 0.6f;
             var blob = Instantiate(blobPrefab, pos, Quaternion.LookRotation(dir));
+            blob.gravity = gravity;
             blob.Launch(gameObject, dir * speed + Vector3.up * 0.8f, knockback, blobMaterial, own);
             Fx.Play(popFx, pos, Quaternion.LookRotation(dir), Fx.ColourOf(blobMaterial));
             Sfx.Play("Spit", pos);

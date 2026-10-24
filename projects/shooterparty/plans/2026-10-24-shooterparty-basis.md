@@ -299,7 +299,7 @@
   - `void ServerSetup(int slot, Color colour, CritterConfig cfg, PlayerModifiers mods)`;
   - `[Rpc(SendTo.Owner)] void KnockbackRpc(Vector3 dv, float newMass, int epoch)`;
   - `[Rpc(SendTo.Server)] void KnockbackAppliedRpc(int blobId)`;
-  - `[Rpc(SendTo.Server, RequireOwnership = true)] void ActionRpc(CritterAction a)`. The server applies its token bucket and re-broadcasts with `[Rpc(SendTo.NotOwner)] ActionEchoRpc`. `enum CritterAction { Spit, Dash, Jump, Land }` is raised by the owner from the motor events;
+  - `[Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)] void ActionRpc(CritterAction a)`. The server applies its token bucket and re-broadcasts with `[Rpc(SendTo.NotOwner)] ActionEchoRpc`. `enum CritterAction { Spit, Dash, Jump, Land }` is raised by the owner from the motor events;
   - `[Rpc(SendTo.Owner)] void TeleportRpc(Vector3 pos, Quaternion rot)`.
 - Behaviour:
   - On non-simulated copies, disable `CritterMotor` and drive the animator from position deltas.
@@ -337,7 +337,7 @@
 - Consumes: `NetworkCritter` (Task 7).
 - Produces:
   - `ShotSystem : NetworkBehaviour` (singleton prefab, spawned by `PartyNet` when the server or host starts, `destroyWithScene=false`):
-    - `void Fire(NetworkCritter shooter, Vector3 origin, Vector3 dir, double clientTime)`. This is the owner-side entry: cosmetic blob plus the shooter's `NetworkCritter.FireRpc`. The RPC lives on the critter as `[Rpc(SendTo.Server, RequireOwnership = true)] FireRpc(Vector3 origin, Vector3 dir, double clientTime)`, so the shooter is the RPC's object and can't be spoofed, even when host and bots share clientId 0.
+    - `void Fire(NetworkCritter shooter, Vector3 origin, Vector3 dir, double clientTime)`. This is the owner-side entry: cosmetic blob plus the shooter's `NetworkCritter.FireRpc`. The RPC lives on the critter as `[Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)] FireRpc(Vector3 origin, Vector3 dir, double clientTime)`, so the shooter is the RPC's object and can't be spoofed, even when host and bots share clientId 0.
     - `void ServerFire(NetworkCritter shooter, Vector3 origin, Vector3 dir, double time)`. `FireRpc` calls it after validating cooldown on client timestamps, origin within `speed*lag+0.5` and the token bucket (6/s, 12 burst). Server-simulated bots call it directly.
     - `[Rpc(SendTo.ClientsAndHost)] BlobSpawnedRpc(int id, int shooterSlot, Vector3 p0, Vector3 v0, double serverTime)`.
     - `BlobHitRpc(int id, int victimSlot, Vector3 point, Vector3 normal)`, sent to the shooter at once and to observers after the victim's ack.

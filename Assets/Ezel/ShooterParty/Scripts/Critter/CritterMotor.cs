@@ -31,7 +31,7 @@ namespace ShooterParty
 
         Rigidbody rb;
         CritterAnimator anim;
-        Vector3 moveInput, faceDir, spawnPos, dashDir;
+        Vector3 moveInput, faceDir, spawnPos, dashDir, remoteVelocity;
         Quaternion spawnRot;
         float stunUntil, dashUntil, rechargeAt, fallSpeed;
         bool jumpQueued, wasGrounded = true;
@@ -43,7 +43,14 @@ namespace ShooterParty
         public float StartMass { get; private set; }
         public float MassFraction => StartMass > 0f ? rb.mass / StartMass : 1f;
         public float DashRechargeProgress => dashCharges >= maxDashCharges ? 1f : 1f - Mathf.Clamp01((rechargeAt - Time.time) / dashRecharge);
-        public Vector3 HorizontalVelocity { get { var v = rb.linearVelocity; v.y = 0f; return v; } }
+        public Vector3 HorizontalVelocity { get { var v = Remote ? remoteVelocity : rb.linearVelocity; v.y = 0f; return v; } }
+
+        // A network copy of someone else's critter: its owner simulates it, NetworkCritter feeds the observed
+        // velocity/grounded state here so animation and FX still read naturally. The motor itself stays disabled.
+        public bool Remote { get; set; }
+        public void SetRemoteState(Vector3 velocity, bool grounded) { remoteVelocity = velocity; Grounded = grounded; }
+
+        public void SetMass(float mass) => rb.mass = Mathf.Max(0.01f, mass);
 
         void Awake()
         {
@@ -94,6 +101,16 @@ namespace ShooterParty
             dashUntil = 0f;
             if (anim) anim.PlayHit(Mathf.Clamp01(impulse.magnitude / 5f));
             Knocked?.Invoke(impulse);
+        }
+
+        // Networked hit: the server already computed the velocity change with its mass and sets the new mass itself.
+        public void ApplyVelocityChange(Vector3 dv)
+        {
+            rb.AddForce(dv, ForceMode.VelocityChange);
+            stunUntil = Time.time + hitStun;
+            dashUntil = 0f;
+            if (anim) anim.PlayHit(Mathf.Clamp01(dv.magnitude * rb.mass / 5f));
+            Knocked?.Invoke(dv * rb.mass);
         }
 
         void FixedUpdate()

@@ -5,6 +5,8 @@ using KnockbackArena.Playground;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
+using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -427,6 +429,13 @@ namespace KnockbackArena.EditorTools
             var shr = sh.GetComponent<MeshRenderer>();
             shr.sharedMaterial = mats["Shadow"]; shr.shadowCastingMode = ShadowCastingMode.Off; shr.receiveShadows = false;
             go.AddComponent<BlobShadow>().shadow = shr;
+            // one prefab can be painted in any player colour (menu, lobby, podium and the networked critter)
+            var look = go.AddComponent<CritterLook>();
+            for (int i = 0; i < Players.Length; i++)
+            {
+                var n = Players[i].name;
+                look.body[i] = mats["Body_" + n]; look.emblem[i] = mats["Emblem_" + n]; look.goo[i] = mats["Goo_" + n];
+            }
             ApplyPlayerMaterials(vis, "Tomato", mats);
             var basePath = $"{Root}/Prefabs/CubeCritter.prefab";
             var baseAsset = PrefabUtility.SaveAsPrefabAsset(go, basePath);
@@ -442,6 +451,22 @@ namespace KnockbackArena.EditorTools
                 outp[name] = PrefabUtility.SaveAsPrefabAsset(inst, $"{Root}/Prefabs/CubeCritter_{name}.prefab");   // variant of the base
                 Object.DestroyImmediate(inst);
             }
+            // networked variant (ShooterParty core): only this prefab carries Netcode components. NetworkRigidbody keeps a
+            // body kinematic until spawned, and a host start rejects loose NetworkObjects, so offline uses stay on the above.
+            var net = (GameObject)PrefabUtility.InstantiatePrefab(baseAsset);
+            var no = net.AddComponent<NetworkObject>();
+            no.DontDestroyWithOwner = true;          // a leaver's critter stays until the round handles it
+            var nt = net.AddComponent<CritterNetworkTransform>();
+            nt.AuthorityMode = NetworkTransform.AuthorityModes.Owner;
+            nt.UseHalfFloatPrecision = true;
+            nt.UseQuaternionCompression = true;
+            nt.SyncRotAngleX = false; nt.SyncRotAngleZ = false;   // critters only yaw
+            nt.SyncScaleX = false; nt.SyncScaleY = false; nt.SyncScaleZ = false;
+            net.AddComponent<NetworkRigidbody>().UseRigidBodyForMotion = true;
+            net.AddComponent<NetworkCritter>();
+            net.name = "CubeCritter_Net";
+            outp["Net"] = PrefabUtility.SaveAsPrefabAsset(net, $"{Root}/Prefabs/CubeCritter_Net.prefab");
+            Object.DestroyImmediate(net);
             return outp;
         }
 
