@@ -287,7 +287,7 @@ namespace KnockbackArena.EditorTools
                 "Knock someone off the ice for a point. The top scorer wears the crown.",
                 "Grab a spring to jump. Dash (Shift) to save yourself at the edge.",
             };
-            def.controlsHint = "WASD move · Mouse aim · Click spit · Shift dash · Space jump";
+            def.controlsHint = "WASD move · Mouse aim · Hold click to spit · Shift dash · Space jump";
             def.sceneName = "KnockbackArena_Ice";
             def.critterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Prefabs/CubeCritter_Net.prefab").GetComponent<NetworkObject>();
             def.minPlayers = 3; def.maxPlayers = 4; def.durationSeconds = 120f;

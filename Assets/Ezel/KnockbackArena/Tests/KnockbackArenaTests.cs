@@ -162,6 +162,20 @@ namespace KnockbackArena.Tests
             Assert.IsNotNull(RenderSettings.skybox); Assert.IsTrue(RenderSettings.fog);
             foreach (var go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
         }
+
+        [UnityTest]
+        public System.Collections.IEnumerator ZPlaygroundKeepsItsDebugKeysOnItsOwnComponent()
+        {
+            yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
+                "Assets/Ezel/KnockbackArena/Scenes/CubeCritter_Playground.unity", new UnityEngine.SceneManagement.LoadSceneParameters());
+            yield return null; yield return null;
+            var input = Object.FindAnyObjectByType<LocalCritterInput>();
+            Assert.IsNotNull(input, "the playground player");
+            Assert.IsNotNull(input.cam, "drives the scene camera");
+            Assert.IsNotNull(input.GetComponent<Playground.PlaygroundControls>(), "taunt/win/lose keys, mouse toggle and hint: playground only");
+            Assert.IsTrue(input.cam.Captured, "no menus here: the playground holds the mouse from the start");
+            foreach (var go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);
+        }
     }
 }
 #endif

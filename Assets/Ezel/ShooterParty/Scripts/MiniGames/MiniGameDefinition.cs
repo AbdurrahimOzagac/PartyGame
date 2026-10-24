@@ -13,7 +13,7 @@ namespace ShooterParty
         public string displayName = "My Mini-game";
         public string tagline = "";
         [TextArea] public string[] howToPlay = new string[0];   // 2-3 short lines on the intro card
-        public string controlsHint = "WASD move · Mouse aim · Click spit · Shift dash";
+        public string controlsHint = "WASD move · Mouse aim · Hold click to spit · Shift dash";
         public Sprite icon;
 
         [Header("Running it")]

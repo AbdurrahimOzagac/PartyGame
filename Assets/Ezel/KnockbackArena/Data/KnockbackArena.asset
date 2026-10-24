@@ -19,8 +19,8 @@ MonoBehaviour:
   - Every hit pushes and makes the target lighter, so the next hit pushes further.
   - Knock someone off the ice for a point. The top scorer wears the crown.
   - Grab a spring to jump. Dash (Shift) to save yourself at the edge.
-  controlsHint: "WASD move \xB7 Mouse aim \xB7 Click spit \xB7 Shift dash \xB7 Space
-    jump"
+  controlsHint: "WASD move \xB7 Mouse aim \xB7 Hold click to spit \xB7 Shift dash
+    \xB7 Space jump"
   icon: {fileID: 21300000, guid: f39f6ecce3bb14698a69a626c3d44057, type: 3}
   sceneName: KnockbackArena_Ice
   controllerPrefab: {fileID: 8695074851064499266, guid: 63e8aa1d90bb74dfdb0d71065d6c5133, type: 3}

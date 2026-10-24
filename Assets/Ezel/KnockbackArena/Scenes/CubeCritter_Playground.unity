@@ -235,6 +235,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 400007182552081603, guid: f0efb906140cc4361ba1b893907d243f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 108506550}
+    - targetCorrespondingSourceObject: {fileID: 400007182552081603, guid: f0efb906140cc4361ba1b893907d243f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 108506551}
   m_SourcePrefab: {fileID: 100100000, guid: f0efb906140cc4361ba1b893907d243f, type: 3}
 --- !u!4 &108506548 stripped
 Transform:
@@ -259,7 +262,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.LocalCritterInput
   cam: {fileID: 2012260348}
-  showHelp: 1
+--- !u!114 &108506551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108506549}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e57afc7741fc94f678cfafc2d23a55a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.Playground.PlaygroundControls
 --- !u!1 &930438200
 GameObject:
   m_ObjectHideFlags: 0
