@@ -126,11 +126,12 @@ The room service writes one JSON object per line. Every line has `event` and `t`
 | `server_end` | the game server announced its exit (`@@END`) | `code` |
 | `server_exited` | the process ended; `rc` 0 is a normal exit | `code`, `slot`, `rc` |
 | `server_error` | a game server output line containing `Exception` or `[Error]` | `code`, `line` |
+| `server_log` | every other line of the game server's Unity log (about 200 per session) | `code`, `line` |
 | `bug` | the service hit an unexpected error (the client got a 500) | `error` |
 
 What normal looks like: `tickMs` around 16.7 (the server runs at 60 frames per second), and `tickMsMax` not far above 20. On the Pi a full session measured 16.7 ms average, 20 ms max, and a peak of about 190 MB RSS per room.
 
-The game server's full Unity log is not stored by default. The service reads its stdout and keeps only the events above. To keep everything, add `--server-log-dir /mnt/apps/partyshooter/home/logs` to `ExecStart` in the unit and create that directory, owned by `partyshooter`. Each room then writes `<code>-<pid>.log`.
+The game server's whole Unity log reaches journald as `server_log` events, so `journalctl -u partyshooter-rooms -o cat | grep '"code": "BKFZT"'` shows one room's full story. To also keep a plain file per room, add `--server-log-dir /mnt/apps/partyshooter/home/logs` to `ExecStart` in the unit and create that directory, owned by `partyshooter`. Each room then writes `<code>-<pid>.log` (nothing prunes those files).
 
 ## 7. Status
 

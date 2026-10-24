@@ -1,0 +1,34 @@
+# The game's own Cloudflare tunnel (partyshooter.ezellm.com). The website's tunnel is a different unit and is never
+# touched. Kill switch: systemctl stop cloudflared-partyshooter (the game goes offline, the website stays up).
+[Unit]
+Description=Cloudflare tunnel for ShooterParty
+After=network-online.target partyshooter-rooms.service
+Wants=network-online.target
+
+[Service]
+Type=notify
+DynamicUser=yes
+# the credential is handed over by systemd, so neither the game nor this process owns it on disk
+LoadCredential=partyshooter.json:/etc/cloudflared/partyshooter.json
+ExecStart=/usr/local/bin/cloudflared --no-autoupdate --config /etc/cloudflared/partyshooter.yml tunnel run
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

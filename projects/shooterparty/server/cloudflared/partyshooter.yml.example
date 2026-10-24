@@ -1,0 +1,16 @@
+# /etc/cloudflared/partyshooter.yml (deploy.sh --tunnel writes it with the tunnel's id).
+# Exact paths only: the room API and the two game sockets; everything else is a 404 at Cloudflare's edge.
+tunnel: TUNNEL_ID
+credentials-file: /run/credentials/cloudflared-partyshooter.service/partyshooter.json
+no-autoupdate: true
+ingress:
+  - hostname: partyshooter.ezellm.com
+    path: ^/api/
+    service: http://127.0.0.1:7700
+  - hostname: partyshooter.ezellm.com
+    path: ^/g/1$
+    service: http://127.0.0.1:7701
+  - hostname: partyshooter.ezellm.com
+    path: ^/g/2$
+    service: http://127.0.0.1:7702
+  - service: http_status:404

@@ -112,3 +112,9 @@ InitTestScene*.unity*
 .DS_Store
 ._*
 ~$*
+
+# ShooterParty: builds and server secrets never go in git
+/[Bb]uilds/
+*.pem
+projects/shooterparty/server/**/secret
+projects/shooterparty/server/cloudflared/*.json

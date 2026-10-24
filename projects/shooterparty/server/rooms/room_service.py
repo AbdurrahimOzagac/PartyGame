@@ -224,12 +224,17 @@ class RoomService:
             elif line.startswith("@@STATS "):
                 try:
                     room.stats = json.loads(line[8:])
-                except ValueError:
+                    log("server_stats", code=room.code, **room.stats)   # every 10 s: tick ms, players, rtt (journald)
+                except (ValueError, TypeError):
                     pass
+            elif line == "@@END":
+                log("server_end", code=room.code)
             elif line.startswith("@@RESULT "):
                 log("session_result", code=room.code, result=line[9:200])
             elif "Exception" in line or "[Error]" in line:
                 log("server_error", code=room.code, line=line[:300])
+            elif line.strip():
+                log("server_log", code=room.code, line=line[:500])   # Unity's own log (-logFile -): ~200 lines a session
         rc = room.proc.wait()
         if out:
             out.close()

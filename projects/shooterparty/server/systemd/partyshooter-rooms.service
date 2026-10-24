@@ -1,0 +1,52 @@
+# ShooterParty room service: party codes, signed join tickets, and one Unity game server per room (children).
+# Installed by deploy.sh. Listens on 127.0.0.1 only; the partyshooter tunnel is the sole way in.
+[Unit]
+Description=ShooterParty room service and game servers
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=partyshooter
+Group=partyshooter
+Environment=HOME=/mnt/apps/partyshooter/home
+WorkingDirectory=/mnt/apps/partyshooter/home
+ExecStart=/usr/bin/python3 -E -s /mnt/apps/partyshooter/rooms/room_service.py \
+    --server-cmd /mnt/apps/partyshooter/server/ShooterPartyServer \
+    --secret-file /etc/partyshooter/secret \
+    --listen 127.0.0.1:7700 --status-listen 127.0.0.1:7709 \
+    --slots 2 --slot-base-port 7701 \
+    --ws-url-template wss://partyshooter.ezellm.com/g/{slot} \
+    --maintenance-file /etc/partyshooter/maintenance
+Restart=on-failure
+RestartSec=3
+
+# Sandbox (spec section 7). Code is root-owned and read-only; only the service home is writable
+# (Unity writes ~/.config/unity3d there). Logs go to journald (Unity runs with -logFile -).
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/mnt/apps/partyshooter/home
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+UMask=0077
+MemoryMax=1500M
+CPUQuota=250%
+TasksMax=512
+
+[Install]
+WantedBy=multi-user.target

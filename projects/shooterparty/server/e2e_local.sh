@@ -2,7 +2,7 @@
 # End-to-end test: a dedicated game server + 3 self-playing clients over WebSocket.
 #
 #   e2e_local.sh [basic|leave-during-load] <desktop game binary>
-#   E2E_REMOTE=ezel@trok E2E_SERVER_DIR=Builds/PiServer e2e_local.sh basic <desktop game binary>
+#   E2E_REMOTE=<ssh-host> E2E_SERVER_DIR=Builds/PiServer e2e_local.sh basic <desktop game binary>
 #   e2e_local.sh rooms <desktop game binary>     the room service starts the server; joins go through its HTTP API
 #   e2e_local.sh drop <desktop game binary>      rooms + Cem's connection drops 8 s into round 1; it must rejoin (token)
 #
@@ -17,8 +17,8 @@ BIN=${2:-${SHOOTERPARTY_BIN:-}}
 ROOMS=; [ "$SCENARIO" = rooms ] || [ "$SCENARIO" = drop ] && ROOMS=1
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${E2E_OUT:-$(mktemp -d -t shooterparty-e2e)}; mkdir -p "$OUT"
-PORT=${E2E_PORT:-7701}
 REMOTE=${E2E_REMOTE:-}
+PORT=${E2E_PORT:-$([ -n "$REMOTE" ] && echo 7801 || echo 7701)}   # remote: stay off the live rooms' 7701/7702
 REMOTE_DIR=${E2E_REMOTE_DIR:-shooterparty_e2e}
 SECRET=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
 ROOM=BCDFG
@@ -28,7 +28,7 @@ SERVER_ARGS="-batchmode -nographics -logFile - -party-server -slot 1 -port $PORT
 
 cleanup() {
   for p in ${PIDS[@]+"${PIDS[@]}"}; do kill "$p" 2>/dev/null; done
-  [ -n "$REMOTE" ] && ssh -o BatchMode=yes "$REMOTE" "pkill -f 'ShooterPartyServer -batchmode' || true"
+  [ -n "$REMOTE" ] && ssh -o BatchMode=yes "$REMOTE" "pkill -f 'ShooterPartyServer -batchmode.*-port $PORT ' || true"
 }
 trap cleanup EXIT
 echo "logs: $OUT"
@@ -57,7 +57,7 @@ elif [ -n "$REMOTE" ]; then
   server_out() { ssh -o BatchMode=yes "$REMOTE" "cat $REMOTE_DIR/server.out" > "$OUT/server.out"; }
   PEAK_KB=0
   server_alive() {   # also samples the server's memory (RSS) on the remote
-    local kb; kb=$(ssh -o BatchMode=yes "$REMOTE" "ps -o rss= -p \$(pgrep -f 'ShooterPartyServer -batchmode' | head -1) 2>/dev/null") || return 1
+    local kb; kb=$(ssh -o BatchMode=yes "$REMOTE" "ps -o rss= -p \$(pgrep -f 'ShooterPartyServer -batchmode.*-port $PORT ' | head -1) 2>/dev/null") || return 1
     kb=${kb//[^0-9]/}; [ -n "$kb" ] || return 1
     [ "$kb" -gt "$PEAK_KB" ] && PEAK_KB=$kb
     return 0
