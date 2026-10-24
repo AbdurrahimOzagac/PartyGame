@@ -3,6 +3,8 @@
     "rootNamespace": "ShooterParty.Tests",
     "references": [
         "ShooterParty.Runtime",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

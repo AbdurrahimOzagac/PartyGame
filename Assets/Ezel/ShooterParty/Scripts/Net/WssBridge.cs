@@ -109,7 +109,12 @@ namespace ShooterParty
                 var upPipe = new Pipe(rs, delayMs, c => Interlocked.Add(ref up, c));
                 upPipe.Push(first, first.Length);
                 var downPipe = new Pipe(ls, delayMs, c => Interlocked.Add(ref down, c));
-                await Task.WhenAny(Read(ls, upPipe), Read(rs, downPipe), upPipe.Writer, downPipe.Writer);
+                var upRead = Read(ls, upPipe);
+                var downRead = Read(rs, downPipe);
+                var ended = await Task.WhenAny(upRead, downRead, upPipe.Writer, downPipe.Writer);
+                // one side ended: deliver what it already sent before closing both
+                if (ended == downRead) await downPipe.Drain();
+                else if (ended == upRead) await upPipe.Drain();
             }
             catch (Exception e) when (e is IOException || e is SocketException || e is ObjectDisposedException || e is System.Security.Authentication.AuthenticationException)
             {
@@ -166,6 +171,7 @@ namespace ShooterParty
             readonly int delayMs;
             readonly Action<int> counted;
             readonly ConcurrentQueue<(long due, byte[] data)> queue = new ConcurrentQueue<(long, byte[])>();
+            static readonly byte[] End = new byte[0];
             readonly SemaphoreSlim ready = new SemaphoreSlim(0);
             public readonly Task Writer;
 
@@ -183,12 +189,21 @@ namespace ShooterParty
                 ready.Release();
             }
 
+            // Writes everything queued so far, then stops (bounded so a stuck peer can't hold the bridge open).
+            public Task Drain()
+            {
+                queue.Enqueue((Environment.TickCount, End));
+                ready.Release();
+                return Task.WhenAny(Writer, Task.Delay(1000 + delayMs));
+            }
+
             async Task Run()
             {
                 while (true)
                 {
                     await ready.WaitAsync();
                     if (!queue.TryDequeue(out var item)) continue;
+                    if (item.data == End) return;
                     int wait = (int)(item.due - Environment.TickCount);
                     if (wait > 0) await Task.Delay(wait);
                     await to.WriteAsync(item.data, 0, item.data.Length);

@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using Unity.Netcode;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace ShooterParty.EditorTools
@@ -17,24 +18,30 @@ namespace ShooterParty.EditorTools
         public const string NetPrefabsPath = Root + "/Data/NetPrefabs.asset";
         public const string ShotSystemPath = Root + "/Prefabs/Net_ShotSystem.prefab";
         public const string CatalogPath = Root + "/Data/MiniGameCatalog.asset";
+        public const string SessionManagerPath = Root + "/Prefabs/Net_SessionManager.prefab";
+        public const string LobbyScenePath = Root + "/Scenes/SP_Lobby.unity";
 
         [MenuItem("ShooterParty/Rebuild core assets")]
         public static void BuildAll()
         {
             Directory.CreateDirectory(Root + "/Prefabs");
             Directory.CreateDirectory(Root + "/Data");
+            Directory.CreateDirectory(Root + "/Scenes");
+            var catalog = BuildCatalog();
             SaveSingleton<ShotSystem>(ShotSystemPath);
+            SaveSingleton<SessionManager>(SessionManagerPath, sm => sm.catalog = catalog);
             BuildNetPrefabs();
-            BuildCatalog();
+            BuildLobbyScene();
             AssetDatabase.SaveAssets();
             Debug.Log("[ShooterParty] core assets rebuilt");
         }
 
-        static void SaveSingleton<T>(string path) where T : Component
+        static void SaveSingleton<T>(string path, System.Action<T> setup = null) where T : Component
         {
             var go = new GameObject(Path.GetFileNameWithoutExtension(path));
             go.AddComponent<NetworkObject>();
-            go.AddComponent<T>();
+            var c = go.AddComponent<T>();
+            setup?.Invoke(c);
             PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
         }
@@ -54,6 +61,28 @@ namespace ShooterParty.EditorTools
             EditorUtility.SetDirty(catalog);
             Debug.Log("[ShooterParty] mini-games: " + string.Join(", ", catalog.games.Select(g => g.id)));
             return catalog;
+        }
+
+        // The room's scene between games (lobby, standings' final podium). Task 15 dresses it.
+        public static void BuildLobbyScene()
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var sun = new GameObject("Sun").AddComponent<Light>();
+            sun.type = LightType.Directional; sun.intensity = 1.1f;
+            sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            var cam = new GameObject("Main Camera") { tag = "MainCamera" };
+            cam.AddComponent<Camera>().clearFlags = CameraClearFlags.Skybox;
+            cam.AddComponent<AudioListener>();
+            cam.transform.SetPositionAndRotation(new Vector3(0f, 2.2f, -6.5f), Quaternion.Euler(10f, 0f, 0f));
+            var stage = new GameObject("LobbyStage").transform;
+            for (int i = 0; i < 4; i++)
+            {
+                var spot = new GameObject("Pedestal_" + i).transform;
+                spot.SetParent(stage, false);
+                spot.localPosition = new Vector3(-2.7f + 1.8f * i, 0f, 0f);
+            }
+            EditorSceneManager.SaveScene(scene, LobbyScenePath);
+            EnsureInBuildSettings(LobbyScenePath);
         }
 
         // NetworkSceneManager can only load scenes listed in the build settings.

@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Ezel/KnockbackArena/Scenes/KnockbackArena_Ice.unity
     guid: 12a2f35c2f1bd414fb7e480025b8d6a5
+  - enabled: 1
+    path: Assets/Ezel/ShooterParty/Scenes/SP_Lobby.unity
+    guid: 81263194789db44a0944fd2abc55bbca
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -51,6 +51,20 @@ namespace ShooterParty.Tests
             return net;
         }
 
+        public const string SessionManagerPrefab = "Assets/Ezel/ShooterParty/Prefabs/Net_SessionManager.prefab";
+
+        // Practice host with the full session (it loads SP_Lobby, then the playlist's scenes).
+        public static PartyNet StartSession()
+        {
+            foreach (var stray in Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+                if (!stray.IsSpawned && stray.gameObject.scene.IsValid()) Object.DestroyImmediate(stray.gameObject);
+            var net = PartyNet.Ensure();
+            net.prefabs = AssetDatabase.LoadAssetAtPath<NetworkPrefabsList>(NetPrefabs);
+            net.serverSingletons = new[] { Load(ShotSystemPrefab).GetComponent<NetworkObject>(), Load(SessionManagerPrefab).GetComponent<NetworkObject>() };
+            Assert.IsTrue(net.StartPractice("Tester"), "practice host failed to start");
+            return net;
+        }
+
         public static NetworkCritter Spawn(int slot, bool bot, ulong owner = NetworkManager.ServerClientId, Vector3 pos = default)
         {
             var go = Object.Instantiate(Load(CritterPrefab), pos, Quaternion.identity);
