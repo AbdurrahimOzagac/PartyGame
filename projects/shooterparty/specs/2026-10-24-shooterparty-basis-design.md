@@ -1,6 +1,6 @@
 # ShooterParty game basis: design spec
 
-Date: 2026-10-24. Author: Ezel (with Claude). Status: draft for peer review.
+Date: 2026-10-24. Author: Ezel (with Claude). Status: approved by peer review (Opus, 2026-10-24) with the changes folded in below; spikes 1-2 run (§9).
 Research behind this spec, with sources: `projects/shooterparty/research/` (netcode brief, backend and security brief). The survey of the Pi is kept private, off-repo.
 
 ## 1. Goal
@@ -83,10 +83,12 @@ About 250 lines of Python with no third-party packages. It runs as a sandboxed s
 
 | Endpoint | Returns | Errors |
 |---|---|---|
-| `POST /api/v1/rooms {name, replaceLeaversWithBots}` | 201 `{code, wsUrl, ticket}` | 503 all rooms busy |
-| `POST /api/v1/rooms/{code}/join {name}` | `{wsUrl, ticket}` | 404 unknown code; 409 full; 409 in progress (unless `name` matches a disconnected player, which is a rejoin) |
+| `POST /api/v1/rooms {name, replaceLeaversWithBots}` | 201 `{code, wsUrl, ticket, rejoinToken}` | 503 all rooms busy |
+| `POST /api/v1/rooms/{code}/join {name}` | `{wsUrl, ticket, rejoinToken}` | 404 unknown code; 409 full; 409 in progress |
+| `POST /api/v1/rooms/{code}/rejoin {rejoinToken}` | `{wsUrl, ticket}` for the same player | 404 unknown room or token |
 | `GET /api/v1/status` | `{version, rooms: n, players: n, up}`, public, no codes | |
-| `GET /api/v1/status?detail=1` | per-room phase, players, tick ms, RTT | only from 127.0.0.1, for the owner over SSH/Tailscale |
+
+The detailed status (per-room phase, players, tick ms, RTT) is served on a **separate loopback port, 127.0.0.1:7709**, which the tunnel does not route. Every tunnel request also arrives from 127.0.0.1, so a source-address check on the public port would protect nothing. The owner reads it over SSH.
 
 ### Game server
 
@@ -110,13 +112,26 @@ The same Unity project, built as a Linux ARM64 Dedicated Server (IL2CPP). Each s
 
 ### Stack
 
-- Netcode for GameObjects **2.13.3** with Unity Transport **2.7.4** (resolved by NGO).
+- Netcode for GameObjects **2.13.3** with Unity Transport **2.7.4**, pinned in the manifest. NGO alone would resolve 2.6.0, and 2.7.2 fixed a Linux IL2CPP server crash when a WebSocket client drops.
 - Multiplayer Play Mode **2.0.2**, for development only.
 - Stay on NGO 2.x. 3.x needs Unity 6000.7.
 - **Transport per mode:**
-  - online uses UTP WebSocket with TLS terminated at Cloudflare, so the client uses `wss` to 443 and the server plain `ws` on loopback;
+  - online uses UTP WebSocket. TLS is terminated at Cloudflare, and the server runs plain `ws` on loopback. On the client, UTP connects in plain `ws` to an in-process **`WssBridge`** on 127.0.0.1 (below);
   - Local and Practice use UTP UDP.
 - Network tick 30 Hz; physics fixed step 50 Hz.
+
+### WssBridge (client only)
+
+Stock UTP 2.7.4 writes `Host: <resolved IP:port>` in its WebSocket handshake (`Runtime/WebSocket/WebSocket.cs`, `Connect`). Cloudflare answers **403** to any request whose Host is an IP (verified with curl against ezellm.com). UTP's resolver also prefers IPv6, and Cloudflare publishes AAAA records.
+
+The bridge (~100 lines of .NET) fixes both without forking UTP:
+1. It listens on 127.0.0.1 on an ephemeral port.
+2. It resolves the hostname itself, IPv4 first, and opens TCP to port 443 with `NoDelay` on both sockets.
+3. It runs `SslStream.AuthenticateAsClientAsync(hostname)`, which gives proper SNI and system-CA validation.
+4. It rewrites the `Host` line of the first request and then pipes bytes both ways untouched. Either side closing closes both.
+5. A dev-only `delayMs` knob simulates latency, replacing the Multiplayer Tools simulator.
+
+On the server side, UTP's handshake parser only requires that a Host header be present. It has a 2.9 KB buffer, and the path must match exactly. All of that fits what cloudflared forwards.
 
 ### Authority split, chosen for ~150 ms RTT
 
@@ -126,35 +141,46 @@ The research default was full server authority. It was rejected because NGO has 
 |---|---|---|---|
 | Your own critter's movement, jump, dash, facing | its owner client (dynamic rigidbody) | owner, within server sanity checks | `NetworkTransform` with Owner authority, interpolated on others (kinematic on non-owners) |
 | Bot critters | server | server | `NetworkTransform` with Server authority |
-| Dash and jump charges | owner, predicted | server | the owner sends `UseDash`/`UseJump` RPCs; the server keeps the count in a `NetworkVariable`, and a rejected use corrects the owner |
+| Dash and jump charges | owner | owner; the server only grants pickup charges, via RPC | not synced; the speed check bounds abuse |
 | Shots (spit blobs) | server: physical blob; everyone: cosmetic blob | server | see "Shots" below |
-| Hits, knockback, mass | server | server | knockback goes to the victim's owner via RPC; mass is a server `NetworkVariable` |
+| Hits, knockback, mass | server | server | `KnockbackRpc(Δv, newMass, roundEpoch)` to the victim's owner. Δv is computed with the server's mass, and the owner *sets* the mass, never subtracts. Mass is also a server `NetworkVariable` for HUDs |
+| Critter-critter contact | nobody | n/a | **off in v1** (collision layer). Remote critters are kinematic proxies, so shoves would differ per screen. Revisit after the 150 ms playtest |
 | Elimination, score, placement, crown | server | server | `NetworkVariable`s on the session and players |
 | Pickups | server (trigger vs reported positions) | server | `NetworkVariable` availability plus a collect RPC to all |
 
 ### Shots
 
 1. **Fire.** The shooter plays the spit animation, sound and pop at once, and launches a **cosmetic local blob**. It sends `FireRpc(origin, dir)`.
-2. **Validate and spawn.** The server checks the cooldown and that the origin is within 1.5 m of its view of the shooter. It spawns the authoritative physical blob (`SpitBlob` with collisions, server-only) and broadcasts `BlobSpawned(id, shooter, p0, v0, serverTime)`.
+2. **Validate and spawn.** The server checks the cooldown against the **client's own fire timestamps**, so a TCP stall followed by a burst doesn't trip it. It checks that the origin is within `speed × lag + 0.5 m` of the shooter's latest received state. It spawns the authoritative physical blob (`SpitBlob` with collisions, server-only) and broadcasts `BlobSpawned(id, shooter, p0, v0, serverTime)`.
 3. **Others' blobs.** Non-shooter clients spawn a cosmetic blob from `p0` and `v0`, advanced by the elapsed server time. The shooter's local blob blends onto the authoritative path over 0.12 s.
 4. **Cosmetic blobs never decide anything.** They pass through critters, and they stop only on world geometry or when the server's hit event arrives.
 5. **Hit.** The server's blob touches a critter (positions as last reported, collider +0.1 m generous) or the floor. The server applies the mass change and knockback and broadcasts `BlobHit(id, victim, point, normal)` or `BlobSplat(id, point)`.
-6. **Hit effects.** Every client plays the absorb or splat, the hit-stop, the camera shake and the sound at the event's point. The cosmetic blob snaps to that point.
-7. **Victim's knockback.** If the victim is a human, the server sends `KnockbackRpc(impulse, newMass)` to that owner, and the owner applies it to its own rigidbody. Bots are knocked back directly on the server.
+6. **Hit effects.** The shooter gets `BlobHit` immediately, as hit confirmation. The victim plays it on `KnockbackRpc`. Observers get it once the victim's owner acknowledges applying the knockback, so the splat travels the same path as the victim's flight and they line up. Each client plays the absorb or splat, the hit-stop, the camera shake and the sound at the event's point, and the cosmetic blob snaps there. Floor splats go to everyone immediately.
+7. **Victim's knockback.** If the victim is a human, the server sends `KnockbackRpc(Δv, newMass, epoch)` to that owner. The owner applies Δv as a velocity change, sets the mass, and drops events from an old round epoch. Bots are knocked back directly on the server.
 
 **Accepted cost.** The victim sees the hit and the knockback about RTT/2 after the server's decision. A blob can look like it "just missed" or "just hit" by up to ~0.3 m of movement. The generous radius and the event-driven visuals keep this honest.
 
+### Remote critter presentation
+
+On non-owner copies the motor is disabled and the rigidbody is kinematic.
+- Locomotion animation comes from position deltas.
+- One-shot actions (spit, dash, jump, land) come from a tiny owner `ActionRpc(kind)` relayed to the others, so their FX and SFX play.
+- HUDs and mass rings read the mass `NetworkVariable`, never `rb.mass`.
+
 ### Server sanity checks (anti-cheat sized for homework)
 
-- **Movement:** speed above (moveSpeed or dashSpeed) × 1.3 + 2 m/s, outside recent knockback, triggers a correction to the last good position. Three corrections in 5 s means a kick. A teleport of more than 3 m between ticks is also a correction.
-- **Rates:** RPCs are capped per client per second (fire 6, dash 4, others 10). Excess is dropped; persistent excess means a kick.
-- **Elimination:** the server eliminates when the reported `y < -2.5`. A client that sits outside the arena footprint (plus margin) and is not falling for more than 1 s is also eliminated.
+Online traffic is TCP: a lost packet stalls everything and then arrives in a burst, so checks keyed on arrival time misfire.
+- **v1 logs violations and does not correct.** Correction teleports would also rubber-band honest players.
+- **Movement:** speed is measured on owner timestamps. Above (dashSpeed × 1.3 + 2 m/s), outside recent knockback, it is logged. A kick happens only on gross abuse: more than 3× the cap sustained over 2 s of client time.
+- **Rates:** token buckets per client with at least 2 s of burst (fire 6/s, other RPCs 20/s). Excess is dropped and logged; a kick only for sustained flooding (10× the rate for 5 s).
+- **Elimination:** the server eliminates when the reported `y < -2.5`. A client that sits outside the arena footprint (plus margin) and is not falling for more than 1 s is also eliminated. A mid-round disconnect counts as a fall at that moment.
 
 ### Session and scene flow over the network
 
 - One `NetworkManager` lives in a persistent bootstrap object.
 - The server loads scenes with `NetworkSceneManager`, in single-scene mode: `SP_Lobby` → mini-game scene → `SP_Lobby` (Final shows in the lobby scene's podium area).
-- Player critters are spawned by core per mini-game at the scene's spawn points, owned by their client. They are despawned on scene change.
+- Player critters are spawned by core per mini-game at the scene's spawn points: spawn as server, then hand ownership to the client. Core **despawns them explicitly before every scene load**, because NGO keeps objects spawned with `destroyWithScene=false` across Single-mode loads.
+- Gameplay RPCs carry the round epoch, and input is gated on the phase.
 
 ### Bandwidth
 
@@ -178,10 +204,8 @@ Assets/Ezel/ShooterParty/              assembly ShooterParty (runtime), ShooterP
   Input/      PlayerInputDriver (was PlaygroundPlayerInput)
   Audio/ FX/  Sfx, SfxBank, SfxPlayer, Fx, SplatDecals
   UI/         screens + HUD frame (section 6)
-  Art/        shared generated assets: CubeCritter + SpitBlob models, animations, critter/goo materials,
-              shared VFX, SFX + music, fonts, UI sprites, portraits, crown
   Scenes/     SP_Boot, SP_Menu, SP_Lobby
-  Docs/       ARCHITECTURE.md, ADDING_A_MINIGAME.md, NETWORKING.md, SERVER_OPS.md
+  Docs/       ARCHITECTURE.md (incl. networking), ADDING_A_MINIGAME.md, SERVER_OPS.md
 Assets/Ezel/KnockbackArena/            assembly KnockbackArena -> references ShooterParty
   Arena kit (models, KA/Ice shader, textures, sky), JumpPickup, KnockbackShotEffect, KnockbackArenaGame,
   ArenaBotBrain, Knockback HUD widgets (mass %, MassRing), scene KnockbackArena_Ice, its definition asset
@@ -189,14 +213,21 @@ projects/shooterparty/server/          room service, systemd units, cloudflared 
 ```
 
 - **Dependencies point one way:** mini-game → core. Core finds mini-games only through `MiniGameCatalog`, a ScriptableObject list of definitions.
-- **Moving files:** each file moves with its `.meta`, so references keep working. Editor generator scripts move with what they generate: critter, VFX, audio and UI builders go to `ShooterParty.Editor`, the arena builder stays in `KnockbackArena.Editor`. The Blender scripts' export paths are updated to match.
+- **Moving files: scripts only.** Each shared script moves to `ShooterParty/` with its `.meta`, renaming class and file together where the name changes. **The generated art stays where it is** (`KnockbackArena/Models, Animation, Materials, VFX, Audio, UI, Portraits, Prefabs`). Assets have no assembly dependency, and moving them would break `CubeCritterSetup.Root` (used by 5 generators) and the Blender export paths for no gain. `ARCHITECTURE.md` lists which art is shared. Moving it is a later cleanup.
 
 ### The mini-game contract
 
 **`MiniGameDefinition`** (ScriptableObject) holds:
 - `id`, `displayName`, `tagline`, `howToPlay` (2-3 lines), `controlsHint`, `icon`, `scene`;
 - `minPlayers`/`maxPlayers`, `durationSeconds`, `placementPoints` (default `[4,3,2,1]`);
-- `supportsBots`, `botBrain` (prefab), `critterPrefab` (defaults to core `NetworkCritter`; a variant may add parts), `shotEffect`, `hudWidget` (optional prefab).
+- `supportsBots`, `botBrain` (prefab), `critterPrefab` (defaults to core `NetworkCritter`; a variant may add parts), `shotEffect`, `hudWidget` (optional prefab);
+- `critter` config: jump mode (off / pickup / on), dash charges, shot speed, gravity and cooldown, and charge time (0 = none).
+
+**`ShotEffect`** (ScriptableObject):
+- `ApplyServer(hit)`: effects on others, decided by the server.
+- `OnFireLocal(shooter)`: owner-side, e.g. recoil steering.
+- `OnOwnImpactLocal(shooter, point)`: owner-side self-effects such as blast-jumping off your own shot. A server-decided self-knockback would land a round trip plus the flight time late, which makes parkour unplayable.
+- Knockback Arena uses only `ApplyServer`.
 
 **`MiniGameController`** (server-side NetworkBehaviour base, one per mini-game scene) has these hooks:
 
@@ -209,6 +240,7 @@ protected virtual IReadOnlyList<PartyPlayer> RankPlayers()          // final ord
 protected void AddScore(PartyPlayer p, int n); protected void SetScore(PartyPlayer p, int n);
 protected void Eliminate(PartyPlayer p);         // core: out banner, spectate cam, bot stops
 protected void EndRound();                       // core: ranking -> points -> results
+protected void RespawnAt(PartyPlayer p, Pose pose); // owner RPC teleport, server teleport for bots (checkpoints)
 public Transform[] SpawnPoints;
 ```
 
@@ -273,17 +305,25 @@ Lobby -> Intro(i) -> Countdown -> Playing -> RoundResults -> Standings -> (i+1 <
 - **Round end:** one critter is left, or the 120 s timer runs out. At the timer, the remaining critters rank by KOs, then mass.
 - The existing tuning carries over: 10 % mass loss per hit, 3 dashes, the jump pickup.
 
-**Disconnects:**
-- **Losing the connection:** the player's slot is held for 60 s, and their points stay.
-- **Bots:** with "replace leavers" on, a bot drives their critter from the next round start. If they are mid-round, the bot takes over immediately.
-- **Rejoining:** the client auto-retries the join for 30 s with the remembered code and name (in memory only). Rejoining by the same name reclaims the slot.
+**Disconnects** (Cloudflare restarts and tunnel reconnects drop WebSockets, so this is routine, not an edge case):
+- **Mid-round:** a disconnect counts as a fall at that moment. The slot and points are kept.
+- **Rejoining:** the client auto-retries `rejoin` with the in-memory `rejoinToken` from its join response for 60 s. A rejoiner spectates until the next round. Rejoin is never by name, which would allow impersonation.
+- **Bots:** with "replace leavers" on, a bot drives a slot whose human is gone, **from the next round start**.
 - **Leaving mid-session:** if fewer than 2 humans remain, the session jumps to Final. A clean leave (menu → Leave) frees the slot at once.
+
+**Edge rules:**
+- A round ends when ≤ 1 critter is alive. Simultaneous falls share a rank.
+- Placement points count from the top when fewer players are left: 3 players get 4/3/2.
+- A slot whose human has left is not eligible for champion.
+- Kick works in the lobby only.
+- An eliminated top scorer keeps the crown, shown on the HUD card only.
+- Going back to the lobby needs 3 humans again to start.
 
 ## 6. UI and UX
 
 Visual language: the existing Fredoka type, 9-slice candy panels, Tomato/Teal/Chartreuse/Violet, Ease utilities and UI sounds.
 
-**Screens, all keyboard, mouse and gamepad navigable:**
+**Screens, all keyboard and mouse navigable** (gamepad menu navigation is cut; gameplay keeps gamepad support):
 
 | Screen | Contents |
 |---|---|
@@ -316,8 +356,9 @@ The UI never blocks on the network without a visible state. Every wait has a spi
   - `/etc/partyshooter/secret`: 32 random bytes, `root:partyshooter 0640`. It is never in git.
 - **`partyshooter-rooms.service`** runs as that user and starts the game servers as children. Sandboxing:
   - `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome`, `PrivateTmp`;
-  - `ReadWritePaths` for logs only, `RestrictAddressFamilies=AF_INET AF_UNIX`;
-  - `MemoryMax=1500M`, `CPUQuota=250%`, `TasksMax`, `Restart=on-failure`.
+  - `ReadWritePaths` for the service home, including Unity's `$HOME/.config/unity3d`. Unity runs with `-logFile -` so logs go to journald;
+  - `RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK`, trimmed after testing;
+  - `MemoryMax=1500M`, `CPUQuota=250%`, `TasksMax=512`, `Restart=on-failure`.
 - **`cloudflared-partyshooter.service`** runs a named tunnel `partyshooter` from `/etc/cloudflared/partyshooter.yml`. Ingress:
   - `partyshooter.ezellm.com` path `^/api/` → `http://127.0.0.1:7700`;
   - `^/g/1$` → `:7701`;
@@ -359,7 +400,7 @@ This repo is public. Nothing that describes the Pi's other services, its address
 
 - **Room service log:** structured JSON lines to journald: room created/closed, join ok/denied (reason), server exit codes, rate-limit hits.
 - **Game server log:** `@@STATS` every 10 s (tick ms avg/max, players, RTT avg/max, kbps), plus warnings for tick overruns (> 20 ms) and for corrections and kicks.
-- **Status view:** `status?detail=1` from localhost gives the owner a live view (`ssh trok partyshooter-status`).
+- **Status view:** the unrouted 127.0.0.1:7709 view gives the owner live detail (`ssh trok partyshooter-status`).
 - **In game:** the F3 overlay and the HUD connection dot.
 
 ## 8. Testing and verification
@@ -370,7 +411,7 @@ This repo is public. Nothing that describes the Pi's other services, its address
 | Python unittest | codes, tickets (same vectors), rate limits, request validation, room lifecycle with a fake server process (READY/STATE/END lines, crash, timeout) |
 | PlayMode (Unity) | existing 10 Knockback tests adapted; Practice session runs end-to-end with bots and shortened timers (Lobby → 2 rounds → Final → Lobby); crown follows the score; bot replacement on a simulated disconnect |
 | End-to-end (scripted) | macOS dedicated-server build plus 3 headless clients (`-autopilot`, bot-driven input) over WS on localhost, with the room service running locally. Asserts `@@END` and the standings. Then the same clients against the Pi through the tunnel. |
-| Network feel | UTP Simulator in development builds at 150 ± 30 ms and 1 % loss. A captured video shows own-movement responsiveness and others' smoothness. |
+| Network feel | The WssBridge `delayMs` knob locally (150 ± 30 ms), plus real sessions through the tunnel. A captured video shows own-movement responsiveness and others' smoothness. |
 | Manual | the owner on Mac plus teammates on Windows; one session from school Wi-Fi before 16 Nov |
 
 ### Builds
@@ -388,28 +429,44 @@ Output goes to `Builds/` (gitignored). Windows and Linux desktop builds can't be
 - **Unity Hub modules:** `linux-server`, `linux-mono`, `windows-mono`.
 - **UPM packages in the team manifest:**
   - `com.unity.netcode.gameobjects` 2.13.3;
+  - `com.unity.transport` 2.7.4 (pinned);
   - `com.unity.multiplayer.playmode` 2.0.2;
   - `com.unity.toolchain.macos-arm64-linux` 1.1.0;
   - `com.unity.sdk.linux-arm64` 1.1.0.
 - **Homebrew:** `cloudflared`, for the day-1 spike's quick tunnel.
+- **Already installed (2026-10-24):** Hub modules `linux-server`, `linux-mono`, `windows-mono`, and `cloudflared` 2026.x.
 
 ## 9. Risks and day-1 spikes
 
 Both spikes run before any framework work. Their outcome can change §2 and §3.
 
-1. **UTP WebSocket through Cloudflare.**
-   - **Test:** a minimal NGO server (Mac, `ws` on 127.0.0.1:7701, path `/g/1`) and client (`wss://<quick-tunnel>.trycloudflare.com/g/1`), exchanging RPCs for 5 minutes. Measure RTT and check the hostname handling: TLS SNI/common name, the `Host` header, the path.
+1. **UTP WebSocket through Cloudflare.** *Partly run (2026-10-24).*
+   - **Found:**
+     - Stock UTP sends `Host: <IP:port>`, and Cloudflare returns 403 for that (curl, verified). The peer reviewer found the same independently.
+     - The fix is the client-side **WssBridge** (§3), and the reviewer agrees.
+     - UTP's server-side handshake requirements fit cloudflared.
+   - **Still to run:** the end-to-end check through a real Cloudflare tunnel. It is blocked until the owner approves opening a tunnel (the agent's permission system blocks public ingress by default).
    - **Fallback B:** a small custom NGO `NetworkTransport` over WebSocket, with `ClientWebSocket` on clients and an RFC 6455 server on loopback on the game server. UDP UTP stays for Local and Practice.
    - **Fallback C:** Unity Relay WSS.
-2. **Unity Linux ARM64 server on the Pi.**
-   - **Test:** an IL2CPP Dedicated Server cross-compiled on the Mac, run on trok (16 KB pages), loading a physics scene and accepting a client over the tunnel.
-   - If it crashes on 16 KB pages: ask the owner to switch to `kernel8.img` (4 KB pages, affects every service on the Pi).
-   - If that is refused or fails, run the game server on a Mac/Linux machine as a stopgap, keeping the room service on the Pi.
+2. **Unity Linux ARM64 server on the Pi.** *Passed (2026-10-24).*
+   - **Build:** IL2CPP, cross-compiled on the Mac with `com.unity.toolchain.macos-arm64-linux` and `com.unity.sdk.linux-arm64` 1.1.0. Arm64 is selected with `UnityEditor.LinuxStandalone.UserBuildSettings.architecture = OSArchitecture.ARM64` (by reflection), plus `subtarget = Server`.
+   - **First-run quirk:** the first batchmode build after adding the toolchain packages fails with "Unable to find an Linux Sysroot", because the packages are imported in that run. The second run succeeds.
+   - **Binary:** `GameAssembly.so` LOAD segments are aligned at 0x10000, so the **stock 16 KB kernel works and no kernel change is needed**. The shipped build is 91 MB.
+   - **On the Pi:** an NGO WebSocket server on 127.0.0.1:7701 path `/g/1`, with a Mac client over an SSH forward. 828 pings in 30 s: p50 18 ms, p99 37 ms, max 66 ms. The server used **97 MB RSS and 1.8 % CPU**, and disconnected cleanly.
 3. **Own-movement owner authority makes knockback on the victim arrive late** (~RTT/2). Mitigation: an instant hit-stop, flash and sound on the event, and tuning in the 150 ms simulator.
 4. **School Wi-Fi blocking `*.ezellm.com` or doing TLS inspection.** The mitigation is Local play over a phone hotspot, tested before 16 Nov.
-5. **Pi memory** (4 GB with 10 containers). `MemoryMax` stops the game from taking down other services. Real RSS per room is measured in spike 2.
+5. **Pi memory** (4 GB, shared with other services). `MemoryMax` stops the game from taking down other services. Spike 2 measured about 100 MB per idle room; this is re-measured with the real game.
 
-## 10. Out of scope
+## 10. Milestones (from the peer review)
+
+| Milestone | Contents | Status / target |
+|---|---|---|
+| **M0** | commit the kit; spike 1 (with WssBridge, real tunnel); spike 2 | done, except spike 1's tunnel run |
+| **M1, "one networked round"** | `NetworkCritter`, shots, knockback, elimination, remote presentation. Runs in Practice/Local UDP host and on the Pi over WSS with 3 autopilot clients, via a debug connect panel and one systemd slot with a dev ticket. 150 ms feel check. This is the Demo 1 fallback. | ~4 Nov |
+| **M2** | session loop, preset playlists, crown, scoring; room service with tickets, codes and rejoin; menu, join and lobby screens; school Wi-Fi test | before 16 Nov |
+| **M3** | playlist builder; standings and podium polish; settings; F3 overlay; bot replacement; sandbox hardening; docs; end-to-end test on the Pi | after Demo 1 |
+
+## 11. Out of scope
 
 - Matchmaking and quick play.
 - Accounts, and anything saved server-side.
