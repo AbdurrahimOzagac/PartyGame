@@ -6,7 +6,7 @@ namespace ShooterParty.UI
 {
     // The one UI canvas (SP_Boot, kept across scenes). It shows the menu while offline and, once in a room, the
     // view that matches the session phase. Modals (dialogs, settings, pause) sit on top. It also decides when the
-    // game may capture the mouse: only during play with no menu open.
+    // game holds the mouse: only during play with no menu open and the window focused (ControlRules.CaptureMouse).
     public class UiRoot : MonoBehaviour
     {
         public static UiRoot Instance { get; private set; }
@@ -36,6 +36,7 @@ namespace ShooterParty.UI
         JoinFlow boundFlow;
         JoinFlow.Step lastStep;
         string lostReason;   // a disconnect, judged one frame later (after JoinFlow decided whether to rejoin)
+        bool focused = true;   // batchmode never sends OnApplicationFocus
 
         public static void Toast(string text) { if (Instance && Instance.toasts) Instance.toasts.Show(text); }
 
@@ -46,6 +47,7 @@ namespace ShooterParty.UI
         }
 
         void Start() => GameSettings.Apply();
+        void OnApplicationFocus(bool hasFocus) => focused = hasFocus;
 
         public bool AnyModal => nameDialog.IsShown || progress.IsShown || dialog.IsShown || settings.IsShown || pause.IsShown;
 
@@ -131,14 +133,15 @@ namespace ShooterParty.UI
                 else loadingCurtain.Hide();
                 foreach (var v in views) { if (v.ShowsIn(p)) v.Show(); else v.Hide(); }
                 var kb = Keyboard.current;
-                if (kb != null && kb.escapeKey.wasPressedThisFrame && !dialog.IsShown && !settings.IsShown)
+                var pad = Gamepad.current;
+                bool pauseKey = (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.startButton.wasPressedThisFrame);
+                if (pauseKey && !dialog.IsShown && !settings.IsShown)
                 {
                     if (pause.IsShown) pause.Hide(); else pause.Show();
                 }
             }
-            bool playing = phase == SessionPhase.Countdown || phase == SessionPhase.Playing || phase == SessionPhase.Intro;
             var cam = OverShoulderCamera.Main;
-            if (cam) cam.allowCursorLock = playing && !AnyModal;
+            if (cam) cam.allowCursorLock = ControlRules.CaptureMouse(phase, AnyModal, focused);
         }
     }
 

@@ -161,7 +161,6 @@ namespace ShooterParty
             var cam = FindAnyObjectByType<OverShoulderCamera>();
             var input = gameObject.AddComponent<LocalCritterInput>();
             input.cam = cam;
-            input.showHelp = false;
             if (cam) cam.SetTarget(transform);
             var shake = cam ? cam.GetComponent<CameraShake>() : null;
             if (shake) shake.focus = transform;

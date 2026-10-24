@@ -699,7 +699,7 @@ MonoBehaviour:
   stickSensitivity: 160
   minPitch: -15
   maxPitch: 55
-  allowCursorLock: 1
+  allowCursorLock: 0
 --- !u!81 &1709620692
 AudioListener:
   m_ObjectHideFlags: 0
