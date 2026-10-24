@@ -30,6 +30,11 @@ namespace ShooterParty.UI
         public string menuScene = "SP_Menu";
         readonly List<SessionView> views = new List<SessionView>();
         bool wasInRoom;
+        SessionManager boundSession;
+        PartyNet boundNet;
+        JoinFlow boundFlow;
+        JoinFlow.Step lastStep;
+        string lostReason;   // a disconnect, judged one frame later (after JoinFlow decided whether to rejoin)
 
         public static void Toast(string text) { if (Instance && Instance.toasts) Instance.toasts.Show(text); }
 
@@ -54,8 +59,51 @@ namespace ShooterParty.UI
             }
         }
 
+        void Bind()
+        {
+            var s = SessionManager.Instance;
+            if (s != boundSession)
+            {
+                if (boundSession) boundSession.Notice -= Toast;
+                boundSession = s;
+                if (s) s.Notice += Toast;   // "Bea joined", "Cem disconnected", "Cem is back"...
+            }
+            var net = PartyNet.Instance;
+            if (net != boundNet)
+            {
+                if (boundNet) boundNet.Disconnected -= OnDisconnected;
+                boundNet = net;
+                if (net) net.Disconnected += OnDisconnected;
+            }
+            var flow = JoinFlow.Instance;
+            if (flow != boundFlow)
+            {
+                if (boundFlow) boundFlow.Changed -= OnJoinStep;
+                boundFlow = flow;
+                lastStep = flow ? flow.State : JoinFlow.Step.Idle;
+                if (flow) flow.Changed += OnJoinStep;
+            }
+        }
+
+        void OnDisconnected(string reason) { if (wasInRoom) lostReason = reason; }
+
+        void OnJoinStep(JoinFlow.Step step)
+        {
+            if (step == JoinFlow.Step.Rejoining) { Toast("Connection lost — rejoining…"); progress.WatchRejoin(); }
+            if (step == JoinFlow.Step.InLobby && lastStep == JoinFlow.Step.Rejoining) Toast("Back in the room!");
+            lastStep = step;
+        }
+
         void Update()
         {
+            Bind();
+            if (lostReason != null)
+            {
+                var reason = lostReason;
+                lostReason = null;
+                bool rejoining = boundFlow && boundFlow.State == JoinFlow.Step.Rejoining;
+                if (!rejoining) dialog.Ask("Disconnected", reason, "OK", null, null, null);   // kicked, host gone, room closed
+            }
             var phase = Phase;
             if (phase == null && wasInRoom && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != menuScene
                 && Application.CanStreamedLevelBeLoaded(menuScene))

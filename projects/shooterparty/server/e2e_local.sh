@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # End-to-end test: a dedicated game server + 3 self-playing clients over WebSocket.
 #
-#   e2e_local.sh [basic|leave-during-load|drop] <desktop game binary>
+#   e2e_local.sh [basic|leave-during-load] <desktop game binary>
 #   E2E_REMOTE=ezel@trok E2E_SERVER_DIR=Builds/PiServer e2e_local.sh basic <desktop game binary>
 #   e2e_local.sh rooms <desktop game binary>     the room service starts the server; joins go through its HTTP API
+#   e2e_local.sh drop <desktop game binary>      rooms + Cem's connection drops 8 s into round 1; it must rejoin (token)
 #
 # Local: the same executable runs as server (-party-server) and clients (-autopilot).
 # Remote: the server build folder is copied to E2E_REMOTE (over SSH) and run there; the clients here reach it
@@ -12,7 +13,8 @@
 set -u
 SCENARIO=${1:-basic}
 BIN=${2:-${SHOOTERPARTY_BIN:-}}
-[ -x "$BIN" ] || { echo "usage: $0 [basic|leave-during-load|drop] <game binary>"; exit 2; }
+[ -x "$BIN" ] || { echo "usage: $0 [basic|leave-during-load|rooms|drop] <game binary>"; exit 2; }
+ROOMS=; [ "$SCENARIO" = rooms ] || [ "$SCENARIO" = drop ] && ROOMS=1
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${E2E_OUT:-$(mktemp -d -t shooterparty-e2e)}; mkdir -p "$OUT"
 PORT=${E2E_PORT:-7701}
@@ -31,7 +33,7 @@ cleanup() {
 trap cleanup EXIT
 echo "logs: $OUT"
 
-if [ "$SCENARIO" = rooms ]; then
+if [ -n "$ROOMS" ]; then
   RPORT=$((PORT + 2000)); mkdir -p "$OUT/rooms"; printf '%s' "$SECRET" > "$OUT/secret"
   python3 "$HERE/rooms/room_service.py" --server-cmd "'$BIN' -timeScale 0.25" --secret-file "$OUT/secret" \
     --listen 127.0.0.1:$RPORT --status-listen 127.0.0.1:$((RPORT + 1)) --slot-base-port $PORT \
@@ -70,7 +72,7 @@ else
   URL="ws://127.0.0.1:$PORT/g/1"
 fi
 
-if [ "$SCENARIO" = rooms ]; then
+if [ -n "$ROOMS" ]; then
   # the game's own client creates the room; the others join with the code it got
   "$BIN" -batchmode -nographics -logFile "$OUT/client0.log" -autopilot -roomService "$ROOMS_URL" -create -name Ann > /dev/null 2>&1 &
   PIDS+=($!)
@@ -78,7 +80,10 @@ if [ "$SCENARIO" = rooms ]; then
   [ -n "$CODE" ] || { echo "the first client never got a room"; grep Autopilot "$OUT/client0.log"; exit 1; }
   echo "  room $CODE"
   for i in 1 2; do
-    "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot -roomService "$ROOMS_URL" -code "$CODE" -name "${NAMES[$i]}" > /dev/null 2>&1 &
+    extra=()
+    [ "$SCENARIO" = drop ] && [ "$i" = 2 ] && extra=(-bridge -dropAt 8)   # plain ws through the bridge, so it can cut it
+    "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot -roomService "$ROOMS_URL" -code "$CODE" -name "${NAMES[$i]}" \
+      ${extra[@]+"${extra[@]}"} > /dev/null 2>&1 &
     PIDS+=($!); sleep 2
   done
 fi
@@ -87,12 +92,11 @@ for _ in $(seq 60); do server_out; grep -q '^@@READY' "$OUT/server.out" && break
 grep -q '^@@READY' "$OUT/server.out" || { echo "server never got ready"; tail -20 "$OUT/server.out"; exit 1; }
 
 for i in 0 1 2; do
-  [ "$SCENARIO" = rooms ] && break
+  [ -n "$ROOMS" ] && break
   extra=()
   [ "$i" = 0 ] && lead=--leader || lead=
   case "$SCENARIO" in
     leave-during-load) [ "$i" = 2 ] && extra=(-leaveAt Loading) ;;
-    drop) [ "$i" = 1 ] && extra=(-bridge -dropAt 8) ;;
   esac
   ticket=$(python3 "$HERE/rooms/make_ticket.py" --secret-hex "$SECRET" --room $ROOM --pid "p$i" --name "${NAMES[$i]}" $lead --ttl 120)
   "$BIN" -batchmode -nographics -logFile "$OUT/client$i.log" -autopilot \
@@ -106,7 +110,12 @@ server_out
 grep '^@@STATE' "$OUT/server.out" | sed 's/^/  /'
 grep '^@@STATS' "$OUT/server.out" | tail -3 | sed 's/^/  /'
 [ -n "$REMOTE" ] && echo "  server peak RSS on $REMOTE: $(( PEAK_KB / 1024 )) MB" 
-python3 "$HERE/e2e_check.py" "$OUT/server.out" --humans 3 --rounds 2
+check=(); [ "$SCENARIO" = drop ] && check=(--expect-rejoin)
+python3 "$HERE/e2e_check.py" "$OUT/server.out" --humans 3 --rounds 2 ${check[@]+"${check[@]}"}
 RC=$?
+if [ "$SCENARIO" = drop ]; then
+  grep -h "\[Autopilot\] \(dropping\|disconnected\|join flow Rejoining\|rejoined\)" "$OUT/client2.log" | sed 's/^/  Cem: /'
+  grep -q "\[Autopilot\] rejoined room" "$OUT/client2.log" || { echo "FAIL: Cem never rejoined"; RC=1; }
+fi
 grep -h -i -E "exception|error" "$OUT"/client*.log "$OUT/server.out" | grep -v -E "Licensing|LogAssemblyErrors|IntegrityCheck|errors=0|0 errors" | sort | uniq -c | head -10
 exit $RC

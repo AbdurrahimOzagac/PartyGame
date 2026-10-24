@@ -145,8 +145,10 @@ namespace ShooterParty
         }
 
         // Netcode's own disconnect texts are for developers; players see "Connection lost" instead.
+        // (JoinFlow rejoins on exactly this reason; a kick or a full room comes with its own text.)
+        public const string ConnectionLost = "Connection lost";
         public static string FriendlyReason(string reason) =>
-            string.IsNullOrWhiteSpace(reason) || reason.StartsWith("[Disconnect Event]") ? "Connection lost" : reason;
+            string.IsNullOrWhiteSpace(reason) || reason.StartsWith("[Disconnect Event]") ? ConnectionLost : reason;
 
         // We chose to leave: no "connection lost" afterwards.
         public void Leave()

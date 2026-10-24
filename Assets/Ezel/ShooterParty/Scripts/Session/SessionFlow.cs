@@ -35,6 +35,7 @@ namespace ShooterParty
         public MiniGameDefinition CurrentGame => RoundIndex >= 0 && RoundIndex < playlist.Count ? find(playlist[RoundIndex]) : null;
 
         public event Action<SessionPhase> PhaseChanged;
+        public event Action<int, string> Notice;   // (seat, "Bea joined"): shown to everyone else as a toast
         public event Action<string> LoadScene;         // manager: NetworkSceneManager.LoadScene(name, Single)
         public event Action SetupRound;                // manager: spawn the mini-game controller, ServerSetupRound
         public event Action StartRound;                // manager: controller.ServerStartRound
@@ -68,8 +69,13 @@ namespace ShooterParty
             if (known >= 0)
             {
                 var p = players[known];
+                bool back = !p.connected;
+                // a rejoin can beat the server to noticing the old connection's end: that critter falls all the same
+                if (!back && p.clientId != clientId && Phase == SessionPhase.Playing) PlayerOutMidRound?.Invoke(p.slot);
                 p.connected = true; p.clientId = clientId; p.eligible = true;
+                p.isBot = false;   // a bot kept the seat warm; the human drives it again from the next round
                 players[known] = p;
+                if (back) Notice?.Invoke(p.slot, p.name + " is back");
                 Changed?.Invoke();
                 return p.slot;
             }
@@ -87,6 +93,7 @@ namespace ShooterParty
             players.Add(state);
             players.Sort((a, b) => a.slot.CompareTo(b.slot));
             if (!isBot && options.fillWithBots) FillBots(now);
+            if (!isBot) Notice?.Invoke(slot, state.name + " joined");
             Changed?.Invoke();
             return slot;
         }
@@ -126,11 +133,14 @@ namespace ShooterParty
         public void SetRtt(string pid, int ms) => Edit(pid, (ref PlayerState p) => p.rttMs = (ushort)Math.Max(0, Math.Min(ms, ushort.MaxValue)));
 
         // A clean leave (menu -> Leave). In the lobby the seat empties; mid-session it stays, out of the running.
-        public void Remove(string pid, bool clean, double now)
+        public void Remove(string pid, bool clean, double now) => Remove(pid, now, " left");
+
+        void Remove(string pid, double now, string what)
         {
             int i = Index(pid);
             if (i < 0) return;
             var p = players[i];
+            Notice?.Invoke(p.slot, p.name + what);
             bool wasLeader = p.leader;
             if (Phase == SessionPhase.Lobby) players.RemoveAt(i);
             else
@@ -145,12 +155,15 @@ namespace ShooterParty
         }
 
         // The connection dropped: the seat and points are held for RejoinGraceSeconds.
-        public void Disconnected(string pid, double now)
+        // clientId: the connection that ended. A seat already on a newer connection (rejoined first) is left alone.
+        public void Disconnected(string pid, double now, ulong? clientId = null)
         {
             int i = Index(pid);
             if (i < 0) return;
-            if (Phase == SessionPhase.Lobby) { Remove(pid, true, now); return; }
+            if (clientId.HasValue && players[i].clientId != clientId.Value) return;
+            if (Phase == SessionPhase.Lobby) { Remove(pid, now, " disconnected"); return; }
             var p = players[i];
+            if (p.connected) Notice?.Invoke(p.slot, p.name + " disconnected");
             if (Phase == SessionPhase.Playing && p.connected) PlayerOutMidRound?.Invoke(p.slot);
             bool wasLeader = p.leader;
             p.connected = false; p.leader = false; p.disconnectedAt = now;
@@ -175,6 +188,7 @@ namespace ShooterParty
             int i = players.FindIndex(p => p.slot == slot);
             if (i < 0 || players[i].pid.ToString() == byPid) return null;
             var pid = players[i].pid.ToString();
+            Notice?.Invoke(players[i].slot, players[i].name + " was kicked");
             players.RemoveAt(i);
             Changed?.Invoke();
             return pid;
@@ -286,7 +300,11 @@ namespace ShooterParty
             {
                 var p = players[i];
                 p.roundScore = 0;
-                if (!p.isBot && !p.connected && options.replaceLeavers) p.isBot = true;   // a bot drives the leaver's seat
+                if (!p.isBot && !p.connected && options.replaceLeavers)   // a bot drives the leaver's seat
+                {
+                    p.isBot = true;
+                    Notice?.Invoke(p.slot, p.name + " replaced by a bot");
+                }
                 players[i] = p;
             }
             Enter(SessionPhase.Intro, now + Scaled(IntroSeconds));

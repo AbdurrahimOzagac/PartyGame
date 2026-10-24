@@ -219,6 +219,87 @@ namespace ShooterParty.Tests
         }
 
         [Test]
+        public void RejoinerTakesTheSeatBackFromTheBot()
+        {
+            New(new SessionFlow.Options { minPlayers = 3, maxPlayers = 4, replaceLeavers = true });
+            StartGame(3);
+            PlayRound(0, 1, 2);
+            flow.Disconnected("c", now);
+            flow.SceneLoaded(game.sceneName, now);
+            Assert.IsTrue(P("c").isBot, "a bot plays the round the human missed");
+            flow.AddPlayer("c", "c", false, 42, now, out _);
+            Assert.IsFalse(P("c").isBot, "back in human hands");
+            Advance(SessionFlow.IntroSeconds + SessionFlow.CountdownSeconds);
+            flow.RoundDone(Ranking(0, 1, 2), now);
+            Advance(SessionFlow.ResultsSeconds + SessionFlow.StandingsSeconds);
+            flow.SceneLoaded(game.sceneName, now);
+            var c = flow.RoundSlots().First(x => x.slot == 2);
+            Assert.IsFalse(c.isBot);
+            Assert.AreEqual(42ul, c.ownerClientId, "the human drives it from the next round");
+        }
+
+        [Test]
+        public void NoticesSayWhoJoinedLeftWasKickedDroppedCameBackOrWasReplaced()
+        {
+            New(new SessionFlow.Options { minPlayers = 3, maxPlayers = 4, replaceLeavers = true });
+            var notes = new List<string>();
+            flow.Notice += (slot, text) => notes.Add(text);
+            Join("a", "Ann"); Join("b", "Bea"); Join("c", "Cem"); Join("d", "Dan");
+            CollectionAssert.AreEqual(new[] { "Ann joined", "Bea joined", "Cem joined", "Dan joined" }, notes);
+            notes.Clear();
+            flow.Kick("a", P("d").slot);
+            Assert.AreEqual("Dan was kicked", notes.Single());
+            notes.Clear();
+            Join("e", "Eve");
+            flow.Remove("e", true, now);
+            CollectionAssert.AreEqual(new[] { "Eve joined", "Eve left" }, notes);
+            notes.Clear();
+            Playlist(2); ReadyAll();
+            Assert.IsNull(flow.TryStart("a", now));
+            PlayRound(0, 1, 2);
+            flow.Disconnected("c", now);
+            flow.SceneLoaded(game.sceneName, now);
+            flow.AddPlayer("c", "Cem", false, 9, now, out _);
+            CollectionAssert.AreEqual(new[] { "Cem disconnected", "Cem replaced by a bot", "Cem is back" }, notes);
+        }
+
+        // A dropped WebSocket can outlive the rejoin: the server notices the old connection's end after the new one
+        // already took the seat. That late disconnect must not knock the rejoined player out again.
+        [Test]
+        public void StaleDisconnectAfterRejoinIsIgnored()
+        {
+            StartGame(2);
+            ulong first = P("c").clientId;
+            flow.AddPlayer("c", "c", false, 77, now, out _);   // rejoined on a new connection
+            flow.Disconnected("c", now, first);
+            Assert.IsTrue(P("c").connected, "the old connection's end is ignored");
+            flow.Disconnected("c", now, 77);
+            Assert.IsFalse(P("c").connected, "the current connection's end counts");
+        }
+
+        [Test]
+        public void RejoinBeforeTheDropIsSeenStillCountsAsAFall()
+        {
+            StartGame(2);
+            flow.SceneLoaded(game.sceneName, now);
+            Advance(SessionFlow.IntroSeconds + SessionFlow.CountdownSeconds);
+            Assert.AreEqual(SessionPhase.Playing, flow.Phase);
+            flow.AddPlayer("c", "c", false, 77, now, out _);   // the server has not noticed the old connection end yet
+            CollectionAssert.AreEqual(new[] { 2 }, droppedMidRound, "the old critter is out for this round");
+        }
+
+        [Test]
+        public void BotsArriveQuietly()
+        {
+            New(new SessionFlow.Options { minPlayers = 1, maxPlayers = 4, fillWithBots = true });
+            var notes = new List<string>();
+            flow.Notice += (slot, text) => notes.Add(text);
+            Join("a", "Ann");
+            Assert.AreEqual(4, flow.Players.Count);
+            CollectionAssert.AreEqual(new[] { "Ann joined" }, notes, "no toast per practice bot");
+        }
+
+        [Test]
         public void WithoutReplacementALeaverSitsOut()
         {
             StartGame(2);

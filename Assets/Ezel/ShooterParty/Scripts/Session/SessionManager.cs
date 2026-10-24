@@ -33,6 +33,7 @@ namespace ShooterParty
         public readonly NetworkVariable<int> MinPlayers = new NetworkVariable<int>(3);
 
         public event Action<string> Message;          // this client: a refused request's reason ("Everyone must be ready")
+        public event Action<string> Notice;           // this client: someone else joined, left, dropped, came back...
         public SessionFlow ServerFlow => flow;          // server only (tests, server runtime)
 
         SessionFlow flow;
@@ -120,6 +121,7 @@ namespace ShooterParty
             flow.SetupRound += SetupRound;
             flow.StartRound += StartRound;
             flow.PlayerOutMidRound += slot => { if (controller) controller.ServerPlayerLeft(slot); };
+            flow.Notice += (slot, text) => NoticeRpc(slot, text);
             var preset = catalog ? catalog.presets.FirstOrDefault() : null;
             if (preset != null && !flow.UsePlaylist(preset.name, preset.games, out var bad)) Debug.LogWarning("[Session] default playlist: " + bad);
             RoomCode.Value = args != null ? args.room : "";
@@ -167,7 +169,7 @@ namespace ShooterParty
         void OnPlayerLeft(ulong clientId, ApprovedPlayer p)
         {
             if (cleanLeaves.Remove(p.pid)) flow.Remove(p.pid, true, Now);
-            else flow.Disconnected(p.pid, Now);
+            else flow.Disconnected(p.pid, Now, clientId);
             buckets.Remove(clientId);
         }
 
@@ -339,5 +341,12 @@ namespace ShooterParty
 
         [Rpc(SendTo.SpecifiedInParams, InvokePermission = RpcInvokePermission.Server)]
         void MessageRpc(string message, RpcParams p = default) => Message?.Invoke(message);
+
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
+        void NoticeRpc(int slot, string text)
+        {
+            if (TryGetLocalPlayer(out var me) && me.slot == slot) return;   // not about yourself
+            Notice?.Invoke(text);
+        }
     }
 }

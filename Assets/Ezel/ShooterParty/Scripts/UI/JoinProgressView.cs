@@ -8,12 +8,13 @@ using UnityEngine.UI;
 namespace ShooterParty.UI
 {
     // Step-by-step progress for joining, with Cancel; a failure shows its reason and goes back to the dialog.
+    // Also the card for an automatic rejoin after a dropped connection (Leave goes back to the menu).
     public class JoinProgressView : UiScreen
     {
         public TMP_Text step, detail;
         public Button cancel;
         public TMP_Text cancelLabel;
-        bool failed;
+        bool failed, rejoining;
         Coroutine local;
 
         protected override void Awake()
@@ -27,9 +28,26 @@ namespace ShooterParty.UI
             var flow = JoinFlow.Ensure();
             flow.Changed -= OnStep;
             flow.Changed += OnStep;
-            failed = false;
+            failed = false; rejoining = false;
             Show();
             OnStep(flow.State);
+        }
+
+        public void WatchRejoin()
+        {
+            WatchOnline();
+            rejoining = true;
+            OnStep(JoinFlow.Instance.State);
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+            var flow = JoinFlow.Instance;
+            if (!IsShown || !rejoining || failed || !flow || flow.State != JoinFlow.Step.Rejoining) return;
+            float wait = flow.NextAttemptAt - Time.unscaledTime;
+            detail.text = wait > 0.5f ? $"Trying again in {Mathf.CeilToInt(wait)} s" + (flow.RejoinAttempt > 0 ? $"  ·  attempt {flow.RejoinAttempt + 1}" : "")
+                                      : "Rejoining the room…";
         }
 
         public void WatchLocal(string address)
@@ -68,6 +86,7 @@ namespace ShooterParty.UI
                 case JoinFlow.Step.Contacting: Set("Contacting server…", "partyshooter.ezellm.com", "CANCEL"); break;
                 case JoinFlow.Step.Joining: Set("Joining room " + flow.Code + "…", "Getting the room ready", "CANCEL"); break;
                 case JoinFlow.Step.InLobby: Hide(); break;
+                case JoinFlow.Step.Rejoining: Set("Connection lost", "Rejoining the room…", "LEAVE"); break;
                 case JoinFlow.Step.Failed: ShowFailure(flow.Error); break;
             }
         }
@@ -75,7 +94,7 @@ namespace ShooterParty.UI
         void ShowFailure(string message)
         {
             failed = true;
-            Set("Couldn't join", message, "BACK");
+            Set(rejoining ? JoinFlow.CouldNotRejoin : "Couldn't join", rejoining ? "The room may have ended." : message, "BACK");
             Sfx.Ui("UiBack");
         }
 
@@ -91,6 +110,7 @@ namespace ShooterParty.UI
             if (!failed) { if (JoinFlow.Instance) JoinFlow.Instance.Cancel(); else PartyNet.Instance?.Leave(); }
             var message = failed ? detail.text : null;
             Hide();
+            if (rejoining) { rejoining = false; return; }   // back to the menu, not the join dialog
             UiRoot.Instance.nameDialog.Reopen(message);
         }
     }

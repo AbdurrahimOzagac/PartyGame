@@ -49,14 +49,16 @@ namespace ShooterParty
             args = a;
             Application.targetFrameRate = 60;
             var net = PartyNet.Instance;
-            net.Disconnected += reason => { Log("disconnected: " + reason); if (!PartyNetRejoining()) Quit(sawFinal ? 0 : 3); };
-            if (a.roomService != null)
+            var flow = a.roomService != null ? JoinFlow.Ensure() : null;   // first: it sees a drop (and starts rejoining) before we judge it
+            net.Disconnected += reason => { Log("disconnected: " + reason); if (!Rejoining) Quit(sawFinal ? 0 : 3); };
+            if (flow)
             {
-                var flow = JoinFlow.Ensure();
+                var before = JoinFlow.Step.Idle;
                 flow.Changed += step =>
                 {
                     Log("join flow " + step + (flow.Error != null ? ": " + flow.Error : ""));
-                    if (step == JoinFlow.Step.InLobby) Log("room " + flow.Code);
+                    if (step == JoinFlow.Step.InLobby) Log(before == JoinFlow.Step.Rejoining ? "rejoined room " + flow.Code : "room " + flow.Code);
+                    before = step;
                     if (step == JoinFlow.Step.Failed && !sawFinal) Quit(4);
                 };
                 if (a.create) flow.CreateRoom(a.name, false, a.roomService);
@@ -68,8 +70,7 @@ namespace ShooterParty
             if (!ok) Quit(4);
         }
 
-        // Task 17 replaces this with the real rejoin flow.
-        static bool PartyNetRejoining() => false;
+        static bool Rejoining => JoinFlow.Instance && JoinFlow.Instance.State == JoinFlow.Step.Rejoining;
 
         void Update()
         {

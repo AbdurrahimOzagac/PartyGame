@@ -154,14 +154,21 @@ namespace ShooterParty.UI
                 if (c == local) StartCoroutine(Banner(c.ColourIndex.Value, alive + 1));
                 else if (session.TryGetPlayer(c.Slot.Value, out var p)) StartCoroutine(Toast(p.name.ToString(), p.colour, alive));
             }
-            bool spectating = local && local.Eliminated.Value;
+            // out of this round: eliminated, or (re)joined after it started and has no critter until the next one
+            bool benched = !local && alive > 0 && session.TryGetLocalPlayer(out _);
+            bool spectating = (local && local.Eliminated.Value) || benched;
             spectateLabel.transform.parent.gameObject.SetActive(spectating);   // the pill with its label
             if (spectating)
             {
                 var cam = OverShoulderCamera.Main;
                 var watched = cam && cam.target ? cam.target.GetComponent<NetworkCritter>() : null;
+                if (cam && (!watched || watched.Eliminated.Value))   // nobody to watch yet (a rejoiner) or they just fell
+                {
+                    foreach (var c in NetworkCritter.All) if (c && !c.Eliminated.Value) { cam.SetTarget(c.transform, false); watched = c; break; }
+                }
+                var head = benched ? "BACK NEXT ROUND" : "YOU'RE OUT";
                 spectateLabel.text = watched && watched != local && session.TryGetPlayer(watched.Slot.Value, out var w)
-                    ? $"YOU'RE OUT  <alpha=#AA>· watching {w.name}" : "YOU'RE OUT";
+                    ? $"{head}  <alpha=#AA>· watching {w.name}" : head;
             }
             if (lastPhase == SessionPhase.Countdown && phase == SessionPhase.Playing) { goT = 0f; Sfx.Ui("Go"); }
             if (phase == SessionPhase.Countdown)
