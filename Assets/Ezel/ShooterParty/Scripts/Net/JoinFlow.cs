@@ -6,8 +6,9 @@ namespace ShooterParty
 {
     // Online join, one step at a time, for the join screen:
     //   Contacting (room service) -> Joining (game server) -> InLobby  |  Failed(message)
-    // InLobby means "in the room" (any phase). If the connection drops there, it rejoins on its own:
-    //   InLobby -> Rejoining (room service rejoin with the token, backoff 1, 2, 4, 8 s, up to 60 s) -> InLobby | Failed
+    // InLobby means "in the room" (any phase). If the connection drops there, or the very first connection to the
+    // game server fails (seen through Cloudflare), it retries on its own with a fresh ticket:
+    //   Joining | InLobby -> Rejoining (room service rejoin with the token, backoff 1, 2, 4, 8 s, up to 60 s) -> InLobby | Failed
     // The code, name and rejoin token live in memory only (nothing is saved).
     public class JoinFlow : MonoBehaviour
     {
@@ -24,6 +25,7 @@ namespace ShooterParty
         public string RejoinToken { get; private set; }
         public event Action<Step> Changed;
         public int RejoinAttempt { get; private set; }
+        public bool EverInRoom { get; private set; }   // false while a first join is still being retried
         public float NextAttemptAt { get; private set; }   // unscaled time of the next try, for the progress card
 
         RoomServiceClient client;
@@ -78,6 +80,7 @@ namespace ShooterParty
         {
             Code = r.code;
             RejoinToken = r.rejoinToken ?? RejoinToken;
+            EverInRoom = false;
             Set(Step.Joining);
             if (!PartyNet.Instance.JoinOnline(r.wsUrl, r.ticket, PlayerName)) { Error = "Couldn't connect to the game server"; Set(Step.Failed); return; }
             running = StartCoroutine(WaitForLobby());
@@ -89,19 +92,18 @@ namespace ShooterParty
             while (Time.unscaledTime < until)
             {
                 var s = SessionManager.Instance;
-                if (s && s.IsSpawned && s.TryGetLocalPlayer(out _)) { Set(Step.InLobby); yield break; }
+                if (s && s.IsSpawned && s.TryGetLocalPlayer(out _)) { EverInRoom = true; Set(Step.InLobby); yield break; }
                 if (State != Step.Joining) yield break;
                 yield return null;
             }
             PartyNet.Instance.Leave();
-            Error = "Couldn't reach the game server — try again";
-            Set(Step.Failed);
+            running = StartCoroutine(Rejoin());   // a fresh ticket and another try, as after a drop
         }
 
         void OnDisconnected(string reason)
         {
             if (State == Step.Rejoining) { lostWhileRejoining = true; return; }
-            if (State == Step.InLobby && reason == PartyNet.ConnectionLost && !string.IsNullOrEmpty(RejoinToken) && client != null)
+            if ((State == Step.InLobby || State == Step.Joining) && reason == PartyNet.ConnectionLost && !string.IsNullOrEmpty(RejoinToken) && client != null)
             {
                 if (running != null) StopCoroutine(running);
                 running = StartCoroutine(Rejoin());
@@ -138,13 +140,13 @@ namespace ShooterParty
                 while (Time.unscaledTime < until && !lostWhileRejoining)
                 {
                     var s = SessionManager.Instance;
-                    if (s && s.IsSpawned && s.TryGetLocalPlayer(out _)) { running = null; Set(Step.InLobby); yield break; }
+                    if (s && s.IsSpawned && s.TryGetLocalPlayer(out _)) { running = null; EverInRoom = true; Set(Step.InLobby); yield break; }
                     yield return null;
                 }
                 PartyNet.Instance.Leave();
             }
             running = null;
-            Error = CouldNotRejoin;
+            Error = EverInRoom ? CouldNotRejoin : "Couldn't reach the game server — try again";
             Set(Step.Failed);
         }
 

@@ -60,6 +60,7 @@ namespace ShooterParty
             DontDestroyOnLoad(gameObject);
             Transport = gameObject.AddComponent<UnityTransport>();
             Transport.MaxPacketQueueSize = PacketQueue;
+            Transport.MaxConnectAttempts = 10;   // ~10 s (default 60): a failed connect is retried with a fresh ticket sooner
             Net = gameObject.AddComponent<NetworkManager>();
             Net.NetworkConfig = new NetworkConfig
             {

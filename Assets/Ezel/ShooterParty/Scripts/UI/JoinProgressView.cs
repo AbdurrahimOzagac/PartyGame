@@ -44,7 +44,7 @@ namespace ShooterParty.UI
         {
             base.Update();
             var flow = JoinFlow.Instance;
-            if (!IsShown || !rejoining || failed || !flow || flow.State != JoinFlow.Step.Rejoining) return;
+            if (!IsShown || failed || !flow || flow.State != JoinFlow.Step.Rejoining) return;
             float wait = flow.NextAttemptAt - Time.unscaledTime;
             detail.text = wait > 0.5f ? $"Trying again in {Mathf.CeilToInt(wait)} s" + (flow.RejoinAttempt > 0 ? $"  ·  attempt {flow.RejoinAttempt + 1}" : "")
                                       : "Rejoining the room…";
@@ -86,7 +86,10 @@ namespace ShooterParty.UI
                 case JoinFlow.Step.Contacting: Set("Contacting server…", "partyshooter.ezellm.com", "CANCEL"); break;
                 case JoinFlow.Step.Joining: Set("Joining room " + flow.Code + "…", "Getting the room ready", "CANCEL"); break;
                 case JoinFlow.Step.InLobby: Hide(); break;
-                case JoinFlow.Step.Rejoining: Set("Connection lost", "Rejoining the room…", "LEAVE"); break;
+                case JoinFlow.Step.Rejoining:
+                    if (flow.EverInRoom) Set("Connection lost", "Rejoining the room…", "LEAVE");
+                    else Set("Joining room " + flow.Code + "…", "Trying again…", "CANCEL");   // a first join being retried
+                    break;
                 case JoinFlow.Step.Failed: ShowFailure(flow.Error); break;
             }
         }

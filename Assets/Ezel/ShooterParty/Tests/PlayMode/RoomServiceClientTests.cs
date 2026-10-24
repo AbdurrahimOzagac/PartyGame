@@ -95,6 +95,21 @@ namespace ShooterParty.Tests
             Assert.AreEqual(RoomServiceClient.BadCode, error.message);
         }
 
+        // The very first connection to the game server can fail too (seen through Cloudflare): the flow must retry with
+        // its rejoin token (a fresh ticket) instead of giving up. Here nothing listens at the room's game-server address.
+        [UnityTest]
+        public IEnumerator FirstConnectFailureRetriesWithTheRejoinToken()
+        {
+            LogAssert.ignoreFailingMessages = true;   // Unity Transport logs the failed connect itself: that is the trigger here
+            var flow = JoinFlow.Ensure();
+            flow.CreateRoom("Ezel", false, baseUrl);
+            for (float t = 0f; t < 25f && flow.State != JoinFlow.Step.Rejoining && flow.State != JoinFlow.Step.Failed; t += Time.unscaledDeltaTime) yield return null;
+            Assert.AreEqual(JoinFlow.Step.Rejoining, flow.State, "a failed first connect is retried, not fatal: " + flow.Error);
+            flow.Cancel();
+            yield return NetTestRig.Teardown();
+            LogAssert.ignoreFailingMessages = false;
+        }
+
         // Tunnel stopped or the Pi off: Cloudflare answers 530 (or another 5xx) with an HTML page, not our JSON.
         [UnityTest]
         public IEnumerator CloudflareOutagePagesReadAsUnreachable()

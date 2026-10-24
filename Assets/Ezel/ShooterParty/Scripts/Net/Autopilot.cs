@@ -57,7 +57,7 @@ namespace ShooterParty
                 flow.Changed += step =>
                 {
                     Log("join flow " + step + (flow.Error != null ? ": " + flow.Error : ""));
-                    if (step == JoinFlow.Step.InLobby) Log(before == JoinFlow.Step.Rejoining ? "rejoined room " + flow.Code : "room " + flow.Code);
+                    if (step == JoinFlow.Step.InLobby) { Log("room " + flow.Code); if (before == JoinFlow.Step.Rejoining) Log("rejoined room " + flow.Code); }
                     before = step;
                     if (step == JoinFlow.Step.Failed && !sawFinal) Quit(4);
                 };

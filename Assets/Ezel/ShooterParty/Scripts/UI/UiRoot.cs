@@ -92,7 +92,7 @@ namespace ShooterParty.UI
 
         void OnJoinStep(JoinFlow.Step step)
         {
-            if (step == JoinFlow.Step.Rejoining) { Toast("Connection lost — rejoining…"); progress.WatchRejoin(); }
+            if (step == JoinFlow.Step.Rejoining && lastStep == JoinFlow.Step.InLobby) { Toast("Connection lost — rejoining…"); progress.WatchRejoin(); }
             if (step == JoinFlow.Step.InLobby && lastStep == JoinFlow.Step.Rejoining) Toast("Back in the room!");
             lastStep = step;
         }
