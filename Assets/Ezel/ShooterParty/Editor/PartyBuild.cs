@@ -14,7 +14,7 @@ namespace ShooterParty.EditorTools
     //   batch:  Unity -batchmode -quit -projectPath . -executeMethod ShooterParty.EditorTools.PartyBuild.BatchMac
     // The Pi server is IL2CPP for Linux Arm64, cross-compiled with the com.unity.toolchain.macos-arm64-linux
     // and com.unity.sdk.linux-arm64 packages. The first build after a fresh import can fail with "Unable to find
-    // an Linux Sysroot"; running it again works (deploy.sh retries).
+    // an Linux Sysroot"; build again and it works (deploy.sh only ships a finished build).
     public static class PartyBuild
     {
         public const string Out = "Builds";
