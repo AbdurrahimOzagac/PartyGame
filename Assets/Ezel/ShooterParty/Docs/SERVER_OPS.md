@@ -63,8 +63,9 @@ What `deploy.sh <ssh-host>` does:
 2. Asks the running service how many rooms are open. If any are, it stops with exit 4 and "N room(s) running: not restarting". `FORCE=1 projects/shooterparty/server/deploy.sh <ssh-host>` drops them.
 3. Creates the `partyshooter` user and the directories if they are missing.
 4. Creates `/etc/partyshooter/secret` with `openssl rand -hex 32` **only if it does not exist**. The secret never leaves the server.
-5. Copies the code root-owned and read-only, installs the unit and `/usr/local/bin/partyshooter-status`, then enables and restarts `partyshooter-rooms`.
-6. Prints `partyshooter-rooms: active` and the public status JSON.
+5. Tunes the network for a game host: UDP buffers up to 7.5 MB (`/etc/sysctl.d/90-partyshooter-net.conf`; cloudflared's QUIC warns "failed to sufficiently increase receive buffer size" without it) and Wi-Fi power saving off (`/etc/NetworkManager/conf.d/90-partyshooter-wifi.conf`, applied at once with `iw`). With power saving on, the Pi's Wi-Fi stalled for seconds; over the TCP WebSocket those stalls arrive as bursts that dropped players.
+6. Copies the code root-owned and read-only, installs the unit and `/usr/local/bin/partyshooter-status`, then enables and restarts `partyshooter-rooms`.
+7. Prints `partyshooter-rooms: active` and the public status JSON.
 
 Every deploy needs a server build in `Builds/PiServer`, even when only Python files changed. Exit 2 means it found none.
 
@@ -73,7 +74,7 @@ Every deploy needs a server build in `Builds/PiServer`, even when only Python fi
 The tunnel is separate from anything else on the server and has its own credential.
 
 1. Install `cloudflared` on the server at `/usr/local/bin/cloudflared` (the unit runs that path).
-2. On the server, run `cloudflared tunnel login` once and pick the zone in the browser.
+2. On the server, run `cloudflared tunnel login` once and pick the zone in the browser. The link expires after about 8 minutes; if you approve later, the browser downloads `cert.pem` instead: copy it to `~/.cloudflared/cert.pem` on the server (`ssh <ssh-host> 'umask 077; mkdir -p ~/.cloudflared; cat > ~/.cloudflared/cert.pem' < ~/Downloads/cert.pem`) and delete the download.
 3. On your machine, run `projects/shooterparty/server/deploy.sh <ssh-host> --tunnel`. It:
    - creates the tunnel `partyshooter` if it is missing;
    - routes DNS for `partyshooter.ezellm.com`;
