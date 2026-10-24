@@ -198,10 +198,10 @@ Assets/Ezel/ShooterParty/              assembly ShooterParty (runtime), ShooterP
   Session/    PartyPlayer, SessionManager (state machine), Playlist, ScoreRules, CrownController, BotReplacement
   MiniGames/  MiniGameDefinition, MiniGameCatalog, MiniGameController (base), PlayerModifiers
   Net/        Bootstrap, ConnectionFlow (online/local/practice), RoomServiceClient, Ticket, ConnectionApproval, NetStats
-  Critter/    CritterMotor, CritterAnimator, CritterShooter (was CritterSpit), SpitBlob, CritterFx, BlobShadow, NetworkCritter, BotDriver
+  Critter/    CritterMotor, CritterAnimator, CritterSpit, SpitBlob, CritterFx, BlobShadow, LeaderCrown, NetworkCritter
   Shot/       ShotEffect (abstract ScriptableObject), KnockbackShotEffect lives in the mini-game
   Camera/     OverShoulderCamera, CameraShake
-  Input/      PlayerInputDriver (was PlaygroundPlayerInput)
+  Input/      LocalCritterInput (was PlaygroundPlayerInput)
   Audio/ FX/  Sfx, SfxBank, SfxPlayer, Fx, SplatDecals
   UI/         screens + HUD frame (section 6)
   Scenes/     SP_Boot, SP_Menu, SP_Lobby
