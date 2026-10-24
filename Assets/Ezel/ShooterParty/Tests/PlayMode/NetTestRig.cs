@@ -86,6 +86,7 @@ namespace ShooterParty.Tests
                 PartyNet.Instance.Leave();
                 Object.Destroy(PartyNet.Instance.gameObject);
             }
+            foreach (var p in Object.FindObjectsByType<ShooterParty.UI.Persistent>(FindObjectsSortMode.None)) Object.Destroy(p.gameObject);
             yield return null;
             yield return null;
         }

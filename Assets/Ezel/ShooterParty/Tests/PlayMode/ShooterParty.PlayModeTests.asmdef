@@ -5,7 +5,9 @@
         "ShooterParty.Runtime",
         "Unity.Collections",
         "Unity.Netcode.Runtime",
-        "UnityEngine.TestRunner"
+        "UnityEngine.TestRunner",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
     "overrideReferences": true,
     "precompiledReferences": [

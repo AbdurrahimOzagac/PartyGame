@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace ShooterParty
 {
-    // Minimal over-the-shoulder orbit camera for the asset playground (not the game's final camera).
+    // Over-the-shoulder orbit camera; mouse look speed and invert-Y come from GameSettings.
     public class OverShoulderCamera : MonoBehaviour
     {
         public Transform target;
@@ -13,6 +13,10 @@ namespace ShooterParty
         public bool allowCursorLock = true;      // off while menus need the mouse
 
         float yaw, pitch = 14f;
+
+        public static OverShoulderCamera Main { get; private set; }   // the scene's gameplay camera, if any
+        void OnEnable() => Main = this;
+        void OnDisable() { if (Main == this) Main = null; }
 
         public Vector3 FlatForward => Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
 
@@ -27,16 +31,17 @@ namespace ShooterParty
             if (!allowCursorLock) Cursor.lockState = CursorLockMode.None;
             else if (mouse != null && mouse.leftButton.wasPressedThisFrame) Cursor.lockState = CursorLockMode.Locked;
             if (kb != null && kb.escapeKey.wasPressedThisFrame) Cursor.lockState = CursorLockMode.None;
+            if (Cursor.lockState == CursorLockMode.Locked) Cursor.visible = false; else Cursor.visible = true;
             if (mouse != null && Cursor.lockState == CursorLockMode.Locked)
             {
-                var d = mouse.delta.ReadValue() * mouseSensitivity;
-                yaw += d.x; pitch -= d.y;
+                var d = mouse.delta.ReadValue() * mouseSensitivity * GameSettings.Sensitivity;
+                yaw += d.x; pitch -= GameSettings.InvertY ? -d.y : d.y;
             }
             var pad = Gamepad.current;
             if (pad != null)
             {
-                var s = pad.rightStick.ReadValue() * stickSensitivity * Time.deltaTime;
-                yaw += s.x; pitch -= s.y;
+                var s = pad.rightStick.ReadValue() * stickSensitivity * GameSettings.Sensitivity * Time.deltaTime;
+                yaw += s.x; pitch -= GameSettings.InvertY ? -s.y : s.y;
             }
             pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
             if (!target) return;

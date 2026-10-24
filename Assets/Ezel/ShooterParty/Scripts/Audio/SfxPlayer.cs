@@ -16,9 +16,12 @@ namespace ShooterParty
         AudioSource[] pool;
         AudioSource music;
         int next;
+        float musicBase = 1f;
+        Coroutine fade;
 
         void Awake()
         {
+            if (Instance && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             if (bank) foreach (var e in bank.entries) map[e.id] = e;
             pool = new AudioSource[voices];
@@ -48,13 +51,37 @@ namespace ShooterParty
             a.PlayOneShot(e.clips[Random.Range(0, e.clips.Length)], e.volume * volume * sfxVolume);
         }
 
+        // Crossfades (0.6 s out, 0.6 s in) so lobby -> game -> results never cuts hard.
         public void PlayMusic(string id)
         {
-            if (!map.TryGetValue(id, out var e) || e.clips == null || e.clips.Length == 0) { music.Stop(); return; }
-            if (music.clip == e.clips[0] && music.isPlaying) return;
-            music.clip = e.clips[0];
-            music.volume = e.volume * musicVolume;
+            AudioClip clip = null; float baseVol = 1f;
+            if (map.TryGetValue(id ?? "", out var e) && e.clips != null && e.clips.Length > 0) { clip = e.clips[0]; baseVol = e.volume; }
+            if (clip && music.clip == clip && music.isPlaying) return;
+            if (fade != null) StopCoroutine(fade);
+            fade = StartCoroutine(Crossfade(clip, baseVol));
+        }
+
+        System.Collections.IEnumerator Crossfade(AudioClip clip, float baseVol)
+        {
+            float from = music.volume;
+            for (float t = 0f; music.isPlaying && t < 0.6f; t += Time.unscaledDeltaTime) { music.volume = Mathf.Lerp(from, 0f, t / 0.6f); yield return null; }
+            music.Stop();
+            musicBase = baseVol;
+            if (!clip) yield break;
+            music.clip = clip;
+            music.volume = 0f;
             music.Play();
+            for (float t = 0f; t < 0.6f; t += Time.unscaledDeltaTime) { music.volume = Mathf.Lerp(0f, musicBase * musicVolume, t / 0.6f); yield return null; }
+            music.volume = musicBase * musicVolume;
+            fade = null;
+        }
+
+        // Settings sliders call this; it applies at once, also to the track that is playing.
+        public void SetVolumes(float sfx, float musicVol)
+        {
+            sfxVolume = sfx;
+            musicVolume = musicVol;
+            if (fade == null) music.volume = musicBase * musicVolume;
         }
     }
 }

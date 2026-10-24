@@ -186,7 +186,7 @@ namespace KnockbackArena.EditorTools
                 ClearCoat(body, 0.93f);
                 body.EnableKeyword("_EMISSION");            // black by default; CritterAnimator flashes it on hit
                 body.SetColor("_EmissionColor", Color.black);
-                body.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+                body.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;   // not EmissiveIsBlack: URP would strip _EMISSION on import
                 d["Body_" + name] = body;
                 var e = Mat("Emblem_" + name, "Universal Render Pipeline/Lit", Color.Lerp(Hex(hex), Color.white, 0.45f), 0.62f);
                 e.SetTexture("_BaseMap", emblems);

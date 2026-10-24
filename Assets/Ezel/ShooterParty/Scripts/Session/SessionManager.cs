@@ -51,6 +51,10 @@ namespace ShooterParty
 
         public MiniGameDefinition CurrentGame => catalog ? catalog.Find(CurrentGameId.Value.ToString()) : null;
 
+        // The playlist's game at an index (e.g. the one loading), or null.
+        public MiniGameDefinition CurrentGameForIndex(int index) =>
+            catalog && index >= 0 && index < PlaylistIds.Count ? catalog.Find(PlaylistIds[index].ToString()) : null;
+
         public bool TryGetPlayer(int slot, out PlayerState p)
         {
             for (int i = 0; i < Players.Count; i++) if (Players[i].slot == slot) { p = Players[i]; return true; }

@@ -53,6 +53,23 @@ namespace KnockbackArena.Tests
             }
         }
 
+        // The hit flash drives _EmissionColor, so the body materials must keep _EMISSION (or builds strip that variant).
+        // URP re-derives the keyword on import and drops it when the material is flagged EmissiveIsBlack.
+        [Test]
+        public void BodyMaterialsKeepTheEmissionKeywordThroughValidation()
+        {
+            foreach (var name in new[] { "Tomato", "Teal", "Chartreuse", "Violet" })
+            {
+                var mat = AssetDatabase.LoadAssetAtPath<Material>($"Assets/Ezel/KnockbackArena/Materials/M_CC_Body_{name}.mat");
+                Assert.IsNotNull(mat, name);
+                Assert.IsTrue(mat.IsKeywordEnabled("_EMISSION"), name + " lost _EMISSION");
+                var copy = new Material(mat);
+                MaterialEditor.FixupEmissiveFlag(copy);
+                Assert.AreEqual(0, (int)(copy.globalIlluminationFlags & MaterialGlobalIlluminationFlags.EmissiveIsBlack), name + " would lose _EMISSION on reimport");
+                Object.DestroyImmediate(copy);
+            }
+        }
+
         [UnityTest]
         public IEnumerator SpitAnimatesTheFace()
         {

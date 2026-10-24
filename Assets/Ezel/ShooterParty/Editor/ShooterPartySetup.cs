@@ -28,12 +28,15 @@ namespace ShooterParty.EditorTools
             Directory.CreateDirectory(Root + "/Prefabs");
             Directory.CreateDirectory(Root + "/Data");
             Directory.CreateDirectory(Root + "/Scenes");
+            UiKit.Init();
+            var ui = UiBuilder.BuildUiRoot();
+            UiBuilder.BuildMenuScene();
             var catalog = BuildCatalog();
             SaveSingleton<ShotSystem>(ShotSystemPath);
             SaveSingleton<SessionManager>(SessionManagerPath, sm => sm.catalog = catalog);
             var prefabs = BuildNetPrefabs();
             BuildLobbyScene();
-            BuildBootScene(prefabs);
+            BuildBootScene(prefabs, ui);
             AssetDatabase.SaveAssets();
             Debug.Log("[ShooterParty] core assets rebuilt");
         }
@@ -89,9 +92,19 @@ namespace ShooterParty.EditorTools
 
         // First scene of every build: PartyNet (prefab list + server singletons) and the Bootstrap that picks
         // server / autopilot / menu from the command line. Task 14 adds the UI root here.
-        public static void BuildBootScene(NetworkPrefabsList prefabs)
+        public static void BuildBootScene(NetworkPrefabsList prefabs, GameObject uiRoot)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // UI, audio and input live here for the whole run (Persistent keeps them across scene loads)
+            var persistent = new GameObject("Persistent");
+            persistent.AddComponent<ShooterParty.UI.Persistent>();
+            ((GameObject)PrefabUtility.InstantiatePrefab(uiRoot)).transform.SetParent(persistent.transform, false);
+            var sfx = new GameObject("Sfx");
+            sfx.transform.SetParent(persistent.transform, false);
+            sfx.AddComponent<SfxPlayer>().bank = AssetDatabase.LoadAssetAtPath<SfxBank>(UiKit.ArtRoot + "/Audio/SFX_Bank.asset");
+            var es = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem));
+            es.transform.SetParent(persistent.transform, false);
+            es.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>().AssignDefaultActions();
             var go = new GameObject("PartyNet");
             var net = go.AddComponent<PartyNet>();
             net.prefabs = prefabs;
