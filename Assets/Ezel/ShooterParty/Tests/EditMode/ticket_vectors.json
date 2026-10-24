@@ -1,0 +1,122 @@
+[
+ {
+  "name": "valid",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": true,
+  "error": "",
+  "data": {
+   "v": 1,
+   "room": "BCDFG",
+   "pid": "a1b2c3d4e5f60718",
+   "name": "Mochi",
+   "leader": true,
+   "exp": 1700000060
+  }
+ },
+ {
+  "name": "valid at exact expiry",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000060,
+  "valid": true,
+  "error": "",
+  "data": {
+   "v": 1,
+   "room": "BCDFG",
+   "pid": "a1b2c3d4e5f60718",
+   "name": "Mochi",
+   "leader": true,
+   "exp": 1700000060
+  }
+ },
+ {
+  "name": "expired",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000061,
+  "valid": false,
+  "error": "expired",
+  "data": null
+ },
+ {
+  "name": "wrong key",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic",
+  "secret_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "now": 1700000000,
+  "valid": false,
+  "error": "bad signature",
+  "data": null
+ },
+ {
+  "name": "tampered payload",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiWlpaWloiLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": false,
+  "error": "bad signature",
+  "data": null
+ },
+ {
+  "name": "flipped signature char",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OAJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": false,
+  "error": "bad signature",
+  "data": null
+ },
+ {
+  "name": "unicode name",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6IsOHYcSfbGEiLCJsZWFkZXIiOmZhbHNlLCJleHAiOjE3MDAwMDAwNjB9.Y1KLWXNnngR__Px95u5265Vd8Q-pXo-neAz0fNgh2B4",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": true,
+  "error": "",
+  "data": {
+   "v": 1,
+   "room": "BCDFG",
+   "pid": "a1b2c3d4e5f60718",
+   "name": "Çağla",
+   "leader": false,
+   "exp": 1700000060
+  }
+ },
+ {
+  "name": "no dot",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": false,
+  "error": "malformed",
+  "data": null
+ },
+ {
+  "name": "two dots",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-ic.x",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": false,
+  "error": "malformed",
+  "data": null
+ },
+ {
+  "name": "oversize",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJwaWQiOiJhMWIyYzNkNGU1ZjYwNzE4IiwibmFtZSI6Ik1vY2hpIiwibGVhZGVyIjp0cnVlLCJleHAiOjE3MDAwMDAwNjB9.5Wi7OPJPDNqZk9jJTo7EV_7fp2OWU7H-3ay7LMZe-icAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": false,
+  "error": "malformed",
+  "data": null
+ },
+ {
+  "name": "missing field",
+  "ticket": "eyJ2IjoxLCJyb29tIjoiQkNERkciLCJuYW1lIjoiTW9jaGkiLCJsZWFkZXIiOnRydWUsImV4cCI6MTcwMDAwMDA2MH0.CUL4N2dWMzcrJEEti_bjkKlddKe2tkLKVfC62TmWY5Y",
+  "secret_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "now": 1700000000,
+  "valid": false,
+  "error": "malformed",
+  "data": null
+ }
+]
