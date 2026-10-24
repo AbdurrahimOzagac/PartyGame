@@ -288,6 +288,58 @@ namespace ShooterParty.Tests
             CollectionAssert.AreEqual(new[] { 2 }, droppedMidRound, "the old critter is out for this round");
         }
 
+        // A tunnel reconnect or a Pi Wi-Fi stall drops everyone at once. That is routine (spec §5): the seats wait
+        // RejoinGraceSeconds and the session goes on; only humans who are gone for good end it.
+        [Test]
+        public void EveryoneDroppingAtOnceKeepsTheSession()
+        {
+            StartGame(2);
+            PlayRound(0, 1, 2);
+            int aTotal = P("a").total;
+            flow.SceneLoaded(game.sceneName, now);
+            Advance(SessionFlow.IntroSeconds + SessionFlow.CountdownSeconds);
+            foreach (var pid in new[] { "a", "b", "c" }) flow.Disconnected(pid, now);
+            Advance(1);
+            Assert.AreEqual(SessionPhase.Playing, flow.Phase, "the round is not abandoned");
+            foreach (var pid in new[] { "a", "b", "c" }) flow.AddPlayer(pid, pid, false, 50, now, out _);
+            Assert.AreEqual(SessionPhase.Playing, flow.Phase);
+            Assert.AreEqual(aTotal, P("a").total, "points are kept");
+        }
+
+        [Test]
+        public void EveryoneGoneForGoodEndsTheSessionAfterTheGrace()
+        {
+            StartGame(2);
+            flow.SceneLoaded(game.sceneName, now);
+            Advance(SessionFlow.IntroSeconds + SessionFlow.CountdownSeconds);
+            foreach (var pid in new[] { "a", "b", "c" }) flow.Disconnected(pid, now);
+            Advance(SessionFlow.RejoinGraceSeconds - 5);
+            Assert.AreNotEqual(SessionPhase.Final, flow.Phase);
+            Advance(10);
+            Assert.AreEqual(SessionPhase.Final, flow.Phase);
+            Assert.Greater(flow.LastDropAt, 0, "the server runtime reads when the last drop happened");
+        }
+
+        [Test]
+        public void ReplacementBotsLeaveWithTheSession()
+        {
+            New(new SessionFlow.Options { minPlayers = 3, maxPlayers = 4, replaceLeavers = true });
+            Join("a"); Join("b"); Join("c"); Join("d");
+            Playlist(2); ReadyAll();
+            Assert.IsNull(flow.TryStart("a", now));
+            flow.SceneLoaded(game.sceneName, now);
+            Advance(SessionFlow.IntroSeconds + SessionFlow.CountdownSeconds);
+            flow.Disconnected("d", now);
+            flow.RoundDone(Ranking(0, 1, 2, 3), now);
+            Advance(SessionFlow.ResultsSeconds + SessionFlow.StandingsSeconds);
+            PlayRound(0, 1, 2, 3);   // d's seat is a bot this round
+            Assert.AreEqual(SessionPhase.Final, flow.Phase);
+            Advance(SessionFlow.FinalSeconds);
+            Assert.AreEqual(SessionPhase.Lobby, flow.Phase);
+            Assert.IsFalse(flow.Players.Any(p => p.pid.ToString() == "d"), "the leaver's stand-in bot does not stay for the next session");
+            Assert.AreEqual(3, flow.Players.Count);
+        }
+
         [Test]
         public void BotsArriveQuietly()
         {

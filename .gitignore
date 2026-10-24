@@ -118,3 +118,4 @@ InitTestScene*.unity*
 *.pem
 projects/shooterparty/server/**/secret
 projects/shooterparty/server/cloudflared/*.json
+.superpowers/

@@ -40,7 +40,7 @@ namespace ShooterParty
         CritterLook look;
         NetworkTransform netTransform;
         SpeedCheck speedCheck;
-        readonly TokenBucket actions = new TokenBucket(20f, 40f);
+        readonly FloodGuard requests = new FloodGuard(20f, 40f);   // the owner's own RPCs (actions, knockback acks, fire)
         float baseMoveSpeed, baseMass, lastKnockbackSent = -99f;
         Vector3 lastPos, remoteVelocity;
 
@@ -209,13 +209,24 @@ namespace ShooterParty
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-        void KnockbackAppliedRpc(int blobId) => KnockbackApplied?.Invoke(this, blobId);
+        void KnockbackAppliedRpc(int blobId) { if (OwnerRequestAllowed()) KnockbackApplied?.Invoke(this, blobId); }
+
+        // Server: paces the owner's RPCs; a sustained flood is a kick, logged once a second.
+        bool OwnerRequestAllowed()
+        {
+            double t = Time.unscaledTimeAsDouble;
+            var verdict = requests.Take(t);
+            if (verdict == FloodGuard.Verdict.Ok) return true;
+            if (requests.LogDue(t, out int dropped)) Debug.LogWarning($"[NetworkCritter] request flood from slot {Slot.Value}: {dropped} dropped");
+            if (verdict == FloodGuard.Verdict.Kick && !IsBot.Value) NetworkManager.DisconnectClient(OwnerClientId, "Kicked: too many requests");
+            return false;
+        }
 
         // Owner -> server: "I spat". The critter is the RPC's object, so nobody can fire as someone else.
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void FireRpc(Vector3 origin, Vector3 dir, double clientTime)
         {
-            if (ShotSystem.Instance) ShotSystem.Instance.ValidateAndFire(this, origin, dir, clientTime);
+            if (ShotSystem.Instance && OwnerRequestAllowed()) ShotSystem.Instance.ValidateAndFire(this, origin, dir, clientTime);
         }
 
         // Server: a pickup granted jumps. Owner-side state, like dash charges.
@@ -253,7 +264,7 @@ namespace ShooterParty
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         void ActionRpc(CritterAction a, float value)
         {
-            if (!actions.Take(Time.unscaledTimeAsDouble)) return;
+            if (!OwnerRequestAllowed()) return;
             ActionEchoRpc(a, value);
         }
 

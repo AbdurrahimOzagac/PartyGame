@@ -71,7 +71,7 @@ One build runs in several modes (`PartyMode`, started by `PartyNet`):
 
 **Why `WssBridge`:** stock UTP writes `Host: <IP:port>` in its WebSocket handshake, and Cloudflare answers 403. UTP also prefers IPv6. The bridge listens on 127.0.0.1, resolves IPv4 first, does TLS with the real hostname (SNI, system CAs), rewrites the `Host` line and then pipes bytes untouched. It also counts bytes for the F3 overlay. Dev flags: `-netDelay <ms>` adds latency, `-bridge` forces the bridge for plain `ws://` URLs.
 
-**Stdout protocol** (game server → room service, one line each, see `ServerRuntime`): `@@READY`, `@@STATE {phase, humans, connected, pids}` on change, `@@STATS {tickMs, tickMsMax, players, rttAvgMs}` every 10 s, `@@RESULT {totals, rankings}` at the Final, `@@END`. A game server exits when the session is over and nobody is connected, after 60 s with nobody connected, after 30 min idle in the lobby, or after 2 h.
+**Stdout protocol** (game server → room service, one line each, see `ServerRuntime`): `@@READY`, `@@STATE {phase, humans, connected, pids}` on change, `@@STATS {tickMs, tickMsMax, players, rttAvgMs}` every 10 s, `@@RESULT {totals, rankings}` at the Final, `@@END`. A game server exits when a finished session's players all left on purpose (not after a drop: they are rejoining), after 60 s with nobody connected, after 30 min idle in the lobby, or after 2 h (`ServerRuntime.ExitReason`).
 
 ## 3. Who decides what
 
@@ -117,8 +117,8 @@ Lobby ─Start─▶ Loading ─scene loaded─▶ Intro 4 s ─▶ Countdown 3 
 - **Disconnect mid-round** counts as a fall at that moment (`MiniGameController.ServerPlayerLeft`). The seat and points are held for 60 s (`SessionFlow.RejoinGraceSeconds`). In the lobby, a drop frees the seat.
 - **Rejoin (online only):** when the reason is "Connection lost", `JoinFlow` calls `/rooms/{code}/rejoin` with the `rejoinToken` (backoff 1, 2, 4, 8, 8 ... s, for up to 60 s). Rejoin is never by name. A rejoiner spectates until the next round.
 - **Bot takeover:** with "Replace leavers with bots" on, a bot drives a disconnected human's seat **from the next round's load**. If the human rejoins, they drive the seat again from the next round.
-- **Too few humans:** if fewer than `min(2, minPlayers)` humans stay connected mid-session, the session jumps to the Final.
-- **After the Final:** back to the Lobby, ready flags reset, disconnected humans removed. Starting again needs `minPlayers` again.
+- **Too few humans:** if fewer than `min(2, minPlayers)` humans remain mid-session, the session jumps to the Final. A dropped human still counts during the 60 s grace, so a tunnel blip that drops everyone at once does not end the session (`e2e_local.sh drop-all`).
+- **After the Final:** back to the Lobby, ready flags reset, disconnected humans and the bots that stood in for them removed. Starting again needs `minPlayers` again.
 
 ## 5. Scene flow
 

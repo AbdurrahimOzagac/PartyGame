@@ -97,6 +97,25 @@ namespace ShooterParty.Tests
             Assert.IsTrue(ui.hud.CardFor(slot).crown.enabled, "the card keeps the icon");
         }
 
+        // The freeze before GO is client-side input gating; the server must refuse shots too, or a modified client
+        // pushes frozen players off the ice during the intro and countdown.
+        [UnityTest]
+        public IEnumerator ShotsBeforeTheRoundIsLiveAreRefused()
+        {
+            yield return StartPlaylist(1);
+            yield return WaitFor(() => s.Phase.Value == SessionPhase.Intro && NetworkCritter.All.Count == 4, 15f, "the intro");
+            var mine = NetworkCritter.All.First(c => !c.IsBot.Value && c.IsOwner);
+            int before = ShotSystem.Instance.ServerShots;
+            mine.FireRpc(mine.transform.position + Vector3.up * 0.45f, mine.transform.forward, s.NetworkManager.LocalTime.Time);
+            yield return null; yield return null;
+            Assert.AreEqual(before, ShotSystem.Instance.ServerShots, "no shots during the intro");
+            yield return WaitFor(() => MiniGameController.Current && MiniGameController.Current.Live.Value, 15f, "GO");
+            before = ShotSystem.Instance.ServerShots;
+            mine.FireRpc(mine.transform.position + Vector3.up * 0.45f, mine.transform.forward, s.NetworkManager.LocalTime.Time);
+            yield return null; yield return null;
+            Assert.AreEqual(before + 1, ShotSystem.Instance.ServerShots, "and they work once the round is live");
+        }
+
         [UnityTest]
         public IEnumerator FinalShowsChampionAndBackToLobby()
         {

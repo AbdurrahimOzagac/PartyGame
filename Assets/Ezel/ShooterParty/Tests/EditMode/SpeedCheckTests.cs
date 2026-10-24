@@ -22,6 +22,15 @@ namespace ShooterParty.Tests
         }
 
         [Test]
+        public void NonFinitePositionIsKicked()
+        {
+            var c = new SpeedCheck(Cap);
+            Assert.AreEqual(SpeedVerdict.Ok, c.Feed(0, Vector3.zero, false));
+            Assert.AreEqual(SpeedVerdict.Kick, c.Feed(1.0 / 30, new Vector3(float.NaN, 0f, 0f), false), "no honest client sends NaN");
+            Assert.AreEqual(SpeedVerdict.Kick, new SpeedCheck(Cap).Feed(0, new Vector3(0f, float.PositiveInfinity, 0f), false));
+        }
+
+        [Test]
         public void FortyMetresPerSecondForHalfASecondLogsOnceNoKick()
         {
             var (logs, kicks) = Run(new SpeedCheck(Cap), 40f, 0.5f);

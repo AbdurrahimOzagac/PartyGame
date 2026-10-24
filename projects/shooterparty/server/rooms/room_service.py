@@ -12,6 +12,7 @@ Errors are {"error": "<sentence to show the player>"}. The detailed status (code
 --status-listen, a loopback port the tunnel does not route. Standard library only; state is in memory.
 """
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -46,6 +47,8 @@ class ApiError(Exception):
 
 def clean_name(raw, low=2, high=16, what="Name"):
     """Mirror of NameRules.TryClean (C#): NFC, collapsed spaces, letters/digits/space/_/- only."""
+    if raw is not None and not isinstance(raw, str):
+        raise ApiError(400, "Bad request")
     s = " ".join(unicodedata.normalize("NFC", raw or "").split(" "))
     s = " ".join(p for p in s.split(" ") if p)
     if len(s) < low:
@@ -90,6 +93,8 @@ class RoomService:
         self.create_limit = ratelimit.Limiter(clock, 6, 600)
         self.join_limit = ratelimit.Limiter(clock, 30, 600)
         self.miss_limit = ratelimit.Limiter(clock, 10, 60, block=300)
+        self.rejoin_limit = ratelimit.Limiter(clock, 60, 600)   # own budget: a drop recovery never waits on code guesses
+        self.salt = secrets.token_bytes(16)                      # per run: logs follow a network without storing its IP
 
     # ------------------------------------------------------------------ helpers
     def blocked_codes(self):
@@ -105,6 +110,9 @@ class RoomService:
         exp = int(time.time()) + TICKET_TTL
         room.pending[pid] = self.clock() + TICKET_TTL
         return tickets.sign({"v": 1, "room": room.code, "pid": pid, "name": name, "leader": leader, "exp": exp}, self.secret)
+
+    def anon(self, ip):
+        return hashlib.sha256(self.salt + (ip or "").encode()).hexdigest()[:10]
 
     def check_open(self):
         if self.maintenance_file and os.path.exists(self.maintenance_file):
@@ -130,7 +138,13 @@ class RoomService:
             env = dict(os.environ, PARTY_TICKET_SECRET=self.secret.hex())
             room = Room(code, slot, port, args, env)
             self.rooms[code] = room
-        self.start(room)
+        try:
+            self.start(room)
+        except Exception as e:   # binary missing mid-deploy, not executable, out of memory: free the slot
+            with self.lock:
+                self.rooms.pop(code, None)
+            log("server_start_failed", code=code, error=repr(e)[:200])
+            raise ApiError(503, "Couldn't start a room — try again")
         if not room.ready.wait(self.ready_timeout):
             self.kill(room)
             raise ApiError(503, "Couldn't start a room — try again")
@@ -139,7 +153,7 @@ class RoomService:
         with self.lock:
             room.rejoin[token] = (pid, name)
             ticket = self.ticket_for(room, pid, name, True)
-        log("room_created", code=code, slot=slot, ip=ip)
+        log("room_created", code=code, slot=slot, ip=self.anon(ip))
         return 201, {"code": code, "wsUrl": self.ws_url(room), "ticket": ticket, "rejoinToken": token}
 
     def find(self, ip, typed):
@@ -169,22 +183,24 @@ class RoomService:
             token = secrets.token_urlsafe(18)
             room.rejoin[token] = (pid, name)
             ticket = self.ticket_for(room, pid, name, False)
-        log("join", code=room.code, ip=ip)
+        log("join", code=room.code, ip=self.anon(ip))
         return 200, {"wsUrl": self.ws_url(room), "ticket": ticket, "rejoinToken": token}
 
+    # The token (144 random bits) is the proof, so rejoin skips the wrong-code lock-out: one classroom's typos must
+    # not block everyone's drop recovery. An unknown room and a bad token give the same answer (no code oracle).
     def rejoin(self, ip, typed, body):
-        if not self.join_limit.hit(ip):
+        if not self.rejoin_limit.hit(ip):
             raise ApiError(429, "Too many attempts — wait a few minutes")
         token = body.get("rejoinToken")
-        room = self.find(ip, typed)
+        code = codes.normalise(typed)
         with self.lock:
-            entry = room.rejoin.get(token) if isinstance(token, str) else None
+            room = self.rooms.get(code) if code else None
+            entry = room.rejoin.get(token) if room and isinstance(token, str) else None
             if not entry:
-                self.miss_limit.hit(ip)
                 raise ApiError(404, "Can't rejoin that room")
             pid, name = entry
             ticket = self.ticket_for(room, pid, name, False)
-        log("rejoin", code=room.code, ip=ip)
+        log("rejoin", code=room.code, ip=self.anon(ip))
         return 200, {"wsUrl": self.ws_url(room), "ticket": ticket}
 
     def status(self):
@@ -291,7 +307,12 @@ def make_handler(svc, public):
                 path = self.path.split("?")[0].rstrip("/")
                 body = {}
                 if method == "POST":
-                    n = int(self.headers.get("Content-Length") or 0)
+                    try:
+                        n = int(self.headers.get("Content-Length") or 0)
+                    except ValueError:
+                        raise ApiError(400, "Bad request")
+                    if n < 0:
+                        raise ApiError(400, "Bad request")
                     if n > MAX_BODY:
                         raise ApiError(413, "Request too large")
                     try:
@@ -313,7 +334,7 @@ def make_handler(svc, public):
                 raise ApiError(404, "Not found")
             except ApiError as e:
                 if e.status in (429, 503):
-                    log("refused", status=e.status, ip=self.ip(), error=e.message)
+                    log("refused", status=e.status, ip=svc.anon(self.ip()), error=e.message)
                 self.reply(e.status, {"error": e.message})
             except Exception as e:   # never leak a stack trace to the internet
                 log("bug", error=repr(e))

@@ -1,6 +1,6 @@
 # ShooterParty backend on a home Raspberry Pi 5: exposure, lobby, security, stack, observability
 
-Research brief, 2026-10-24. Scope: 3-4 players per room, at most 1-2 rooms at once, Unity 6.3 (project is on 6000.3.9f1, no netcode package installed yet), Windows + macOS clients, Pi 5 at home on a ~30 Mbps line, domain ezellm.com already served from the Pi.
+Research brief, 2026-10-24. Scope: 3-4 players per room, at most 1-2 rooms at once, Unity 6.3 (project is on 6000.3.9f1, no netcode package installed yet), Windows + macOS clients, a Pi 5 on a ~30 Mbps line, domain ezellm.com already served from the Pi.
 
 Evidence tags used throughout:
 - **(V)** checked against a primary doc (vendor docs, RFC, OWASP, man page) during this research.

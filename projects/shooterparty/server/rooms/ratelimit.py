@@ -30,12 +30,12 @@ class Limiter:
             q = self.hits.pop(key, None) or collections.deque()
             while q and now - q[0] >= self.window:
                 q.popleft()
-            q.append(now)
             self.hits[key] = q
             while len(self.hits) > MAX_KEYS:
                 self.hits.popitem(last=False)
-            if len(q) > self.limit:
+            if len(q) >= self.limit:   # a refused attempt is not counted, so retrying does not extend the wait
                 if self.block:
                     self.blocked[key] = now + self.block
                 return False
+            q.append(now)
             return True

@@ -240,3 +240,5 @@ When client and server stop understanding each other (a changed RPC, network var
 - the `X-ShooterParty-Version` header in `deploy.sh` and `e2e_local.sh`.
 
 Then deploy the server and hand out new client builds together.
+
+Rebuilt network prefabs (any `ShooterParty > Rebuild core assets` or Knockback "rebuild everything") change their ids even without a version bump. Every build carries a fingerprint of its prefab ids (`PartyProtocol.Fingerprint`, sent in the join payload), and the game server turns a mismatch into "Update your game". So: build the Pi server and the clients from the same commit, and redeploy the server whenever you hand out new clients.

@@ -230,6 +230,58 @@ class RoomServiceTests(unittest.TestCase):
         self.assertEqual(s, 503)
         self.assertEqual(len(self.svc.rooms), 0)
 
+    # ---- final review fixes
+    def test_failed_server_start_frees_the_slot(self):
+        self.svc.server_cmd = ["/no/such/binary"]   # mid-deploy, not executable, out of memory...
+        for _ in range(3):
+            status, body = self.create()
+            self.assertEqual(503, status)
+            self.assertIn("Couldn't start a room", body["error"])
+        self.assertEqual(0, len(self.svc.rooms), "no slot is held by a server that never started")
+
+    def test_non_string_name_is_400_not_500(self):
+        for bad in (5, ["Ezel"], {"x": 1}, True):
+            status, body = self.call("POST", "/rooms", {"name": bad})
+            self.assertEqual(400, status, repr(bad))
+
+    def test_negative_content_length_is_400(self):
+        import http.client
+        port = self.http.server_address[1]
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        c.putrequest("POST", "/api/v1/rooms")
+        c.putheader("X-ShooterParty-Version", "1")
+        c.putheader("Content-Length", "-1")
+        c.endheaders()
+        self.assertEqual(400, c.getresponse().status)
+        c.close()
+
+    def test_rejoin_still_works_during_a_wrong_code_lockout(self):
+        status, room = self.create(ip="10.0.0.9")
+        for _ in range(11):   # a classroom behind one IP mistypes codes
+            self.call("POST", "/rooms/BCDFG/join", {"name": "Kid"}, headers={"CF-Connecting-IP": "10.0.0.9"})
+        self.assertEqual(429, self.call("POST", "/rooms/BCDFG/join", {"name": "Kid"}, headers={"CF-Connecting-IP": "10.0.0.9"})[0])
+        status, body = self.call("POST", "/rooms/%s/rejoin" % room["code"], {"rejoinToken": room["rejoinToken"]},
+                                 headers={"CF-Connecting-IP": "10.0.0.9"})
+        self.assertEqual(200, status, "the 144-bit token is the proof; the code-guess lockout must not block a drop recovery")
+
+    def test_refused_attempts_do_not_extend_a_limit(self):
+        lim = room_service.ratelimit.Limiter(self.clock, limit=2, window=10.0)
+        self.assertTrue(lim.hit("k")); self.assertTrue(lim.hit("k"))
+        for _ in range(5):   # keeps retrying every 2 s while refused
+            self.clock.t += 2.0
+            lim.hit("k")
+        self.clock.t += 0.5   # 10.5 s after the two counted hits
+        self.assertTrue(lim.hit("k"), "only counted hits fill the window")
+
+    def test_logs_do_not_keep_player_ips(self):
+        import contextlib, io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.create(ip="203.0.113.77")
+            self.call("POST", "/rooms/BCDFG/join", {"name": "Kid"}, headers={"CF-Connecting-IP": "203.0.113.77"})
+        self.assertNotIn("203.0.113.77", out.getvalue())
+        self.assertIn('"ip": "', out.getvalue(), "a stable pseudonym is still logged, so one network's activity can be followed")
+
     def test_status_public_has_no_codes(self):
         code = self.create()[1]["code"]
         s, r = self.call("GET", "/status")

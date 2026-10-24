@@ -40,6 +40,26 @@ namespace ShooterParty.Tests
             Assert.AreEqual("a1b2c3d4e5f60718", p.pid); Assert.AreEqual("Mochi", p.name); Assert.IsTrue(p.leader);
         }
 
+        // Clients and the server must come from the same build: rebuilt prefabs change their ids, and Netcode would
+        // otherwise drop the connection with no reason. The gate turns that into "Update your game".
+        [Test]
+        public void OtherBuildIsTurnedAwayWithUpdateYourGame()
+        {
+            var mine = Encoding.UTF8.GetBytes(JsonUtility.ToJson(new JoinPayload { v = PartyProtocol.Version, name = "Zesty", ticket = MintTicket(), build = "aaaa1111" }));
+            Assert.IsFalse(ConnectionGate.Approve(mine, server, k => !used.Add(k), Now, out _, out var r, build: "bbbb2222"));
+            Assert.AreEqual(ConnectionGate.OldVersion, r);
+            Assert.IsTrue(ConnectionGate.Approve(mine, server, k => !used.Add(k), Now, out _, out r, build: "aaaa1111"), r);
+        }
+
+        [Test]
+        public void BuildFingerprintIgnoresOrderAndTracksPrefabs()
+        {
+            var a = PartyProtocol.Fingerprint(new uint[] { 7, 99, 12345 });
+            Assert.AreEqual(a, PartyProtocol.Fingerprint(new uint[] { 12345, 7, 99 }));
+            Assert.AreNotEqual(a, PartyProtocol.Fingerprint(new uint[] { 7, 99, 12346 }));
+            Assert.AreEqual(8, a.Length);
+        }
+
         [Test] public void WrongRoomRejected() { Assert.IsFalse(Online(Payload(MintTicket(room: "ZZZZZ")), out _, out var r)); Assert.AreEqual(ConnectionGate.WrongRoom, r); }
         [Test] public void ExpiredRejected() { Assert.IsFalse(Online(Payload(MintTicket(exp: Now - 1)), out _, out var r)); Assert.AreEqual(ConnectionGate.Expired, r); }
         [Test] public void MissingTicketRejected() { Assert.IsFalse(Online(Payload(null), out _, out var r)); Assert.AreEqual(ConnectionGate.BadTicket, r); }

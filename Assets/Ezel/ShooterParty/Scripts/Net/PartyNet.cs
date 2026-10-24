@@ -30,6 +30,7 @@ namespace ShooterParty
         public ServerArgs Server { get; private set; }
         public string LastDenyReason { get; private set; }
         public string Address { get; private set; }                    // LocalClient: the host address we joined
+        public string Build { get; private set; }                      // PartyProtocol.Fingerprint of this build's prefabs
 
         public event Action ServerStarted;
         public event Action<string> Disconnected;                      // local client lost the server (reason)
@@ -63,6 +64,7 @@ namespace ShooterParty
             Net.NetworkConfig = new NetworkConfig
             {
                 NetworkTransport = Transport, TickRate = 30, ConnectionApproval = true, EnableSceneManagement = true,
+                ForceSamePrefabs = false,   // our join gate compares the build fingerprint and can say "Update your game"
             };
             Net.ConnectionApprovalCallback = Approve;
             Net.OnClientDisconnectCallback += OnClientDisconnect;
@@ -83,6 +85,7 @@ namespace ShooterParty
             if (configured) return;
             configured = true;
             if (prefabs) Net.NetworkConfig.Prefabs.NetworkPrefabsLists.Add(prefabs);
+            Build = PartyProtocol.Fingerprint(prefabs ? prefabs.PrefabList.Where(x => x.Prefab).Select(x => x.Prefab.GetComponent<NetworkObject>().PrefabIdHash) : Enumerable.Empty<uint>());
         }
 
         // ------------------------------------------------------------------ start modes
@@ -177,7 +180,7 @@ namespace ShooterParty
             usedTickets.Clear();
             Transport.UseWebSockets = ws;
             Transport.UseEncryption = false;   // online TLS is done by WssBridge / Cloudflare
-            Net.NetworkConfig.ConnectionData = new JoinPayload { v = PartyProtocol.Version, name = name, ticket = ticket }.ToBytes();
+            Net.NetworkConfig.ConnectionData = new JoinPayload { v = PartyProtocol.Version, name = name, ticket = ticket, build = Build }.ToBytes();
         }
 
         bool Fail()
@@ -192,7 +195,7 @@ namespace ShooterParty
         {
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var server = Mode == PartyMode.DedicatedServer ? Server : null;
-            bool ok = ConnectionGate.Approve(request.Payload, server, k => !usedTickets.Add(k), now, out var p, out var reason);
+            bool ok = ConnectionGate.Approve(request.Payload, server, k => !usedTickets.Add(k), now, out var p, out var reason, Build);
             if (ok && request.ClientNetworkId == NetworkManager.ServerClientId) p.leader = true;   // the host leads Local and Practice
             if (ok && Admission != null) { reason = Admission(request.ClientNetworkId, p); ok = reason == null; }
             response.Approved = ok;

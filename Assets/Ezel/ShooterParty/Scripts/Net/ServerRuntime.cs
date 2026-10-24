@@ -11,7 +11,8 @@ namespace ShooterParty
     //   @@STATS {"tickMs":..,"tickMsMax":..,"players":n,"rttAvgMs":..}   every 10 s
     //   @@RESULT {"totals":[..],"rankings":[[..],..]}   when a session reaches its final
     //   @@END                         about to exit
-    // It exits when nobody has been connected for 60 s, after 30 min idle in the lobby, or after 2 h.
+    // It exits when a finished session's players all left on purpose, when nobody has been connected for 60 s,
+    // after 30 min idle in the lobby, or after 2 h.
     public class ServerRuntime : MonoBehaviour
     {
         public const float EmptySeconds = 60f, LobbyIdleSeconds = 30f * 60f, MaxSeconds = 2f * 3600f;
@@ -68,12 +69,18 @@ namespace ShooterParty
                 Emit("@@STATS {\"tickMs\":" + avg + ",\"tickMsMax\":" + max + ",\"players\":" + connected + ",\"rttAvgMs\":" + rtt + "}");
                 tickSum = tickMax = 0f; ticks = 0;
             }
-            string why = sessionOver && connected == 0 ? "session over, everyone left"
-                       : Time.unscaledTime - emptySince > EmptySeconds ? "empty"
-                       : Time.unscaledTime - lobbySince > LobbyIdleSeconds ? "idle in lobby"
-                       : Time.realtimeSinceStartup > MaxSeconds ? "time limit" : null;
+            string why = ExitReason(sessionOver, humans, connected, s.NetworkManager.ServerTime.Time - flow.LastDropAt,
+                Time.unscaledTime - emptySince, Time.unscaledTime - lobbySince, Time.realtimeSinceStartup);
             if (why != null) End(why);
         }
+
+        // A finished session that everyone left on purpose frees the slot at once. After a drop, wait: they are rejoining
+        // (the empty rule still applies after EmptySeconds).
+        public static string ExitReason(bool sessionOver, int humans, int connected, double sinceLastDrop, float emptyFor, float lobbyIdleFor, float uptime) =>
+            sessionOver && humans == 0 && connected == 0 && sinceLastDrop > SessionFlow.RejoinGraceSeconds ? "session over, everyone left"
+            : emptyFor > EmptySeconds ? "empty"
+            : lobbyIdleFor > LobbyIdleSeconds ? "idle in lobby"
+            : uptime > MaxSeconds ? "time limit" : null;
 
         static string Result(SessionFlow flow)
         {

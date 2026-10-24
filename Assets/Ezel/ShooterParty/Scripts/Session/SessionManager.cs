@@ -39,7 +39,7 @@ namespace ShooterParty
 
         SessionFlow flow;
         MiniGameController controller;
-        readonly Dictionary<ulong, TokenBucket> buckets = new Dictionary<ulong, TokenBucket>();
+        readonly Dictionary<ulong, FloodGuard> buckets = new Dictionary<ulong, FloodGuard>();
         readonly HashSet<string> cleanLeaves = new HashSet<string>();
         float nextRtt;
         bool mirrorQueued;
@@ -281,8 +281,15 @@ namespace ShooterParty
         {
             pid = null;
             ulong sender = p.Receive.SenderClientId;
-            if (!buckets.TryGetValue(sender, out var b)) buckets[sender] = b = new TokenBucket(20f, 40f);
-            if (!b.Take(Time.unscaledTimeAsDouble)) { Debug.LogWarning($"[Session] request flood from client {sender}"); return false; }
+            if (!buckets.TryGetValue(sender, out var b)) buckets[sender] = b = new FloodGuard(20f, 40f);
+            double t = Time.unscaledTimeAsDouble;
+            var verdict = b.Take(t);
+            if (verdict != FloodGuard.Verdict.Ok)
+            {
+                if (b.LogDue(t, out int dropped)) Debug.LogWarning($"[Session] request flood from client {sender}: {dropped} dropped");
+                if (verdict == FloodGuard.Verdict.Kick) NetworkManager.DisconnectClient(sender, "Kicked: too many requests");
+                return false;
+            }
             var net = PartyNet.Instance;
             if (!net || !net.Players.TryGetValue(sender, out var approved)) return false;
             pid = approved.pid;

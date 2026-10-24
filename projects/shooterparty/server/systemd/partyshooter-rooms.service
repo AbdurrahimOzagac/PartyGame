@@ -43,6 +43,10 @@ SystemCallArchitectures=native
 CapabilityBoundingSet=
 AmbientCapabilities=
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+# loopback only: cloudflared reaches the room service and the game servers on 127.0.0.1; nothing here dials out
+IPAddressAllow=localhost
+IPAddressDeny=any
+ProtectProc=invisible
 UMask=0077
 MemoryMax=1500M
 CPUQuota=250%

@@ -86,7 +86,8 @@ namespace ShooterParty
             }
             string message =
                 status == 426 ? UpdateYourGame :
-                req.result == UnityWebRequest.Result.ConnectionError || status == 0 || status == 502 || status == 504 ? Unreachable :
+                req.result == UnityWebRequest.Result.ConnectionError || status == 0 ? Unreachable :
+                status >= 500 && string.IsNullOrEmpty(reply?.error) ? Unreachable :   // Cloudflare's 52x/530 pages: tunnel or Pi down
                 !string.IsNullOrEmpty(reply?.error) ? reply.error :
                 $"Something went wrong ({status}) — try again";
             fail(new JoinError { status = status, message = message });

@@ -31,7 +31,7 @@ The game is graded school homework. The bar is polished UI, UX and HUD, few bugs
 | Platforms | macOS, Windows and Linux desktop clients. A Linux ARM64 dedicated server runs on the Pi. |
 | Where played | Both at home and on school Wi-Fi for graded demos. School Wi-Fi is the strict case. |
 | Code home | Everything stays under `Assets/Ezel/`. |
-| Server | Approach A: everything on the Pi (trok), reached only through Cloudflare. The router is shared with the building, so no port forwarding is possible. |
+| Server | Approach A: everything on the Pi, reached only through Cloudflare. The router is shared with the building, so no port forwarding is possible. |
 | Later, not now | Comeback and underdog advantages, dynamic difficulty, cosmetics shop. The architecture leaves documented places for them. |
 
 ### Measured constraints
@@ -60,7 +60,7 @@ The game is graded school homework. The bar is polished UI, UX and HUD, few bugs
    ▼
  Cloudflare edge ── tunnel "partyshooter" (its own credentials, separate from the website tunnel)
    ▼
- Pi (trok), every listener bound to 127.0.0.1
+ Pi, every listener bound to 127.0.0.1
    ├─ room service     127.0.0.1:7700   Python 3.13 standard library only
    ├─ game server #1   127.0.0.1:7701   headless Unity (Linux ARM64 Dedicated Server), path /g/1
    └─ game server #2   127.0.0.1:7702   path /g/2      (hard cap: 2 rooms)
@@ -400,7 +400,7 @@ This repo is public. Nothing that describes the Pi's other services, its address
 
 - **Room service log:** structured JSON lines to journald: room created/closed, join ok/denied (reason), server exit codes, rate-limit hits.
 - **Game server log:** `@@STATS` every 10 s (tick ms avg/max, players, RTT avg/max, kbps), plus warnings for tick overruns (> 20 ms) and for corrections and kicks.
-- **Status view:** the unrouted 127.0.0.1:7709 view gives the owner live detail (`ssh trok partyshooter-status`).
+- **Status view:** the unrouted 127.0.0.1:7709 view gives the owner live detail (`ssh <ssh-host> partyshooter-status`).
 - **In game:** the F3 overlay and the HUD connection dot.
 
 ## 8. Testing and verification

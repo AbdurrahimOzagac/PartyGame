@@ -94,6 +94,30 @@ namespace ShooterParty.Tests
             yield return client.Join("AE", "Zesty", _ => { }, e => error = e);
             Assert.AreEqual(RoomServiceClient.BadCode, error.message);
         }
+
+        // Tunnel stopped or the Pi off: Cloudflare answers 530 (or another 5xx) with an HTML page, not our JSON.
+        [UnityTest]
+        public IEnumerator CloudflareOutagePagesReadAsUnreachable()
+        {
+            int port = FreePort();
+            var stub = new HttpListener();
+            stub.Prefixes.Add($"http://127.0.0.1:{port}/");
+            stub.Start();
+            stub.BeginGetContext(ar =>
+            {
+                var ctx = stub.EndGetContext(ar);
+                var page = System.Text.Encoding.UTF8.GetBytes("<html><body>Error 1033 Argo Tunnel error</body></html>");
+                ctx.Response.StatusCode = 530;
+                ctx.Response.ContentType = "text/html";
+                ctx.Response.OutputStream.Write(page, 0, page.Length);
+                ctx.Response.Close();
+            }, null);
+            JoinError error = default;
+            yield return new RoomServiceClient($"http://127.0.0.1:{port}/api/v1").Join("BCDFG", "Zesty", _ => { }, e => error = e);
+            stub.Stop();
+            Assert.AreEqual(530, error.status);
+            Assert.AreEqual(RoomServiceClient.Unreachable, error.message);
+        }
     }
 }
 #endif

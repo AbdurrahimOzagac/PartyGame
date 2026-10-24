@@ -58,6 +58,7 @@ namespace ShooterParty
         static float Scaled(float s) => s * TimeScaleForTests;
         int Index(string pid) => players.FindIndex(p => p.pid.ToString() == pid);
         int Humans => players.Count(p => !p.isBot && p.eligible);
+        public double LastDropAt { get; private set; } = double.NegativeInfinity;   // when a connection last dropped (not a clean leave)
         int ConnectedHumans => players.Count(p => !p.isBot && p.connected);
 
         // ------------------------------------------------------------------ membership
@@ -161,6 +162,7 @@ namespace ShooterParty
             int i = Index(pid);
             if (i < 0) return;
             if (clientId.HasValue && players[i].clientId != clientId.Value) return;
+            LastDropAt = now;
             if (Phase == SessionPhase.Lobby) { Remove(pid, now, " disconnected"); return; }
             var p = players[i];
             if (p.connected) Notice?.Invoke(p.slot, p.name + " disconnected");
@@ -376,7 +378,7 @@ namespace ShooterParty
                     case SessionPhase.Standings: NextGame(t); break;
                     case SessionPhase.Final:
                         for (int i = 0; i < players.Count; i++) { var p = players[i]; p.ready = p.isBot; players[i] = p; }
-                        players.RemoveAll(p => !p.isBot && !p.connected);
+                        players.RemoveAll(p => !p.connected);   // gone humans, and the bots that stood in for them
                         RoundIndex = -1;
                         Enter(SessionPhase.Lobby, double.PositiveInfinity);
                         break;
@@ -402,7 +404,8 @@ namespace ShooterParty
         void CheckTooFewHumans(double now)
         {
             if (Phase == SessionPhase.Lobby || Phase == SessionPhase.Final) return;
-            if (ConnectedHumans < Math.Min(2, options.minPlayers)) EnterFinal(now);
+            // seats still held for a rejoin count: a tunnel blip that drops everyone must not end the session
+            if (Humans < Math.Min(2, options.minPlayers)) EnterFinal(now);
         }
 
         void Enter(SessionPhase phase, double endsAt)

@@ -79,6 +79,8 @@ namespace ShooterParty
         internal void ValidateAndFire(NetworkCritter shooter, Vector3 origin, Vector3 dir, double clientTime)
         {
             if (!IsServer || !shooter || shooter.Eliminated.Value) return;
+            var round = MiniGameController.Current;
+            if (round && !round.Live.Value) return;   // intro, countdown, results: everyone is frozen, so nobody shoots
             if (!fireState.TryGetValue(shooter, out var st)) st = (double.NegativeInfinity, new TokenBucket(6f, 12f));
             double now = NetworkManager.ServerTime.Time;
             float cooldown = shooter.GetComponent<CritterSpit>().cooldown;

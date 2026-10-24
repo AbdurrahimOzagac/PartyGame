@@ -18,6 +18,7 @@ namespace ShooterParty
 
         public SpeedVerdict Feed(double ownerTime, Vector3 pos, bool recentKnockback)
         {
+            if (!float.IsFinite(pos.x) || !float.IsFinite(pos.y) || !float.IsFinite(pos.z) || double.IsNaN(ownerTime)) return SpeedVerdict.Kick;   // no honest client sends NaN
             if (double.IsNaN(lastT)) { lastT = ownerTime; lastP = pos; return SpeedVerdict.Ok; }
             if (ownerTime <= lastT) return SpeedVerdict.Ok;   // same tick or reordered
             var d = pos - lastP; d.y = 0f;                    // falls are fast and legitimate

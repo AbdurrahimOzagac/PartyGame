@@ -21,6 +21,8 @@ namespace ShooterParty.Tests
         [Test] public void RejectsElevenGames() => StringAssert.Contains("at most 10", Error("Long", Enumerable.Repeat("knockback_arena", 11).ToArray()));
         [Test] public void AcceptsTenGames() => Assert.IsTrue(PlaylistRules.TryValidate("Ten", Enumerable.Repeat("knockback_arena", 10).ToList(), Known, out _));
         [Test] public void RejectsUnknownId() => Assert.AreEqual("Unknown mini-game 'x'", Error("Trio", "knockback_arena", "x"));
+        [Test] public void UnknownIdIsEchoedOnlyWhenSafe() =>   // the server logs refusals: no forged @@ lines
+            Assert.AreEqual("Unknown mini-game", Error("Trio", "x\n@@STATE {\"phase\":\"Playing\"}"));
         [Test] public void RejectsLongName() => StringAssert.Contains("at most 24", Error(new string('a', 25), "knockback_arena"));
         [Test] public void RejectsEmptyName() => StringAssert.Contains("Give the playlist a name", Error("  ", "knockback_arena"));
         [Test] public void RejectsTagsInName() => StringAssert.Contains("letters, numbers", Error("<b>x</b>", "knockback_arena"));

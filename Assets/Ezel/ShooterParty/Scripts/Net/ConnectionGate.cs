@@ -13,6 +13,7 @@ namespace ShooterParty
         public int v;
         public string name;
         public string ticket;
+        public string build;
 
         public byte[] ToBytes() => Encoding.UTF8.GetBytes(JsonUtility.ToJson(this));
     }
@@ -33,7 +34,7 @@ namespace ShooterParty
 
         // ticketUsed(key) returns true when the key was already used, and records it otherwise.
         public static bool Approve(byte[] payload, ServerArgs server, Func<string, bool> ticketUsed, long nowUnix,
-                                   out ApprovedPlayer p, out string reason)
+                                   out ApprovedPlayer p, out string reason, string build = null)
         {
             p = default;
             reason = BadRequest;
@@ -43,6 +44,7 @@ namespace ShooterParty
             catch (ArgumentException) { return false; }
             if (j == null) return false;
             if (j.v != PartyProtocol.Version) { reason = OldVersion; return false; }
+            if (build != null && j.build != build) { reason = OldVersion; return false; }   // another build's prefabs
 
             if (server == null)
             {
