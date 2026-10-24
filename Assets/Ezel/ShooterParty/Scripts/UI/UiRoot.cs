@@ -18,6 +18,7 @@ namespace ShooterParty.UI
         public RoundResultsView results;
         public StandingsView standings;
         public FinalView final;
+        public NetStatsOverlay netStats;
         public NameCodeDialog nameDialog;
         public JoinProgressView progress;
         public Dialog dialog;

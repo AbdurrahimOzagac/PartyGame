@@ -45,6 +45,7 @@ namespace ShooterParty.EditorTools
             root.pause = BuildPause(t);
             root.dialog = BuildDialog(t);
             root.toasts = BuildToasts(t);
+            root.netStats = BuildNetStats(t);
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, UiRootPath);
             Object.DestroyImmediate(go);
             return prefab;
@@ -158,6 +159,17 @@ namespace ShooterParty.EditorTools
             d.primary = Btn(p, "Primary", "LEAVE", new Vector2(0.5f, 0f), new Vector2(165f, 72f), new Vector2(290f, 86f), Tomato, Paper);
             d.primaryLabel = d.primary.GetComponentInChildren<TMP_Text>();
             return d;
+        }
+
+        // F3 readout: one ink-backed line at the bottom centre, clear of the lobby's buttons and the HUD
+        static NetStatsOverlay BuildNetStats(Transform parent)
+        {
+            var o = Screen<NetStatsOverlay>(parent, "NetStats");
+            var box = I(o.transform, "Box", S("UI_Pill"), new Color(0.086f, 0.1f, 0.227f, 0.86f), new Vector2(0.5f, 0f), new Vector2(-60f, 28f), new Vector2(660f, 40f), Image.Type.Sliced);   // clear of Leave and Start
+            box.raycastTarget = false;
+            o.text = T(box.transform, "Text", "RTT 0 ms", 20f, Paper, C, new Vector2(0f, 1f), new Vector2(640f, 34f), TextAlignmentOptions.Center, false, false);
+            o.text.richText = true;
+            return o;
         }
 
         static Toasts BuildToasts(Transform parent)

@@ -31,6 +31,7 @@ namespace ShooterParty
         public readonly NetworkVariable<FixedString32Bytes> RoomCode = new NetworkVariable<FixedString32Bytes>();
         public readonly NetworkVariable<bool> ReplaceLeavers = new NetworkVariable<bool>();
         public readonly NetworkVariable<int> MinPlayers = new NetworkVariable<int>(3);
+        public readonly NetworkVariable<float> ServerTickMs = new NetworkVariable<float>(-1f);   // dedicated server's average frame, every 10 s (F3)
 
         public event Action<string> Message;          // this client: a refused request's reason ("Everyone must be ready")
         public event Action<string> Notice;           // this client: someone else joined, left, dropped, came back...

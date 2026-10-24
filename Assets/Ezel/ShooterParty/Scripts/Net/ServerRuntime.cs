@@ -61,7 +61,9 @@ namespace ShooterParty
                 nextStats = Time.unscaledTime + 10f;
                 var rtts = flow.Players.Where(p => !p.isBot && p.connected).Select(p => (int)p.rttMs).ToList();
                 var inv = System.Globalization.CultureInfo.InvariantCulture;   // JSON numbers, whatever the server locale
-                string avg = (ticks > 0 ? tickSum / ticks : 0f).ToString("F1", inv), max = tickMax.ToString("F1", inv);
+                float avgMs = ticks > 0 ? tickSum / ticks : 0f;
+                string avg = avgMs.ToString("F1", inv), max = tickMax.ToString("F1", inv);
+                if (SessionManager.Instance && SessionManager.Instance.IsSpawned) SessionManager.Instance.ServerTickMs.Value = avgMs;   // players' F3 overlay
                 string rtt = (rtts.Count > 0 ? rtts.Average() : 0.0).ToString("F0", inv);
                 Emit("@@STATS {\"tickMs\":" + avg + ",\"tickMsMax\":" + max + ",\"players\":" + connected + ",\"rttAvgMs\":" + rtt + "}");
                 tickSum = tickMax = 0f; ticks = 0;
