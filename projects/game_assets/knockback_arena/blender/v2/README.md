@@ -339,3 +339,7 @@ Secondary motion is baked: the Top jiggle and curl follow-through come from a da
 - **URP Complex Lit has no rim light.** A Shader Graph with a Fresnel rim and wrap lighting (values in the design brief) would bring the Unity look closer to the Blender renders.
 - **Edit-mode previews show a neutral face** even when a clip is selected: batch edit-mode sampling doesn't apply blend shapes. Play mode is correct (tested).
 - **Unity names the imported mesh child objects `CubeCritter` / `CubeCritter_Mesh`**, with a 270° X rotation from the axis conversion. That is the standard Blender→Unity result; the prefab root is identity.
+
+# Game framework docs
+
+This kit is the shared art of the ShooterParty game: every mini-game reuses the cube critter, the spit shot and these assets from `Assets/Ezel/KnockbackArena`, where they stay. To build on it, read [ARCHITECTURE.md](../../../../../Assets/Ezel/ShooterParty/Docs/ARCHITECTURE.md) (how the game, the network and the session fit together), [ADDING_A_MINIGAME.md](../../../../../Assets/Ezel/ShooterParty/Docs/ADDING_A_MINIGAME.md) (a new mini-game step by step, with Knockback Arena as the worked example) and [SERVER_OPS.md](../../../../../Assets/Ezel/ShooterParty/Docs/SERVER_OPS.md) (deploying and running the online server).
