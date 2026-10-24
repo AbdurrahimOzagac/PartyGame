@@ -42,7 +42,7 @@ UNITY=/Applications/Unity/Hub/Editor/6000.3.9f1/Unity.app/Contents/MacOS/Unity
 "$UNITY" -batchmode -quit -projectPath . -executeMethod ShooterParty.EditorTools.PartyBuild.BatchPiServer
 ```
 
-The first build after the toolchain packages are imported can fail with "Unable to find an Linux Sysroot". Run it again; the second run works. `deploy.sh` does not build for you.
+The build needs about 4 GB of free disk (IL2CPP intermediates plus the output). It switches the active build profile to Linux Dedicated Server before it sets the Arm64 architecture, because Unity 6 keeps the architecture per build profile, and it fails if the result is not an Arm64 binary. `deploy.sh` does not build for you, and it refuses a server build that is not Arm64.
 
 Other targets are in the same menu: macOS, Windows, Linux x64, and All. Desktop builds go to `Builds/macOS/`, `Builds/Windows/` and `Builds/Linux/`.
 
@@ -242,3 +242,23 @@ When client and server stop understanding each other (a changed RPC, network var
 Then deploy the server and hand out new client builds together.
 
 Rebuilt network prefabs (any `ShooterParty > Rebuild core assets` or Knockback "rebuild everything") change their ids even without a version bump. Every build carries a fingerprint of its prefab ids (`PartyProtocol.Fingerprint`, sent in the join payload), and the game server turns a mismatch into "Update your game". So: build the Pi server and the clients from the same commit, and redeploy the server whenever you hand out new clients.
+
+## 14. Running the game on Windows, macOS and Linux
+
+Build in Unity with `ShooterParty > Build > Windows`, `macOS` or `Linux x64` (or `Build > All`). Every target lands in `Builds/<target>/`. Hand out the **whole folder**, not only the executable: the player needs its `_Data` folder and the Unity runtime next to it.
+
+| | Windows | macOS | Linux |
+|---|---|---|---|
+| Start | `ShooterParty.exe` | `ShooterParty.app` | `chmod +x ShooterParty.x86_64`, then run it |
+| First start | The build is unsigned: SmartScreen says "Windows protected your PC" → **More info → Run anyway** | Copied or downloaded apps are quarantined: right-click → **Open** once | — |
+| Local play host | Allow the firewall prompt (Private networks) for UDP 7777 | Allow incoming connections when asked | Open UDP 7777 if a firewall runs |
+
+Online play needs no firewall change on any of them (HTTPS/WSS on 443 out).
+
+Checklist per laptop, before a demo:
+1. Start the game; the menu shows over the ice floe and music plays.
+2. PRACTICE VS BOTS: play a round to the results. Mouse capture, WASD, hold-click spit, Shift dash and Space jump work; Esc pauses and frees the mouse.
+3. SETTINGS: display mode and resolution apply; volumes change.
+4. F3: the network line appears in a room (RTT 0 in Practice).
+5. PLAY ONLINE > CREATE ROOM gets a 5-letter code; a second laptop joins with it (school Wi-Fi: see section 10).
+6. SAME WI-FI > HOST on one laptop, JOIN BY ADDRESS on another, on the same network.

@@ -22,7 +22,9 @@ push() { rsync -az --delete -e "ssh -o BatchMode=yes" "$@"; }
 
 install_service() {
   local build=${1:-$ROOT/Builds/PiServer}
-  [ -x "$build/ShooterPartyServer" ] || { echo "no server build in $build (Unity: ShooterParty > Build > Pi Server (Linux Arm64); the first try per editor launch can fail on the sysroot, build again)"; exit 2; }
+  [ -x "$build/ShooterPartyServer" ] || { echo "no server build in $build (Unity: ShooterParty > Build > Pi Server (Linux Arm64))"; exit 2; }
+  # ELF e_machine (offset 18) b7 00 = AArch64; anything else fails on the Pi with "Exec format error"
+  [ "$(od -An -tx1 -j18 -N2 "$build/ShooterPartyServer" | tr -d ' \n')" = b700 ] || { echo "$build/ShooterPartyServer is not a Linux Arm64 build; build Pi Server (Linux Arm64) again"; exit 2; }
   echo "staging on $HOST"
   remote "mkdir -p $STAGE"
   push --exclude '*_DoNotShip' --exclude '*_BackUpThisFolder_ButDontShipItWithYourGame' "$build/" "$HOST:$STAGE/server/"

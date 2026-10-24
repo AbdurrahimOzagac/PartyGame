@@ -450,7 +450,7 @@ Both spikes run before any framework work. Their outcome can change §2 and §3.
    - **Fallback C:** Unity Relay WSS.
 2. **Unity Linux ARM64 server on the Pi.** *Passed (2026-10-24).*
    - **Build:** IL2CPP, cross-compiled on the Mac with `com.unity.toolchain.macos-arm64-linux` and `com.unity.sdk.linux-arm64` 1.1.0. Arm64 is selected with `UnityEditor.LinuxStandalone.UserBuildSettings.architecture = OSArchitecture.ARM64` (by reflection), plus `subtarget = Server`.
-   - **First-run quirk:** the first batchmode build after adding the toolchain packages fails with "Unable to find an Linux Sysroot", because the packages are imported in that run. The second run succeeds.
+   - **First-run quirk:** the first batchmode build after adding the toolchain packages fails with "Unable to find an Linux Sysroot", because the packages are imported in that run. The second run succeeds. (Later found to be a different cause: Unity 6 keeps the Linux architecture per build profile, so the Arm64 setting landed on another profile and the build tried x64. `PartyBuild` now switches to the Linux server profile first.)
    - **Binary:** `GameAssembly.so` LOAD segments are aligned at 0x10000, so the **stock 16 KB kernel works and no kernel change is needed**. The shipped build is 91 MB.
    - **On the Pi:** an NGO WebSocket server on 127.0.0.1:7701 path `/g/1`, with a Mac client over an SSH forward. 828 pings in 30 s: p50 18 ms, p99 37 ms, max 66 ms. The server used **97 MB RSS and 1.8 % CPU**, and disconnected cleanly.
 3. **Own-movement owner authority makes knockback on the victim arrive late** (~RTT/2). Mitigation: an instant hit-stop, flash and sound on the event, and tuning in the 150 ms simulator.
