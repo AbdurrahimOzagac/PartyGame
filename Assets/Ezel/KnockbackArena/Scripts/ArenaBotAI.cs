@@ -2,11 +2,11 @@ using UnityEngine;
 using ShooterParty;
 using ShooterParty.UI;
 
-namespace KnockbackArena.Playground
+namespace KnockbackArena
 {
-    // Local stand-in opponent for the arena demo (not networked, not the game's AI): picks the nearest rival,
-    // keeps a spitting distance while strafing, stays off the edge, dashes back to safety when pushed out,
-    // and sometimes detours for a jump pickup.
+    // Knockback Arena's bot brain: picks the nearest rival, keeps a spitting distance while strafing, stays off the
+    // edge, dashes back to safety when pushed out, and sometimes detours for a jump pickup. Online it runs only
+    // where the bot is simulated (the server) and only while the round is live.
     [RequireComponent(typeof(CritterMotor), typeof(CritterSpit))]
     public class ArenaBotAI : MonoBehaviour
     {
@@ -31,6 +31,8 @@ namespace KnockbackArena.Playground
 
         void Update()
         {
+            var game = MiniGameController.Current;
+            if (game && game.IsSpawned && !game.Live.Value) { motor.Move(Vector3.zero); return; }
             if (Time.time > retargetAt) { target = Nearest(); retargetAt = Time.time + 1.5f; }
             var pos = transform.position; pos.y = 0f;
             var move = Vector3.zero;
@@ -66,7 +68,9 @@ namespace KnockbackArena.Playground
             Transform best = null; float bd = float.MaxValue;
             foreach (var m in FindObjectsByType<CritterMotor>(FindObjectsSortMode.None))
             {
-                if (m == motor || !m.isActiveAndEnabled) continue;
+                var nc = m.GetComponent<NetworkCritter>();
+                bool candidate = nc && nc.IsSpawned ? !nc.Eliminated.Value : m.isActiveAndEnabled;   // online proxies have their motor off
+                if (m == motor || !candidate) continue;
                 float d = (m.transform.position - transform.position).sqrMagnitude;
                 if (d < bd) { bd = d; best = m.transform; }
             }

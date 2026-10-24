@@ -55,7 +55,7 @@ namespace ShooterParty.Tests
         {
             var go = Object.Instantiate(Load(CritterPrefab), pos, Quaternion.identity);
             var nc = go.GetComponent<NetworkCritter>();
-            nc.ServerSetup(slot, slot % 4, bot, CritterConfig.Default, PlayerModifiers.One, epoch: 1);
+            nc.ServerSetup(slot, slot % 4, bot, CritterConfig.Default, PlayerModifiers.One, epoch: 1, humanClientId: owner);
             var no = go.GetComponent<NetworkObject>();
             if (owner == NetworkManager.ServerClientId) no.Spawn(destroyWithScene: true);
             else no.SpawnWithOwnership(owner, destroyWithScene: true);

@@ -144,10 +144,14 @@ namespace KnockbackArena.Tests
             yield return null; yield return null;
             foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 foreach (var c in go.GetComponents<Component>()) Assert.IsNotNull(c, "missing script on " + go.name);
-            Assert.IsNotNull(SfxPlayer.Instance, "sound player"); Assert.IsNotNull(SfxPlayer.Instance.bank, "sound bank");
-            Assert.IsNotNull(Object.FindAnyObjectByType<KnockbackArena.Playground.KnockbackMatchDemo>());
-            Assert.AreEqual(4, Object.FindObjectsByType<CritterMotor>(FindObjectsSortMode.None).Length, "four critters in the lobby");
-            Assert.AreEqual(2, Object.FindObjectsByType<JumpPickup>(FindObjectsSortMode.None).Length);
+            var markers = Object.FindAnyObjectByType<MiniGameScene>();
+            Assert.IsNotNull(markers, "spawn and pickup markers");
+            Assert.AreEqual(4, markers.spawnPoints.Length, "four spawns");
+            Assert.AreEqual(2, markers.pickupSpots.Length, "two spring spots");
+            Assert.IsNotNull(markers.pickupPrefab, "the spring prefab the controller spawns");
+            Assert.IsNotNull(Object.FindAnyObjectByType<OverShoulderCamera>());
+            Assert.AreEqual(0, Object.FindObjectsByType<Unity.Netcode.NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
+                "the scene holds no networked objects: the round's controller spawns them");
             Assert.IsNotNull(SplatDecals.Instance);
             Assert.IsNotNull(RenderSettings.skybox); Assert.IsTrue(RenderSettings.fog);
             foreach (var go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects()) Object.Destroy(go);

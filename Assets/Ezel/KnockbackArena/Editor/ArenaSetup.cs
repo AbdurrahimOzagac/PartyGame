@@ -1,17 +1,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using KnockbackArena.Playground;
 using KnockbackArena.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using ShooterParty;
 using ShooterParty.UI;
+using ShooterParty.EditorTools;
+using Unity.Netcode;
 
 namespace KnockbackArena.EditorTools
 {
@@ -107,9 +106,11 @@ namespace KnockbackArena.EditorTools
                 mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
                 stands = PodiumStands(mf);
             });
-            var crown = BuildCrown();
+            BuildCrown();
             var pickup = BuildPickup();
-            BuildScene(arena, backdrop, podium, stands, crown, pickup);
+            BuildMiniGame();
+            BuildScene(arena, backdrop, pickup);
+            ShooterPartySetup.EnsureInBuildSettings(ScenePath);
         }
 
         // ------------------------------------------------------------------ materials
@@ -274,6 +275,7 @@ namespace KnockbackArena.EditorTools
             AssetDatabase.DeleteAsset(rmPath); AssetDatabase.CreateAsset(rm, rmPath);
             rm.SetColor("_BaseColor", new Color(1f, 0.84f, 0.3f, 0.6f));
             var rr = ring.GetComponent<MeshRenderer>(); rr.sharedMaterial = rm; rr.shadowCastingMode = ShadowCastingMode.Off; rr.receiveShadows = false;
+            go.AddComponent<NetworkObject>();   // spawned by the round's controller at the scene's pickup spots
             var jp = go.AddComponent<JumpPickup>();
             jp.visual = visual;
             jp.collectFx = CubeCritterSetup.FxPrefabs["VFX_PickupCollect"];
@@ -283,7 +285,53 @@ namespace KnockbackArena.EditorTools
         }
 
         // ------------------------------------------------------------------ scene
-        static void BuildScene(GameObject arena, GameObject backdrop, GameObject podium, Vector3[] stands, GameObject crown, GameObject pickup)
+        // ------------------------------------------------------------------ mini-game assets
+        public const string DefinitionPath = Root + "/Data/KnockbackArena.asset";
+        public const string ControllerPath = Root + "/Prefabs/Net_KnockbackArenaGame.prefab";
+
+        static MiniGameDefinition BuildMiniGame()
+        {
+            Directory.CreateDirectory(Root + "/Data");
+            var effectPath = Root + "/Data/ShotEffect_Knockback.asset";
+            var effect = AssetDatabase.LoadAssetAtPath<KnockbackShotEffect>(effectPath);
+            if (!effect) { effect = ScriptableObject.CreateInstance<KnockbackShotEffect>(); AssetDatabase.CreateAsset(effect, effectPath); }
+            var def = AssetDatabase.LoadAssetAtPath<MiniGameDefinition>(DefinitionPath);
+            if (!def) { def = ScriptableObject.CreateInstance<MiniGameDefinition>(); AssetDatabase.CreateAsset(def, DefinitionPath); }
+            def.id = "knockback_arena";
+            def.displayName = "Knockback Arena";
+            def.tagline = "Spit everyone off the ice.";
+            def.howToPlay = new[]
+            {
+                "Every hit pushes and makes the target lighter, so the next hit pushes further.",
+                "Knock someone off the ice for a point. The top scorer wears the crown.",
+                "Grab a spring to jump. Dash (Shift) to save yourself at the edge.",
+            };
+            def.controlsHint = "WASD move · Mouse aim · Click spit · Shift dash · Space jump";
+            def.sceneName = "KnockbackArena_Ice";
+            def.critterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Prefabs/CubeCritter_Net.prefab").GetComponent<NetworkObject>();
+            def.minPlayers = 3; def.maxPlayers = 4; def.durationSeconds = 120f;
+            def.placementPoints = new[] { 4, 3, 2, 1 };
+            def.supportsBots = true;
+            def.critter = CritterConfig.Default;
+            def.shotEffect = effect;
+            def.icon = AssetDatabase.LoadAssetAtPath<Sprite>(Root + "/UI/Sprites/UI_IconSpring.png");
+
+            var go = new GameObject("Net_KnockbackArenaGame");
+            go.AddComponent<NetworkObject>();
+            var game = go.AddComponent<KnockbackArenaGame>();
+            game.Definition = def;
+            game.fallPoof = CubeCritterSetup.FxPrefabs["VFX_FallPoof"];
+            var prefab = PrefabUtility.SaveAsPrefabAsset(go, ControllerPath);
+            Object.DestroyImmediate(go);
+            def.controllerPrefab = prefab.GetComponent<NetworkObject>();
+            EditorUtility.SetDirty(def);
+            return def;
+        }
+
+        // ------------------------------------------------------------------ scene
+        // The networked round's scene: world, light, camera and the MiniGameScene markers. No networked objects:
+        // the session spawns the controller, which spawns critters and pickups at the markers.
+        static void BuildScene(GameObject arena, GameObject backdrop, GameObject pickup)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -304,58 +352,28 @@ namespace KnockbackArena.EditorTools
 
             PrefabUtility.InstantiatePrefab(arena);
             PrefabUtility.InstantiatePrefab(backdrop);
-            var pod = (GameObject)PrefabUtility.InstantiatePrefab(podium);
-            pod.SetActive(false);
-            foreach (var x in new[] { -4f, 4f })
-            {
-                var p = (GameObject)PrefabUtility.InstantiatePrefab(pickup);
-                p.transform.position = new Vector3(x, 0f, 0f);
-            }
             var fx = CubeCritterSetup.FxPrefabs;
             PrefabUtility.InstantiatePrefab(fx["VFX_SnowAmbient"]);
             PrefabUtility.InstantiatePrefab(fx["VFX_SplatDecals"]);
-            var bank = AssetDatabase.LoadAssetAtPath<SfxBank>(AudioSetup.BankPath);
-            new GameObject("Sfx").AddComponent<SfxPlayer>().bank = bank;
 
             // camera: over-the-shoulder rig + local-only shake + post
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             var cam = camGo.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.Skybox; cam.fieldOfView = 55f; cam.farClipPlane = 400f; cam.nearClipPlane = 0.1f;
             camGo.AddComponent<AudioListener>();
-            var osc = camGo.AddComponent<OverShoulderCamera>();
+            camGo.AddComponent<OverShoulderCamera>();
             camGo.AddComponent<CameraShake>();
             cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
             camGo.transform.SetPositionAndRotation(new Vector3(9f, 6f, -14f), Quaternion.Euler(18f, -30f, 0f));
             new GameObject("Post FX").AddComponent<Volume>().sharedProfile = PostProfile();
 
-            // UI
-            var hud = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/HUD_KnockbackArena.prefab"))).GetComponent<PartyHud>();
-            var lobby = ((GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/Lobby_KnockbackArena.prefab"))).GetComponent<LobbyPanel>();
-            var es = new GameObject("EventSystem", typeof(EventSystem)).AddComponent<InputSystemUIInputModule>();
-            es.AssignDefaultActions();
-
-            // spawns (ice brief 3: 4 m from two edges, 8 m to the nearest neighbours) + the demo flow
-            var demo = new GameObject("Match (local demo)").AddComponent<KnockbackMatchDemo>();
-            var names = new Dictionary<string, string> { { "Tomato", "YOU" }, { "Teal", "MOCHI" }, { "Chartreuse", "ZESTY" }, { "Violet", "GRAPE" } };
+            // spawns (ice brief 3: 4 m from two edges, 8 m to the nearest neighbours) and the two spring spots
+            var markers = new GameObject("MiniGameScene").AddComponent<MiniGameScene>();
+            Transform Marker(string n, Vector3 p) { var t = new GameObject(n).transform; t.position = p; t.SetParent(markers.transform, true); return t; }
             var spots = new[] { new Vector3(-4f, 0.05f, -4f), new Vector3(4f, 0.05f, 4f), new Vector3(4f, 0.05f, -4f), new Vector3(-4f, 0.05f, 4f) };
-            demo.slots = CubeCritterSetup.Players.Select((p, i) =>
-            {
-                var spawn = new GameObject("Spawn_" + p.name).transform;
-                spawn.position = spots[i];
-                spawn.SetParent(demo.transform, true);
-                return new KnockbackMatchDemo.Slot
-                {
-                    prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Prefabs/CubeCritter_{p.name}.prefab"),
-                    name = names[p.name], colour = Hex(p.hex), faces = UiSetup.Faces(p.name), spawn = spawn, human = i == 0,
-                };
-            }).ToArray();
-            demo.cam = osc; demo.hud = hud; demo.lobby = lobby;
-            demo.ringPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/MassRing.prefab").GetComponent<MassRing>();
-            demo.podium = pod.transform; demo.podiumStands = stands;
-            demo.fallPoof = fx["VFX_FallPoof"]; demo.confetti = fx["VFX_Confetti"];
-            var c = (GameObject)PrefabUtility.InstantiatePrefab(crown);
-            c.SetActive(false);
-            demo.crown = c.GetComponent<LeaderCrown>();
+            markers.spawnPoints = spots.Select((p, i) => Marker("Spawn_" + i, p)).ToArray();
+            markers.pickupSpots = new[] { Marker("Pickup_0", new Vector3(-4f, 0f, 0f)), Marker("Pickup_1", new Vector3(4f, 0f, 0f)) };
+            markers.pickupPrefab = pickup.GetComponent<NetworkObject>();
 
             // nothing is baked (realtime only), but generating once stores the ambient/reflection data with the scene
             var ls = new LightingSettings { name = "LS_KnockbackArena_Ice", bakedGI = false, realtimeGI = false };

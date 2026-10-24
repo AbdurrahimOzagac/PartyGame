@@ -22,6 +22,7 @@ namespace ShooterParty
         public readonly NetworkVariable<int> Slot = new NetworkVariable<int>(-1);
         public readonly NetworkVariable<byte> ColourIndex = new NetworkVariable<byte>();
         public readonly NetworkVariable<bool> IsBot = new NetworkVariable<bool>();
+        public readonly NetworkVariable<ulong> HumanClientId = new NetworkVariable<ulong>();   // whose keyboard drives it (humans)
         public readonly NetworkVariable<float> Mass = new NetworkVariable<float>(1f);
         public readonly NetworkVariable<bool> Eliminated = new NetworkVariable<bool>();
         public readonly NetworkVariable<int> Epoch = new NetworkVariable<int>();
@@ -56,8 +57,10 @@ namespace ShooterParty
         }
 
         // Server, before Spawn(): the values travel with the spawn message.
-        public void ServerSetup(int slot, int colourIndex, bool isBot, CritterConfig cfg, PlayerModifiers mods, int epoch)
+        public void ServerSetup(int slot, int colourIndex, bool isBot, CritterConfig cfg, PlayerModifiers mods, int epoch,
+                                ulong humanClientId = NetworkManager.ServerClientId)
         {
+            HumanClientId.Value = humanClientId;
             Slot.Value = slot;
             ColourIndex.Value = (byte)colourIndex;
             IsBot.Value = isBot;
@@ -76,20 +79,51 @@ namespace ShooterParty
             Mass.OnValueChanged += OnMass;
             Config.OnValueChanged += OnConfig;
             Modifiers.OnValueChanged += OnModifiers;
+            Eliminated.OnValueChanged += OnEliminated;
             Motor.SetMass(Mass.Value);
             ApplyConfig();
             Motor.respawnBelowY = float.NegativeInfinity;   // falling off is final online; the mini-game decides
-            Motor.Remote = !Simulated;
-            Motor.enabled = Simulated;
-            if (Simulated)
-            {
-                Motor.Dashed += OnDashed;
-                Motor.Jumped += OnJumped;
-                Motor.Landed += OnLanded;
-                if (!IsBot.Value) AttachLocalInput();
-            }
-            if (IsServer && !IsOwner) speedCheck = new SpeedCheck(Motor.dashSpeed * 1.3f + 2f);
+            Motor.Dashed += OnDashed;
+            Motor.Jumped += OnJumped;
+            Motor.Landed += OnLanded;
+            ApplyAuthority();
+            if (Eliminated.Value) OnEliminated(false, true);
             lastPos = transform.position;
+        }
+
+        // Owner simulates; everyone else animates a kinematic proxy. Re-run when ownership moves
+        // (a leaver's critter handed to the server, a rejoiner taking it back).
+        void ApplyAuthority()
+        {
+            Motor.Remote = !Simulated;
+            Motor.enabled = Simulated && !Eliminated.Value;
+            var input = GetComponent<LocalCritterInput>();
+            bool wantsInput = Simulated && !IsBot.Value && !Eliminated.Value && HumanClientId.Value == NetworkManager.LocalClientId;
+            if (wantsInput && !input) AttachLocalInput();
+            else if (!wantsInput && input) Destroy(input);
+            speedCheck = IsServer && !IsOwner ? speedCheck ?? new SpeedCheck(Motor.dashSpeed * 1.3f + 2f) : null;
+        }
+
+        public override void OnGainedOwnership() => ApplyAuthority();
+        public override void OnLostOwnership() => ApplyAuthority();
+
+        // Out of the round: vanish (the mini-game plays its own fall FX) and, for its player, spectate someone else.
+        void OnEliminated(bool _, bool now)
+        {
+            if (!now) return;
+            foreach (var r in GetComponentsInChildren<Renderer>()) r.enabled = false;
+            foreach (var c in GetComponentsInChildren<Collider>()) c.enabled = false;
+            Motor.Move(Vector3.zero);
+            Motor.enabled = false;
+            var input = GetComponent<LocalCritterInput>();
+            if (input) Destroy(input);
+            var cam = FindAnyObjectByType<OverShoulderCamera>();
+            if (cam && cam.target == transform)
+            {
+                NetworkCritter next = null;
+                foreach (var c in all) if (c != this && c && !c.Eliminated.Value) { next = c; break; }
+                if (next) cam.SetTarget(next.transform, false);
+            }
         }
 
         public override void OnNetworkDespawn()
@@ -99,6 +133,7 @@ namespace ShooterParty
             Mass.OnValueChanged -= OnMass;
             Config.OnValueChanged -= OnConfig;
             Modifiers.OnValueChanged -= OnModifiers;
+            Eliminated.OnValueChanged -= OnEliminated;
             Motor.Dashed -= OnDashed;
             Motor.Jumped -= OnJumped;
             Motor.Landed -= OnLanded;
@@ -183,6 +218,16 @@ namespace ShooterParty
         {
             if (ShotSystem.Instance) ShotSystem.Instance.ValidateAndFire(this, origin, dir, clientTime);
         }
+
+        // Server: a pickup granted jumps. Owner-side state, like dash charges.
+        public void ServerAddJumpCharge(int n)
+        {
+            if (IsOwner) Motor.AddJumpCharge(n);
+            else AddJumpChargeRpc(n);
+        }
+
+        [Rpc(SendTo.Owner, InvokePermission = RpcInvokePermission.Server)]
+        void AddJumpChargeRpc(int n) => Motor.AddJumpCharge(n);
 
         public void ServerTeleport(Vector3 pos, Quaternion rot)
         {

@@ -1,13 +1,15 @@
-using UnityEngine;
 using ShooterParty;
-using ShooterParty.UI;
+using Unity.Netcode;
+using UnityEngine;
 
 namespace KnockbackArena
 {
     // Jump power-up (pitch: jumping is strong, so it is a pickup). Floats, spins and breathes; a critter that
-    // touches it gets a jump charge. Respawns after a while. Timings from the VFX brief.
+    // touches it gets a jump charge, then it respawns after a while. Timings from the VFX brief.
+    // Online the server decides who got it (availability is a NetworkVariable) and every machine animates the
+    // change; offline (playground, tests) it works on its own as before.
     [RequireComponent(typeof(SphereCollider))]
-    public class JumpPickup : MonoBehaviour
+    public class JumpPickup : NetworkBehaviour
     {
         public Transform visual;
         public ParticleSystem collectFx;
@@ -16,10 +18,11 @@ namespace KnockbackArena
         public float bobHeight = 0.12f, bobHz = 0.8f, spinDps = 90f;
 
         public event System.Action<CritterMotor> Collected;
-        public bool Available => collectT < 0f && hiddenUntil < 0f;
+        public bool Available => IsSpawned ? available.Value : collectT < 0f && hiddenUntil < 0f;
 
+        readonly NetworkVariable<bool> available = new NetworkVariable<bool>(true);
         Vector3 basePos;
-        float collectT = -1f, hiddenUntil = -1f, popT = -1f, phase;
+        float collectT = -1f, hiddenUntil = -1f, popT = -1f, phase, serverRespawnAt = -1f;
 
         void Awake()
         {
@@ -28,8 +31,34 @@ namespace KnockbackArena
             phase = Random.value * 10f;
         }
 
+        public override void OnNetworkSpawn()
+        {
+            available.OnValueChanged += OnAvailable;
+            if (!available.Value && visual) visual.gameObject.SetActive(false);
+        }
+
+        public override void OnNetworkDespawn() => available.OnValueChanged -= OnAvailable;
+
+        void OnAvailable(bool was, bool now)
+        {
+            if (!now) PlayCollect();
+            else { hiddenUntil = 0.001f; }   // reappear on the next frame with the pop
+        }
+
+        void PlayCollect()
+        {
+            Fx.Play(collectFx, visual ? visual.position : transform.position, Quaternion.identity, Color.white);
+            Sfx.Play("Pickup", transform.position);
+            collectT = 0f;
+        }
+
         void Update()
         {
+            if (IsSpawned && IsServer && !available.Value && serverRespawnAt > 0f && Time.time >= serverRespawnAt)
+            {
+                serverRespawnAt = -1f;
+                available.Value = true;
+            }
             if (!visual) return;
             float t = Time.time + phase;
             if (collectT >= 0f)
@@ -38,7 +67,12 @@ namespace KnockbackArena
                 collectT += Time.deltaTime;
                 float s = collectT < 0.06f ? Mathf.Lerp(1f, 1.3f, collectT / 0.06f) : Mathf.Lerp(1.3f, 0f, Mathf.Pow(Mathf.Clamp01((collectT - 0.06f) / 0.1f), 2f));
                 visual.localScale = Vector3.one * s;
-                if (collectT > 0.16f) { visual.gameObject.SetActive(false); collectT = -1f; hiddenUntil = Time.time + respawnTime; }
+                if (collectT > 0.16f)
+                {
+                    visual.gameObject.SetActive(false);
+                    collectT = -1f;
+                    hiddenUntil = IsSpawned ? float.MaxValue : Time.time + respawnTime;   // online: wait for the server
+                }
                 return;
             }
             if (hiddenUntil > 0f)
@@ -56,13 +90,22 @@ namespace KnockbackArena
 
         void OnTriggerEnter(Collider c)
         {
-            if (!Available) return;
             var m = c.GetComponentInParent<CritterMotor>();
             if (!m) return;
+            if (IsSpawned)
+            {
+                if (!IsServer || !available.Value) return;
+                var nc = m.GetComponent<NetworkCritter>();
+                if (!nc || !nc.IsSpawned || nc.Eliminated.Value || nc.Config.Value.jump != CritterConfig.JumpMode.Pickup) return;
+                available.Value = false;
+                serverRespawnAt = Time.time + respawnTime;
+                nc.ServerAddJumpCharge(charges);
+                Collected?.Invoke(m);
+                return;
+            }
+            if (!Available) return;
             m.AddJumpCharge(charges);
-            Fx.Play(collectFx, visual ? visual.position : transform.position, Quaternion.identity, Color.white);
-            Sfx.Play("Pickup", transform.position);
-            collectT = 0f;
+            PlayCollect();
             Collected?.Invoke(m);
         }
     }

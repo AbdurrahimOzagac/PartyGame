@@ -43,6 +43,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5881939930486059464}
   - component: {fileID: 3477027075017684003}
+  - component: {fileID: 9083971221262076337}
   - component: {fileID: 3991878440501491615}
   m_Layer: 0
   m_Name: Pickup_Jump
@@ -89,6 +90,33 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.65
   m_Center: {x: 0, y: 0.8, z: 0}
+--- !u!114 &9083971221262076337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1070030014282765203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 93308585
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &3991878440501491615
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -101,6 +129,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af04bb07012ad4b628b6dfb47cdac75c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.JumpPickup
+  ShowTopMostFoldoutHeaderGroup: 1
   visual: {fileID: 2405186631897228931}
   collectFx: {fileID: 4516864664812519277, guid: abc4099dfb160485086cbf6ae2e4a392, type: 3}
   charges: 1

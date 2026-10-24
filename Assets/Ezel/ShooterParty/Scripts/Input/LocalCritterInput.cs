@@ -22,6 +22,8 @@ namespace ShooterParty
 
         void Update()
         {
+            var game = MiniGameController.Current;   // frozen through the intro and countdown
+            if (game && game.IsSpawned && !game.Live.Value) { motor.Move(Vector3.zero); return; }
             var kb = Keyboard.current;
             var mouse = Mouse.current;
             var pad = Gamepad.current;

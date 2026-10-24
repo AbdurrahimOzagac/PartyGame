@@ -12,7 +12,7 @@ using ShooterParty.UI;
 namespace KnockbackArena.EditorTools
 {
     // Builds the UI kit (UI brief, A1-A3): Fredoka TMP font assets (static atlases, outline presets), sprite
-    // import settings, and the prefabs HUD_KnockbackArena, MassRing and Lobby_KnockbackArena.
+    // import settings, and the prefabs HUD_KnockbackArena, and MassRing.
     // Needs TMP Essential Resources in Assets/TextMesh Pro (Window > TextMeshPro > Import TMP Essential Resources).
     public static class UiSetup
     {
@@ -34,7 +34,6 @@ namespace KnockbackArena.EditorTools
             SemiOutline = OutlinePreset(Semi, 0.22f, false);
             BuildHud();
             BuildMassRing();
-            BuildLobby();
         }
 
         // ------------------------------------------------------------------ assets
@@ -320,58 +319,6 @@ namespace KnockbackArena.EditorTools
         }
 
         // ------------------------------------------------------------------ lobby (+ logo)
-        static void BuildLobby()
-        {
-            var go = new GameObject("Lobby_KnockbackArena", typeof(RectTransform));
-            OverlayCanvas(go, 20);
-            var lp = go.AddComponent<LobbyPanel>();
-            var mid = new Vector2(0.5f, 0.5f);
-            var dim = I(go.transform, "Dim", null, new Color(Ink.r, Ink.g, Ink.b, 0.35f), mid, Vector2.zero, Vector2.zero);
-            Fill(dim.rectTransform);
-
-            // logo (U9): KNOCKBACK over ARENA, tilted, white face, thick ink outline, hard shadow
-            var logo = R(go.transform, "Logo", new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(1000f, 240f));
-            logo.localRotation = Quaternion.Euler(0f, 0f, 4f);
-            T(logo, "Knockback", "KNOCKBACK", 128f, Color.white, mid, new Vector2(-20f, 40f), new Vector2(1000f, 150f));
-            var arena = T(logo, "Arena", "ARENA", 104f, Chartreuse, mid, new Vector2(120f, -62f), new Vector2(700f, 130f));
-            arena.characterSpacing = 18f;
-            var cube = I(logo, "Critter", AssetDatabase.LoadAssetAtPath<Sprite>($"{Root}/Portraits/Portrait_CC_Tomato_Happy.png"), Color.white, mid, new Vector2(-300f, -78f), new Vector2(160f, 160f));
-            cube.preserveAspect = true;
-
-            var panel = Panel(go.transform, "Panel", mid, new Vector2(0f, -110f), new Vector2(1400f, 720f), new Color(Ink.r, Ink.g, Ink.b, 0.92f));
-            T(panel, "Title", "LOBBY", 44f, Color.white, mid, new Vector2(-480f, 300f), new Vector2(360f, 60f), TextAlignmentOptions.Left);
-            // left: host / join
-            lp.hostButton = Btn(panel, "Host", "HOST GAME", mid, new Vector2(-480f, 190f), new Vector2(360f, 84f), Chartreuse, Ink);
-            lp.hostInfo = T(panel, "HostInfo", "", 22f, new Color(1f, 1f, 1f, 0.8f), mid, new Vector2(-480f, 128f), new Vector2(360f, 30f), TextAlignmentOptions.Center, false, false);
-            T(panel, "JoinLabel", "JOIN BY IP", 24f, new Color(1f, 1f, 1f, 0.7f), mid, new Vector2(-480f, 70f), new Vector2(360f, 30f), TextAlignmentOptions.Left, false, false);
-            lp.ipField = Field(panel, "IP", "192.168.1.24", new Vector2(-530f, 14f), new Vector2(260f, 72f));
-            lp.portField = Field(panel, "Port", "7777", new Vector2(-342f, 14f), new Vector2(96f, 72f));
-            lp.joinButton = Btn(panel, "Join", "JOIN", mid, new Vector2(-480f, -76f), new Vector2(360f, 76f), new Color32(0x00, 0xB3, 0xA4, 0xFF), Ink);
-            // right: four slots
-            lp.slots = new LobbyPanel.Slot[4];
-            for (int i = 0; i < 4; i++)
-            {
-                var x = -120f + 236f * i;
-                var s = new LobbyPanel.Slot();
-                s.card = I(panel, "Slot" + i, S("UI_Panel"), Color.white, mid, new Vector2(x, 90f), new Vector2(220f, 320f), Image.Type.Sliced);
-                I(s.card.transform, "Inner", S("UI_Panel"), new Color(Ink.r, Ink.g, Ink.b, 0.35f), mid, new Vector2(0f, 24f), new Vector2(196f, 196f), Image.Type.Sliced);
-                s.portrait = I(s.card.transform, "Portrait", null, Color.white, mid, new Vector2(0f, 34f), new Vector2(200f, 200f));
-                s.portrait.preserveAspect = true;
-                s.playerName = T(s.card.transform, "Name", "", 28f, Color.white, mid, new Vector2(0f, -94f), new Vector2(200f, 36f));
-                s.pill = I(s.card.transform, "Pill", S("UI_Pill"), Chartreuse, mid, new Vector2(0f, -136f), new Vector2(168f, 40f), Image.Type.Sliced);
-                s.status = T(s.pill.transform, "Status", "READY", 20f, Ink, mid, new Vector2(10f, 1f), new Vector2(150f, 34f), TextAlignmentOptions.Center, true, false);
-                s.check = I(s.pill.transform, "Check", S("UI_IconCheck"), Ink, mid, new Vector2(-56f, 0f), new Vector2(24f, 24f));
-                lp.slots[i] = s;
-            }
-            // bottom: ready + start
-            lp.readyButton = Btn(panel, "Ready", "READY!", mid, new Vector2(120f, -250f), new Vector2(300f, 84f), Color.white, Ink);
-            lp.readyLabel = lp.readyButton.GetComponentInChildren<TextMeshProUGUI>();
-            lp.startButton = Btn(panel, "Start", "START", mid, new Vector2(480f, -250f), new Vector2(300f, 84f), Chartreuse, Ink);
-            T(panel, "Hint", "<b>Enter</b> start  ·  WASD move  ·  mouse aim  ·  click spit  ·  Shift dash  ·  Space jump (pickup)", 22f,
-              new Color(1f, 1f, 1f, 0.7f), mid, new Vector2(0f, -330f), new Vector2(1300f, 30f), TextAlignmentOptions.Center, false, false);
-            Save(go, "Lobby_KnockbackArena");
-        }
-
         static TMP_InputField Field(Transform parent, string name, string value, Vector2 pos, Vector2 size)
         {
             var bg = I(parent, name, S("UI_Panel"), Color.white, new Vector2(0.5f, 0.5f), pos, size, Image.Type.Sliced);
