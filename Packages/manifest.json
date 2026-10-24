@@ -11,6 +11,7 @@
     "com.unity.pipeline": "0.8.0-exp.1",
     "com.unity.render-pipelines.universal": "17.3.0",
     "com.unity.sdk.linux-arm64": "1.1.0",
+    "com.unity.sdk.linux-x86_64": "1.1.0",
     "com.unity.test-framework": "1.6.0",
     "com.unity.timeline": "1.8.10",
     "com.unity.toolchain.macos-arm64-linux": "1.1.0",
