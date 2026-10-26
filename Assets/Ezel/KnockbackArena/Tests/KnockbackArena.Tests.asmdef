@@ -1,0 +1,21 @@
+{
+    "name": "KnockbackArena.Tests",
+    "rootNamespace": "KnockbackArena.Tests",
+    "references": [
+        "ShooterParty.Runtime",
+        "Unity.Collections",
+        "ShooterParty.PlayModeTests",
+        "Unity.Netcode.Runtime",
+        "KnockbackArena.Runtime",
+        "UnityEngine.TestRunner",
+        "Unity.TextMeshPro"
+    ],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ]
+}

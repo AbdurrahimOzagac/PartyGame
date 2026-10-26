@@ -1,0 +1,115 @@
+#if UNITY_EDITOR   // loads prefabs through the AssetDatabase
+using System.Collections;
+using NUnit.Framework;
+using ShooterParty.UI;
+using Unity.Netcode;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace ShooterParty.Tests
+{
+    // Practice-host harness for PlayMode tests: registers prefabs, starts a host on an ephemeral UDP port,
+    // spawns critters, and tears everything down so the next test starts clean.
+    public static class NetTestRig
+    {
+        public const string CritterPrefab = "Assets/Ezel/KnockbackArena/Prefabs/CubeCritter_Net.prefab";
+        public const string OfflineCritterPrefab = "Assets/Ezel/KnockbackArena/Prefabs/CubeCritter.prefab";
+
+        public static GameObject Load(string path)
+        {
+            var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            Assert.IsNotNull(go, "missing " + path);
+            return go;
+        }
+
+        public static PartyNet StartPractice(params GameObject[] prefabs)
+        {
+            // a host start sweeps the scene and rejects unspawned NetworkObjects left by earlier tests
+            foreach (var stray in Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+                if (!stray.IsSpawned && stray.gameObject.scene.IsValid()) Object.DestroyImmediate(stray.gameObject);
+            var net = PartyNet.Ensure();
+            var list = ScriptableObject.CreateInstance<NetworkPrefabsList>();
+            foreach (var p in prefabs) list.Add(new NetworkPrefab { Prefab = p });
+            net.prefabs = list;
+            Assert.IsTrue(net.StartPractice("Tester"), "practice host failed to start");
+            return net;
+        }
+
+        public const string NetPrefabs = "Assets/Ezel/ShooterParty/Data/NetPrefabs.asset";
+        public const string ShotSystemPrefab = "Assets/Ezel/ShooterParty/Prefabs/Net_ShotSystem.prefab";
+
+        // Practice host with the real prefab list and server singletons (ShotSystem, ...), as SP_Boot configures it.
+        public static PartyNet StartNetworked()
+        {
+            foreach (var stray in Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+                if (!stray.IsSpawned && stray.gameObject.scene.IsValid()) Object.DestroyImmediate(stray.gameObject);
+            var net = PartyNet.Ensure();
+            net.prefabs = AssetDatabase.LoadAssetAtPath<NetworkPrefabsList>(NetPrefabs);
+            Assert.IsNotNull(net.prefabs, "missing " + NetPrefabs);
+            net.serverSingletons = new[] { Load(ShotSystemPrefab).GetComponent<NetworkObject>() };
+            Assert.IsTrue(net.StartPractice("Tester"), "practice host failed to start");
+            Assert.IsNotNull(ShotSystem.Instance, "ShotSystem spawned on server start");
+            return net;
+        }
+
+        public const string SessionManagerPrefab = "Assets/Ezel/ShooterParty/Prefabs/Net_SessionManager.prefab";
+
+        // Practice host with the full session (it loads SP_Lobby, then the playlist's scenes).
+        public static PartyNet StartSession()
+        {
+            foreach (var stray in Object.FindObjectsByType<NetworkObject>(FindObjectsSortMode.None))
+                if (!stray.IsSpawned && stray.gameObject.scene.IsValid()) Object.DestroyImmediate(stray.gameObject);
+            var net = PartyNet.Ensure();
+            net.prefabs = AssetDatabase.LoadAssetAtPath<NetworkPrefabsList>(NetPrefabs);
+            net.serverSingletons = new[] { Load(ShotSystemPrefab).GetComponent<NetworkObject>(), Load(SessionManagerPrefab).GetComponent<NetworkObject>() };
+            Assert.IsTrue(net.StartPractice("Tester"), "practice host failed to start");
+            return net;
+        }
+
+        // The real boot path into a Practice room: SP_Boot -> menu -> name dialog -> SP_Lobby with 1 human + 3 bots.
+        public static IEnumerator BootToPracticeLobby(string name = "Tester")
+        {
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity",
+                new LoadSceneParameters(LoadSceneMode.Single));
+            for (float t = 0f; t < 10f && !(UiRoot.Instance && SceneManager.GetActiveScene().name == "SP_Menu"); t += Time.unscaledDeltaTime) yield return null;
+            var ui = UiRoot.Instance;
+            Assert.IsNotNull(ui, "UI root from SP_Boot");
+            ui.nameDialog.Open(NameCodeDialog.Mode.Practice);
+            ui.nameDialog.nameField.text = name;
+            ui.nameDialog.Confirm();
+            for (float t = 0f; t < 10f && !(ui.lobby.IsShown && SessionManager.Instance && SessionManager.Instance.Players.Count == 4
+                && SceneManager.GetActiveScene().name == SessionManager.LobbyScene); t += Time.unscaledDeltaTime) yield return null;
+            Assert.IsTrue(ui.lobby.IsShown, "the lobby view shows in the Lobby phase");
+            yield return null;
+        }
+
+        public static NetworkCritter Spawn(int slot, bool bot, ulong owner = NetworkManager.ServerClientId, Vector3 pos = default)
+        {
+            var go = Object.Instantiate(Load(CritterPrefab), pos, Quaternion.identity);
+            var nc = go.GetComponent<NetworkCritter>();
+            nc.ServerSetup(slot, slot % 4, bot, CritterConfig.Default, PlayerModifiers.One, epoch: 1, humanClientId: owner);
+            var no = go.GetComponent<NetworkObject>();
+            if (owner == NetworkManager.ServerClientId) no.Spawn(destroyWithScene: true);
+            else no.SpawnWithOwnership(owner, destroyWithScene: true);
+            return nc;
+        }
+
+        public static IEnumerator Teardown()
+        {
+            foreach (var nc in Object.FindObjectsByType<NetworkCritter>(FindObjectsSortMode.None)) Object.Destroy(nc.gameObject);
+            foreach (var b in Object.FindObjectsByType<SpitBlob>(FindObjectsSortMode.None)) Object.Destroy(b.gameObject);
+            yield return null;   // let critters go before the network does, so no event fires an RPC mid-shutdown
+            if (PartyNet.Instance)
+            {
+                PartyNet.Instance.Leave();
+                Object.Destroy(PartyNet.Instance.gameObject);
+            }
+            foreach (var p in Object.FindObjectsByType<Persistent>(FindObjectsSortMode.None)) Object.Destroy(p.gameObject);
+            yield return null;
+            yield return null;
+        }
+    }
+}
+#endif

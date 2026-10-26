@@ -1,0 +1,5 @@
+#!/bin/sh
+# ShooterParty live status for the owner (installed to /usr/local/bin by deploy.sh): rooms, phases, players and
+# the game servers' last @@STATS, from the room service's unrouted 127.0.0.1:7709 view.
+curl -s --max-time 3 http://127.0.0.1:7709/ | python3 -m json.tool 2>/dev/null \
+  || { echo "room service not answering"; systemctl --no-pager status partyshooter-rooms | head -5; }

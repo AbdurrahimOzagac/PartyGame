@@ -1,0 +1,21 @@
+{
+    "name": "ShooterParty.PlayModeTests",
+    "rootNamespace": "ShooterParty.Tests",
+    "references": [
+        "ShooterParty.Runtime",
+        "Unity.Collections",
+        "Unity.Netcode.Runtime",
+        "UnityEngine.TestRunner",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
+    ],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ]
+}
