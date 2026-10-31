@@ -6,7 +6,7 @@ import tickets
 
 KEY = bytes(range(32))
 VECTORS = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..",
-                       "Assets", "Ezel", "ShooterParty", "Tests", "EditMode", "ticket_vectors.json")
+                       "Assets", "ShooterParty", "Core", "Tests", "EditMode", "ticket_vectors.json")
 
 
 def data(**kw):

@@ -14,7 +14,7 @@ namespace KnockbackArena.Tests
 {
     public class KnockbackArenaGameTests
     {
-        const string ControllerPrefab = "Assets/Ezel/KnockbackArena/Prefabs/Net_KnockbackArenaGame.prefab";
+        const string ControllerPrefab = "Assets/ShooterParty/MiniGames/KnockbackArena/Prefabs/Net_KnockbackArenaGame.prefab";
 
         // Stands in for SessionManager: decides the round's slots and records what the mini-game reports.
         class TestSessionHost : ISessionHost

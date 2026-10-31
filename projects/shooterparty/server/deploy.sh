@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploys ShooterParty's server side to a Linux ARM64 host (the Pi) over SSH. See Assets/Ezel/ShooterParty/Docs/SERVER_OPS.md.
+# Deploys ShooterParty's server side to a Linux ARM64 host (the Pi) over SSH. See Assets/ShooterParty/Core/Docs/SERVER_OPS.md.
 #
 #   deploy.sh <ssh-host> [server-build-dir]   install or update: room service + Unity game server build
 #   deploy.sh <ssh-host> --tunnel             once, after `cloudflared tunnel login` on the host: create the

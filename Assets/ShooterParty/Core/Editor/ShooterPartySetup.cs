@@ -10,12 +10,12 @@ namespace ShooterParty.EditorTools
 {
     // Generates the core's assets from code, like the Knockback Arena builders do:
     //   Prefabs/Net_ShotSystem.prefab   server singleton for networked shots
-    //   Data/NetPrefabs.asset           every prefab under Assets/Ezel whose root has a NetworkObject
-    //   Data/MiniGameCatalog.asset      every MiniGameDefinition under Assets/Ezel
+    //   Data/NetPrefabs.asset           every prefab under Assets/ShooterParty whose root has a NetworkObject
+    //   Data/MiniGameCatalog.asset      every MiniGameDefinition under Assets/ShooterParty
     // A mini-game's networked prefabs (critter variants, pickups) are registered automatically by living there.
     public static class ShooterPartySetup
     {
-        public const string Root = "Assets/Ezel/ShooterParty";
+        public const string Root = "Assets/ShooterParty/Core";
         public const string NetPrefabsPath = Root + "/Data/NetPrefabs.asset";
         public const string ShotSystemPath = Root + "/Prefabs/Net_ShotSystem.prefab";
         public const string CatalogPath = Root + "/Data/MiniGameCatalog.asset";
@@ -56,7 +56,7 @@ namespace ShooterParty.EditorTools
         {
             var catalog = AssetDatabase.LoadAssetAtPath<MiniGameCatalog>(CatalogPath);
             if (!catalog) { catalog = ScriptableObject.CreateInstance<MiniGameCatalog>(); AssetDatabase.CreateAsset(catalog, CatalogPath); }
-            catalog.games = AssetDatabase.FindAssets("t:MiniGameDefinition", new[] { "Assets/Ezel" })
+            catalog.games = AssetDatabase.FindAssets("t:MiniGameDefinition", new[] { "Assets/ShooterParty" })
                 .Select(g => AssetDatabase.LoadAssetAtPath<MiniGameDefinition>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(d => d).OrderBy(d => d.displayName).ToList();
             foreach (var d in catalog.games)
@@ -123,7 +123,7 @@ namespace ShooterParty.EditorTools
                 AssetDatabase.CreateAsset(list, NetPrefabsPath);
             }
             foreach (var p in list.PrefabList.ToList()) list.Remove(p);
-            var prefabs = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Ezel" })
+            var prefabs = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/ShooterParty" })
                 .Select(g => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(g)))
                 .Where(go => go && go.GetComponent<NetworkObject>())
                 .OrderBy(go => AssetDatabase.GetAssetPath(go));

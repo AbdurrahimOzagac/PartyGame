@@ -13,7 +13,7 @@ namespace ShooterParty.EditorTools
     // The fonts and sprites live with the shared art in KnockbackArena/UI for now (see ARCHITECTURE.md).
     public static class UiKit
     {
-        public const string ArtRoot = "Assets/Ezel/KnockbackArena";
+        public const string ArtRoot = "Assets/ShooterParty/MiniGames/KnockbackArena";
         const string Root = ArtRoot;
         const string UiDir = ArtRoot + "/UI";
         public static readonly Color Ink = new Color32(0x16, 0x1A, 0x3A, 0xFF);

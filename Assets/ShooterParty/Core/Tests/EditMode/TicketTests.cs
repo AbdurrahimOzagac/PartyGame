@@ -25,7 +25,7 @@ namespace ShooterParty.Tests
         [Test]
         public void MatchesSharedVectors()
         {
-            var json = File.ReadAllText(Path.Combine(Application.dataPath, "Ezel/ShooterParty/Tests/EditMode/ticket_vectors.json"), Encoding.UTF8);
+            var json = File.ReadAllText(Path.Combine(Application.dataPath, "ShooterParty/Core/Tests/EditMode/ticket_vectors.json"), Encoding.UTF8);
             var vectors = JsonUtility.FromJson<Vectors>("{\"items\":" + json + "}").items;
             Assert.GreaterOrEqual(vectors.Length, 10);
             foreach (var v in vectors)

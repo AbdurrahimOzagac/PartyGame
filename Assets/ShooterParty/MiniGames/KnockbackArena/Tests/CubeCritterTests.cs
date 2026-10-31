@@ -12,8 +12,8 @@ namespace KnockbackArena.Tests
 {
     public class CubeCritterTests
     {
-        const string Fbx = "Assets/Ezel/KnockbackArena/Models/CubeCritter.fbx";
-        const string Prefab = "Assets/Ezel/KnockbackArena/Prefabs/CubeCritter_Tomato.prefab";
+        const string Fbx = "Assets/ShooterParty/MiniGames/KnockbackArena/Models/CubeCritter.fbx";
+        const string Prefab = "Assets/ShooterParty/MiniGames/KnockbackArena/Prefabs/CubeCritter_Tomato.prefab";
 
         [Test]
         public void ImportedClipsAndBlendShapes()
@@ -43,11 +43,11 @@ namespace KnockbackArena.Tests
         [Test]
         public void EveryCritterPrefabHasTheAnimatorController()
         {
-            var ac = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/Ezel/KnockbackArena/Animation/CubeCritter.controller");
+            var ac = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>("Assets/ShooterParty/MiniGames/KnockbackArena/Animation/CubeCritter.controller");
             Assert.IsNotNull(ac);
             foreach (var name in new[] { "CubeCritter", "CubeCritter_Tomato", "CubeCritter_Teal", "CubeCritter_Chartreuse", "CubeCritter_Violet", "CubeCritter_Net" })
             {
-                var go = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Ezel/KnockbackArena/Prefabs/{name}.prefab");
+                var go = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/ShooterParty/MiniGames/KnockbackArena/Prefabs/{name}.prefab");
                 Assert.IsNotNull(go, name);
                 Assert.AreEqual(ac, go.GetComponentInChildren<Animator>().runtimeAnimatorController, name + " lost its animator controller");
             }

@@ -207,7 +207,7 @@ def main(what):
         apply({})
     if "portraits" in what:
         # HUD portraits: 512 px, transparent, one per player x expression (written straight into the Unity project)
-        pdir = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena/Portraits"
+        pdir = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena/Portraits"
         os.makedirs(pdir, exist_ok=True)
         bpy.data.objects["Stage_Ground"].hide_render = True
         sc.render.film_transparent = True

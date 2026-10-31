@@ -1,7 +1,7 @@
 # One-command rebuild of the ice arena, background and props:
 #   Blender -b --factory-startup --python make_world.py -- [--no-export]
 # kit pieces -> default 16 m arena (tiles placed + underside + floor collider) -> backdrop ring -> podium ->
-# crown + jump pickup -> save IceArena.blend -> FBX into Assets/Ezel/KnockbackArena/Models/{Arena,Props}.
+# crown + jump pickup -> save IceArena.blend -> FBX into Assets/ShooterParty/MiniGames/KnockbackArena/Models/{Arena,Props}.
 import bpy, os, sys, math, random
 from mathutils import Vector
 
@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 for f in ("arena.py", "props.py", "world.py"):
     exec(open(os.path.join(HERE, f)).read().split('if __name__ == "__main__":')[0])
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena/Models"
+UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena/Models"
 
 for o in list(bpy.data.objects): bpy.data.objects.remove(o)
 sc = bpy.context.scene
