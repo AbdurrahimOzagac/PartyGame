@@ -4,7 +4,7 @@
 import bpy, math, os
 from mathutils import Vector
 
-UNITY_MODELS = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena/Models/Arena"
+UNITY_MODELS = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena/Models/Arena"
 
 def _hex(h):
     h = h.lstrip("#"); c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]

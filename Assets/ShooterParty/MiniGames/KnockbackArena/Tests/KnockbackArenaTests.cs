@@ -15,7 +15,7 @@ namespace KnockbackArena.Tests
     // The ice arena, props, VFX, UI and audio wiring (see projects/game_assets/knockback_arena/blender/v2/README.md).
     public class KnockbackArenaTests
     {
-        const string Root = "Assets/Ezel/KnockbackArena";
+        const string Root = "Assets/ShooterParty/MiniGames/KnockbackArena";
         static T Load<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>($"{Root}/{path}");
         static GameObject Spawn(string prefab, Vector3 pos) => Object.Instantiate(Load<GameObject>(prefab), pos, Quaternion.identity);
 
@@ -116,7 +116,7 @@ namespace KnockbackArena.Tests
             NetTestRig.StartNetworked();
             var c = NetTestRig.Spawn(0, bot: true, pos: new Vector3(-20f, 0f, 0f));
             c.GetComponent<Rigidbody>().isKinematic = true;
-            var root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Ezel/ShooterParty/Prefabs/UI_Root.prefab"));
+            var root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/ShooterParty/Core/Prefabs/UI_Root.prefab"));
             var hud = root.GetComponentInChildren<PartyHud>(true);
             hud.BindSeat(0, 0, "MOCHI", 1, false);
             Object.Instantiate(Load<GameObject>("UI/HUD_KnockbackWidget.prefab"), hud.widgetSlot);
@@ -146,7 +146,7 @@ namespace KnockbackArena.Tests
         public System.Collections.IEnumerator ZArenaSceneLoadsFullyWired()
         {
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
-                "Assets/Ezel/KnockbackArena/Scenes/KnockbackArena_Ice.unity", new UnityEngine.SceneManagement.LoadSceneParameters());
+                "Assets/ShooterParty/MiniGames/KnockbackArena/Scenes/KnockbackArena_Ice.unity", new UnityEngine.SceneManagement.LoadSceneParameters());
             yield return null; yield return null;
             foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 foreach (var c in go.GetComponents<Component>()) Assert.IsNotNull(c, "missing script on " + go.name);
@@ -167,7 +167,7 @@ namespace KnockbackArena.Tests
         public System.Collections.IEnumerator ZPlaygroundKeepsItsDebugKeysOnItsOwnComponent()
         {
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
-                "Assets/Ezel/KnockbackArena/Scenes/CubeCritter_Playground.unity", new UnityEngine.SceneManagement.LoadSceneParameters());
+                "Assets/ShooterParty/MiniGames/KnockbackArena/Scenes/CubeCritter_Playground.unity", new UnityEngine.SceneManagement.LoadSceneParameters());
             yield return null; yield return null;
             var input = Object.FindAnyObjectByType<LocalCritterInput>();
             Assert.IsNotNull(input, "the playground player");

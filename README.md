@@ -3,14 +3,14 @@
 ShooterParty is a 3–4 player online party game: cube critters, a spit shot, and a playlist of mini-games played one after another. The session total crowns a champion. It ships with one mini-game, **Knockback Arena**: spit everyone off the ice.
 
 - Engine: **Unity 6000.3.9f1** (URP, Input System, Netcode for GameObjects 2.13, Unity Transport 2.7).
-- The ShooterParty code is under `Assets/Ezel/` (`ShooterParty/` = the shared framework, `KnockbackArena/` = the mini-game). Teammates' folders: `Assets/Abd`, `Assets/Ardil`, `Assets/Kha`.
+- The ShooterParty code is under `Assets/ShooterParty/` (`Core/` = the shared framework, `MiniGames/KnockbackArena/` = the mini-game and the shared art). Everyone works here. Personal sandboxes for experiments: `Assets/Abd`, `Assets/Ardil`, `Assets/Kha`.
 - Design and server: `projects/shooterparty/` (spec, plan, room service, deploy scripts).
-- Developer docs: [architecture](Assets/Ezel/ShooterParty/Docs/ARCHITECTURE.md) · [adding a mini-game](Assets/Ezel/ShooterParty/Docs/ADDING_A_MINIGAME.md) · [server operations](Assets/Ezel/ShooterParty/Docs/SERVER_OPS.md).
+- Developer docs: [architecture](Assets/ShooterParty/Core/Docs/ARCHITECTURE.md) · [adding a mini-game](Assets/ShooterParty/Core/Docs/ADDING_A_MINIGAME.md) · [server operations](Assets/ShooterParty/Core/Docs/SERVER_OPS.md).
 
 ## Open and play in the editor
 
 1. In Unity Hub: **Add → Add project from disk** → this folder, with editor **6000.3.9f1**.
-2. Open `Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity` and press **Play**. The game always starts from `SP_Boot` (it loads the menu).
+2. Open `Assets/ShooterParty/Core/Scenes/SP_Boot.unity` and press **Play**. The game always starts from `SP_Boot` (it loads the menu).
 3. In the menu: **PRACTICE VS BOTS** plays a full session against three bots, with no network needed.
 
 | Action | Keyboard / mouse | Gamepad |
@@ -69,7 +69,7 @@ Ways to play:
 - **SAME WI-FI → HOST / JOIN BY ADDRESS**: no server needed; everyone is on the same network, and the host's lobby shows its address (UDP 7777, so allow the firewall prompt on the host).
 - **PRACTICE VS BOTS**: alone, offline.
 
-**Clients and the online server must come from the same commit.** Every build carries a fingerprint of its network prefabs; a game built from a different commit than the deployed server gets "Update your game". After changing networked prefabs (or running a *Rebuild* menu), the Pi server has to be redeployed before handing out new builds; see [server operations](Assets/Ezel/ShooterParty/Docs/SERVER_OPS.md).
+**Clients and the online server must come from the same commit.** Every build carries a fingerprint of its network prefabs; a game built from a different commit than the deployed server gets "Update your game". After changing networked prefabs (or running a *Rebuild* menu), the Pi server has to be redeployed before handing out new builds; see [server operations](Assets/ShooterParty/Core/Docs/SERVER_OPS.md).
 
 ## Generated assets
 

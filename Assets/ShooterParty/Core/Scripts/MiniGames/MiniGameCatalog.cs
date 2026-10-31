@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ShooterParty
 {
     // The list of playable mini-games. Rebuilt by "ShooterParty/Rebuild core assets" from every
-    // MiniGameDefinition under Assets/Ezel, so adding a mini-game never edits core code.
+    // MiniGameDefinition under Assets/ShooterParty, so adding a mini-game never edits core code.
     [CreateAssetMenu(menuName = "ShooterParty/Mini-game catalog", fileName = "MiniGameCatalog")]
     public class MiniGameCatalog : ScriptableObject
     {

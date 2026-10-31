@@ -1,7 +1,7 @@
 """One-time join tickets: base64url(payload JSON) "." base64url(HMAC-SHA256(key, payload segment)).
 
 The signature covers the payload segment's bytes, so neither side needs canonical JSON.
-The C# twin is Assets/Ezel/ShooterParty/Scripts/Net/Ticket.cs. Both are checked against ticket_vectors.json.
+The C# twin is Assets/ShooterParty/Core/Scripts/Net/Ticket.cs. Both are checked against ticket_vectors.json.
 """
 import base64
 import binascii

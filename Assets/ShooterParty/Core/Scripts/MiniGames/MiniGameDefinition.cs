@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ShooterParty
 {
     // Everything the core needs to list, introduce and run one mini-game. Create one per mini-game
-    // (Assets > Create > ShooterParty > Mini-game); the catalog picks every definition under Assets/Ezel up.
+    // (Assets > Create > ShooterParty > Mini-game); the catalog picks every definition under Assets/ShooterParty up.
     [CreateAssetMenu(menuName = "ShooterParty/Mini-game", fileName = "MiniGame")]
     public class MiniGameDefinition : ScriptableObject
     {

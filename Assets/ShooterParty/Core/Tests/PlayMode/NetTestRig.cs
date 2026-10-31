@@ -14,8 +14,8 @@ namespace ShooterParty.Tests
     // spawns critters, and tears everything down so the next test starts clean.
     public static class NetTestRig
     {
-        public const string CritterPrefab = "Assets/Ezel/KnockbackArena/Prefabs/CubeCritter_Net.prefab";
-        public const string OfflineCritterPrefab = "Assets/Ezel/KnockbackArena/Prefabs/CubeCritter.prefab";
+        public const string CritterPrefab = "Assets/ShooterParty/MiniGames/KnockbackArena/Prefabs/CubeCritter_Net.prefab";
+        public const string OfflineCritterPrefab = "Assets/ShooterParty/MiniGames/KnockbackArena/Prefabs/CubeCritter.prefab";
 
         public static GameObject Load(string path)
         {
@@ -37,8 +37,8 @@ namespace ShooterParty.Tests
             return net;
         }
 
-        public const string NetPrefabs = "Assets/Ezel/ShooterParty/Data/NetPrefabs.asset";
-        public const string ShotSystemPrefab = "Assets/Ezel/ShooterParty/Prefabs/Net_ShotSystem.prefab";
+        public const string NetPrefabs = "Assets/ShooterParty/Core/Data/NetPrefabs.asset";
+        public const string ShotSystemPrefab = "Assets/ShooterParty/Core/Prefabs/Net_ShotSystem.prefab";
 
         // Practice host with the real prefab list and server singletons (ShotSystem, ...), as SP_Boot configures it.
         public static PartyNet StartNetworked()
@@ -54,7 +54,7 @@ namespace ShooterParty.Tests
             return net;
         }
 
-        public const string SessionManagerPrefab = "Assets/Ezel/ShooterParty/Prefabs/Net_SessionManager.prefab";
+        public const string SessionManagerPrefab = "Assets/ShooterParty/Core/Prefabs/Net_SessionManager.prefab";
 
         // Practice host with the full session (it loads SP_Lobby, then the playlist's scenes).
         public static PartyNet StartSession()
@@ -71,7 +71,7 @@ namespace ShooterParty.Tests
         // The real boot path into a Practice room: SP_Boot -> menu -> name dialog -> SP_Lobby with 1 human + 3 bots.
         public static IEnumerator BootToPracticeLobby(string name = "Tester")
         {
-            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity",
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/ShooterParty/Core/Scenes/SP_Boot.unity",
                 new LoadSceneParameters(LoadSceneMode.Single));
             for (float t = 0f; t < 10f && !(UiRoot.Instance && SceneManager.GetActiveScene().name == "SP_Menu"); t += Time.unscaledDeltaTime) yield return null;
             var ui = UiRoot.Instance;

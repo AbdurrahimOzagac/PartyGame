@@ -2,7 +2,7 @@
 
 This guide adds a new mini-game (a race, a parkour, ...) that uses the shared cube critters and the spit shot. You need your own folder, assembly, scene, definition asset and controller. You do not edit core code.
 
-Knockback Arena (`Assets/Ezel/KnockbackArena`) is the worked example at every step. Read [ARCHITECTURE.md](ARCHITECTURE.md) sections 3 and 4 first: they explain who decides what and how a session runs.
+Knockback Arena (`Assets/ShooterParty/MiniGames/KnockbackArena`) is the worked example at every step. Read [ARCHITECTURE.md](ARCHITECTURE.md) sections 3 and 4 first: they explain who decides what and how a session runs.
 
 Below, `MyGame` stands for your mini-game's name.
 
@@ -22,7 +22,7 @@ The core does **not** detect falls, and a spawned critter never respawns by itse
 
 ## Step 1. Folder and assemblies
 
-Create `Assets/Ezel/MyGame/` with `Scripts/`, `Editor/`, `Tests/`, `Data/`, `Prefabs/`, `Scenes/` and `UI/`. Everything of yours stays in this folder.
+Create `Assets/ShooterParty/MiniGames/MyGame/` with `Scripts/`, `Editor/`, `Tests/`, `Data/`, `Prefabs/`, `Scenes/` and `UI/`. Everything of yours stays in this folder.
 
 Add three assembly definitions. Copy Knockback's and rename them.
 
@@ -37,7 +37,7 @@ Knockback's files: `KnockbackArena/Scripts/KnockbackArena.Runtime.asmdef`, `Knoc
 Rules:
 - Use your own namespace (`namespace MyGame`). Core types are in `ShooterParty` and `ShooterParty.UI`.
 - Never reference another mini-game's assembly. If you need something from Knockback's code, ask for it to move into the core.
-- Shared art (critter, blob, fonts, sprites, VFX, sounds) stays in `Assets/Ezel/KnockbackArena`. Reference it, but do not move or rename it (ARCHITECTURE.md section 7).
+- Shared art (critter, blob, fonts, sprites, VFX, sounds) stays in `Assets/ShooterParty/MiniGames/KnockbackArena`. Reference it, but do not move or rename it (ARCHITECTURE.md section 7).
 
 ## Step 2. The controller
 
@@ -158,7 +158,7 @@ Knockback: `KnockbackArena/Scripts/ArenaBotAI.cs` (targets the nearest rival, st
 
 ## Step 5. The critter and its config
 
-- `critterPrefab`: use `Assets/Ezel/KnockbackArena/Prefabs/CubeCritter_Net.prefab`, or a prefab variant of it saved in your `Prefabs/` folder if you need extra parts. Keep the `NetworkObject` on the root.
+- `critterPrefab`: use `Assets/ShooterParty/MiniGames/KnockbackArena/Prefabs/CubeCritter_Net.prefab`, or a prefab variant of it saved in your `Prefabs/` folder if you need extra parts. Keep the `NetworkObject` on the root.
 - `critter` (`CritterConfig`): `jump` (`Off`, `Pickup` = only after a pickup, `On`), `dashCharges`, `shotSpeed`, `shotGravity`, `shotCooldown`. `chargeTime` is reserved and does nothing yet. `CritterConfig.Default` is Knockback's tuning.
 - Pickups: a `NetworkObject` prefab that the server spawns at the scene's pickup spots. Knockback's `JumpPickup` (`KnockbackArena/Scripts/JumpPickup.cs`) shows the pattern: the server detects the trigger, flips a `NetworkVariable`, and grants charges with `NetworkCritter.ServerAddJumpCharge`.
 
@@ -239,10 +239,10 @@ Knockback creates this asset in code: `ArenaSetup.BuildMiniGame` writes `Knockba
 
 ## Step 9. Register it
 
-1. **Networked prefabs register themselves.** The core's prefab list (`ShooterParty/Data/NetPrefabs.asset`) is rebuilt from every prefab under `Assets/Ezel` whose root has a `NetworkObject`. Your controller, critter variant and pickups only need to live under `Assets/Ezel`.
-2. **Add the scene to the build settings.** NGO can only load listed scenes. From your builder, call `ShooterPartySetup.EnsureInBuildSettings("Assets/Ezel/MyGame/Scenes/MyGame.unity")`, or add it by hand in the build profile's scene list.
+1. **Networked prefabs register themselves.** The core's prefab list (`ShooterParty/Data/NetPrefabs.asset`) is rebuilt from every prefab under `Assets/ShooterParty` whose root has a `NetworkObject`. Your controller, critter variant and pickups only need to live under `Assets/ShooterParty`.
+2. **Add the scene to the build settings.** NGO can only load listed scenes. From your builder, call `ShooterPartySetup.EnsureInBuildSettings("Assets/ShooterParty/MiniGames/MyGame/Scenes/MyGame.unity")`, or add it by hand in the build profile's scene list.
 3. **Run ShooterParty > Rebuild core assets** (`ShooterPartySetup.BuildAll`). It:
-   - rebuilds the catalog with every `MiniGameDefinition` under `Assets/Ezel`, and warns if one has no scene, controller or critter prefab;
+   - rebuilds the catalog with every `MiniGameDefinition` under `Assets/ShooterParty`, and warns if one has no scene, controller or critter prefab;
    - rebuilds the presets, which cycle through all games, so Quick/Classic/Marathon now include yours;
    - rebuilds `UI_Root.prefab`, which gets a "+ MY GAME" button in the playlist builder;
    - rebuilds `NetPrefabs.asset`, `SP_Menu`, `SP_Lobby` and `SP_Boot`.
@@ -253,7 +253,7 @@ Tip: write one editor menu item that builds your definition, prefabs and scene, 
 
 ## Step 10. Play it in Practice
 
-1. Open `Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity` and press Play. Pressing Play in your own scene does not start a session.
+1. Open `Assets/ShooterParty/Core/Scenes/SP_Boot.unity` and press Play. Pressing Play in your own scene does not start a session.
 2. In the menu, choose **PRACTICE VS BOTS** and enter a name. You land in the lobby with 3 bots.
 3. In the playlist panel, choose **CUSTOM**, add your game with "+ MY GAME", then **USE PLAYLIST** and **START**.
 
@@ -270,7 +270,7 @@ To test with several humans, use the SAME WI-FI buttons: one instance chooses HO
 
 ## Step 11. Write a PlayMode test
 
-Put tests in `Assets/Ezel/MyGame/Tests/` and wrap them in `#if UNITY_EDITOR`, because `NetTestRig` loads prefabs through the AssetDatabase. There are two useful kinds:
+Put tests in `Assets/ShooterParty/MiniGames/MyGame/Tests/` and wrap them in `#if UNITY_EDITOR`, because `NetTestRig` loads prefabs through the AssetDatabase. There are two useful kinds:
 
 **Controller test with a fake session** (like `KnockbackArena/Tests/KnockbackArenaGameTests.cs`): fast and deterministic. It uses the real prefab list, so run Rebuild core assets first.
 
@@ -334,7 +334,7 @@ namespace MyGame.Tests
                 host.slots.Add(new SlotInfo { slot = i, colourIndex = i, isBot = true,
                                               ownerClientId = NetworkManager.ServerClientId, mods = PlayerModifiers.One });
             MiniGameController.Host = host;
-            var game = Object.Instantiate(NetTestRig.Load("Assets/Ezel/MyGame/Prefabs/Net_MyGame.prefab"))
+            var game = Object.Instantiate(NetTestRig.Load("Assets/ShooterParty/MiniGames/MyGame/Prefabs/Net_MyGame.prefab"))
                              .GetComponent<MyGameController>();
             game.NetworkObject.Spawn(destroyWithScene: true);
             game.ServerSetupRound();
@@ -364,7 +364,7 @@ Run them from the Test Runner (PlayMode tab), or from a shell as in ARCHITECTURE
 
 ## Done when
 
-- [ ] Everything lives in `Assets/Ezel/MyGame/`, and no `ShooterParty` file was edited by hand (only regenerated).
+- [ ] Everything lives in `Assets/ShooterParty/MiniGames/MyGame/`, and no `ShooterParty` file was edited by hand (only regenerated).
 - [ ] The definition has an id, a scene, a controller and a critter prefab, and the scene is in the build settings.
 - [ ] Rebuild core assets lists your game and its prefabs, and the lobby shows "+ MY GAME".
 - [ ] A Practice round plays to the results, and a playlist with your game reaches the Final.

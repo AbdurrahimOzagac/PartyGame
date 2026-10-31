@@ -12,7 +12,7 @@ namespace ShooterParty.Tests
     // The real boot path: SP_Boot -> Bootstrap -> SP_Menu with the persistent UI root.
     public class MenuFlowTests
     {
-        const string BootScene = "Assets/Ezel/ShooterParty/Scenes/SP_Boot.unity";
+        const string BootScene = "Assets/ShooterParty/Core/Scenes/SP_Boot.unity";
         float savedMusic;
 
         [UnitySetUp]

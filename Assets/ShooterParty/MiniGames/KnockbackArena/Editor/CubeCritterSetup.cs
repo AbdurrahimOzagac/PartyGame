@@ -79,7 +79,7 @@ namespace KnockbackArena.EditorTools
 
     public static class CubeCritterSetup
     {
-        public const string Root = "Assets/Ezel/KnockbackArena";
+        public const string Root = "Assets/ShooterParty/MiniGames/KnockbackArena";
         public const string Fbx = Root + "/Models/CubeCritter.fbx";
         public const string BlobFbx = Root + "/Models/SpitBlob.fbx";
         public const string ScenePath = Root + "/Scenes/CubeCritter_Playground.unity";

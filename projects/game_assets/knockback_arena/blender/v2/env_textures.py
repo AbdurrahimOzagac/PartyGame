@@ -7,7 +7,7 @@ import os
 import numpy as np
 from img import save_png, tile_noise, tile_voronoi, smooth, hex_rgb
 
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena/Textures"
+UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena/Textures"
 
 
 def ice_detail(n=1024):

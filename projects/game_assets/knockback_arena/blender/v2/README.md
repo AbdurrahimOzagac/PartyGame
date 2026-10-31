@@ -16,7 +16,7 @@ Research notes behind the choices are in `research/`:
 
 ## Try it
 
-Open `Assets/Ezel/KnockbackArena/Scenes/KnockbackArena_Ice.unity` and press Play.
+Open `Assets/ShooterParty/MiniGames/KnockbackArena/Scenes/KnockbackArena_Ice.unity` and press Play.
 
 1. **Lobby.** Press Enter or click START. HOST and JOIN are view-only: networking hooks them up.
 2. **3-2-1-GO!** Then play:
@@ -47,7 +47,7 @@ Review renders from Unity are in `renders/v2/unity/`: 12 stills plus `gameplay_u
 
 **Unity needs TMP Essential Resources** in `Assets/TextMesh Pro`. They are committed alongside. If they are missing: Window → TextMeshPro → Import TMP Essential Resources.
 
-## What was built (Unity paths under `Assets/Ezel/KnockbackArena/`)
+## What was built (Unity paths under `Assets/ShooterParty/MiniGames/KnockbackArena/`)
 
 ### Spit: "what she throws"
 
@@ -203,7 +203,7 @@ It is exported to Unity 6 / URP and wired into prefabs, an Animator and a playab
 | Blender source (open this) | `blender/v2/CubeCritter_v2.blend` |
 | Build scripts | `blender/v2/*.py`; `make_all.py` rebuilds everything from an empty file in about 6 s |
 | Preview renders | `renders/v2/`: `hero_lineup.png`, `back_emblems.png`, `expressions.png`, `turntable.mp4`, `clip_<Name>.mp4` (one per clip), `gameplay_cam_run.mp4`, `gameplay_cam_spit.mp4` |
-| Unity models | `Assets/Ezel/KnockbackArena/Models/CubeCritter.fbx`, `SpitBlob.fbx` |
+| Unity models | `Assets/ShooterParty/MiniGames/KnockbackArena/Models/CubeCritter.fbx`, `SpitBlob.fbx` |
 | Unity prefabs | `Prefabs/CubeCritter.prefab` (base) and the variants `CubeCritter_Tomato/Teal/Chartreuse/Violet`, plus `SpitBlob.prefab` |
 | Animator | `Animation/CubeCritter.controller`, `Animation/CC_UpperBodyMask.mask` |
 | Playable test scene | `Scenes/CubeCritter_Playground.unity` |
@@ -342,4 +342,4 @@ Secondary motion is baked: the Top jiggle and curl follow-through come from a da
 
 # Game framework docs
 
-This kit is the shared art of the ShooterParty game: every mini-game reuses the cube critter, the spit shot and these assets from `Assets/Ezel/KnockbackArena`, where they stay. To build on it, read [ARCHITECTURE.md](../../../../../Assets/Ezel/ShooterParty/Docs/ARCHITECTURE.md) (how the game, the network and the session fit together), [ADDING_A_MINIGAME.md](../../../../../Assets/Ezel/ShooterParty/Docs/ADDING_A_MINIGAME.md) (a new mini-game step by step, with Knockback Arena as the worked example) and [SERVER_OPS.md](../../../../../Assets/Ezel/ShooterParty/Docs/SERVER_OPS.md) (deploying and running the online server).
+This kit is the shared art of the ShooterParty game: every mini-game reuses the cube critter, the spit shot and these assets from `Assets/ShooterParty/MiniGames/KnockbackArena`, where they stay. To build on it, read [ARCHITECTURE.md](../../../../../Assets/ShooterParty/Core/Docs/ARCHITECTURE.md) (how the game, the network and the session fit together), [ADDING_A_MINIGAME.md](../../../../../Assets/ShooterParty/Core/Docs/ADDING_A_MINIGAME.md) (a new mini-game step by step, with Knockback Arena as the worked example) and [SERVER_OPS.md](../../../../../Assets/ShooterParty/Core/Docs/SERVER_OPS.md) (deploying and running the online server).
