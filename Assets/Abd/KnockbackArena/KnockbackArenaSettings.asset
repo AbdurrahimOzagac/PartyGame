@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecddb569056b27241a9c525ad1a1b3ff, type: 3}
+  m_Name: KnockbackArenaSettings
+  m_EditorClassIdentifier: Assembly-CSharp::Abd.KnockbackArena.KnockbackArenaSettings
+  moveSpeed: 8
+  moveAcceleration: 80
+  airControl: 0
+  mouseSensitivity: 0.12
+  fireRate: 4
+  bulletSpeed: 25
+  bulletLifetime: 3
+  bulletRadius: 0.15
+  knockbackImpulse: 12
+  massMultiplier: 0.9
+  initialMass: 1
+  controlLockTime: 0.25
+  knockbackDrag: 1.5
+  cameraDistance: 6
+  cameraPivotHeight: 1.5
+  cameraStartPitch: 20
+  cameraMinPitch: -10
+  cameraMaxPitch: 60
+  killY: -8

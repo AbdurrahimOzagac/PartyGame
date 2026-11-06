@@ -1,6 +1,6 @@
 """Writes the shared ticket test vectors that the C# (TicketTests) and Python tests both check.
 
-    python3 make_vectors.py      # rewrites Assets/Ezel/ShooterParty/Tests/EditMode/ticket_vectors.json
+    python3 make_vectors.py      # rewrites Assets/ShooterParty/Core/Tests/EditMode/ticket_vectors.json
 """
 import json
 import os
@@ -8,7 +8,7 @@ import os
 import tickets
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..",
-                   "Assets", "Ezel", "ShooterParty", "Tests", "EditMode", "ticket_vectors.json")
+                   "Assets", "ShooterParty", "Core", "Tests", "EditMode", "ticket_vectors.json")
 KEY = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
 OTHER = "ff" * 32
 

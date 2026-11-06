@@ -6,7 +6,7 @@ import os, wave, subprocess
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena"
+UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena"
 OUT = os.path.join(UNITY, "Audio", "SFX")
 RENDERS = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "renders", "v2"))
 FFMPEG = "/opt/homebrew/bin/ffmpeg"

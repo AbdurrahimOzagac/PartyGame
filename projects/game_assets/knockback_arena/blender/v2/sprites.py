@@ -5,7 +5,7 @@ import os, math
 import numpy as np
 from img import save_png, uv, smooth, sd_circle, sd_box, sd_star, sd_polygon
 
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena"
+UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena"
 FX = os.path.join(UNITY, "Sprites")
 UI = os.path.join(UNITY, "UI", "Sprites")
 SS = 4   # supersampling

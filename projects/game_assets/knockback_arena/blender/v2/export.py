@@ -2,7 +2,7 @@
 # FBX_SCALE_ALL (no 100x), -Z forward / Y up (Blender -Y front -> Unity +Z), no leaf bones, all actions baked.
 import bpy, os, shutil
 
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/Ezel/KnockbackArena"
+UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena"
 HERE = "/Users/ezelbayraktar/Documents/Development/PartyGame/projects/game_assets/knockback_arena/blender/v2"
 
 COMMON = dict(apply_scale_options='FBX_SCALE_ALL', axis_forward='-Z', axis_up='Y',

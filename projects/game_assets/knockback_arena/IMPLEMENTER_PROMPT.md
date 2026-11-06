@@ -9,7 +9,7 @@ You are building game assets for **Knockback Arena**, a mini-game in a Unity LAN
 ## 0. Facts you must not change
 
 - **Unity:** 6000.3.9f1, URP 17.3, Input System 1.18. Project root: `/Users/ezelbayraktar/Documents/Development/PartyGame`.
-- **Asset folder:** put everything under `Assets/Ezel/KnockbackArena/`, with subfolders `Models/`, `Materials/`, `Textures/`, `Sprites/`, `Audio/SFX/`, `Audio/Music/`, `VFX/`, `UI/`, `Prefabs/`, `Scripts/`, `Portraits/`. Create a folder only if it doesn't exist.
+- **Asset folder:** put everything under `Assets/ShooterParty/MiniGames/KnockbackArena/`, with subfolders `Models/`, `Materials/`, `Textures/`, `Sprites/`, `Audio/SFX/`, `Audio/Music/`, `VFX/`, `UI/`, `Prefabs/`, `Scripts/`, `Portraits/`. Create a folder only if it doesn't exist.
 - **Blender source files:** save under `projects/game_assets/knockback_arena/blender/`. Reference images are in `projects/game_assets/knockback_arena/refs/`. Open `glossy_lineup.png` and `ko_hit_full.png` and match that look: glossy vinyl toy, soft rounded edges, two tall black oval eyes, small stubby arms, dark brown feet.
 - **Colours (exact hex):**
 
@@ -131,7 +131,7 @@ Use eased (Bezier) keys, not linear. **No root motion:** never move `Root` in X/
 
 Select `CubeRig` plus all its meshes. Then **File → Export → FBX**:
 
-- **Path:** `Assets/Ezel/KnockbackArena/Models/CubeCharacter.fbx`
+- **Path:** `Assets/ShooterParty/MiniGames/KnockbackArena/Models/CubeCharacter.fbx`
 - **Include:** Selected Objects, Object Types: Armature + Mesh.
 - **Transform:** Scale 1.0, Apply Scalings: FBX All, Forward: −Z Forward, Up: Y Up, Apply Unit on, Use Space Transform on, Apply Transform (experimental) **on**.
 - **Geometry:** Smoothing: Face, Apply Modifiers on, Triangulate off.
@@ -145,14 +145,14 @@ Also save `projects/game_assets/knockback_arena/blender/CubeCharacter.blend`.
 1. Add a camera in front of the cube, 3/4 view, slightly from above, framing the body with about 10% padding. Use one soft area light plus world colour `#EEF6FF`.
 2. Set Film to Transparent and resolution to 512×512.
 3. Render 4 PNGs, one per colour material: `Portrait_Orange.png`, `Portrait_Cyan.png`, `Portrait_Lime.png`, `Portrait_Purple.png`.
-4. Save them to `Assets/Ezel/KnockbackArena/Portraits/`.
+4. Save them to `Assets/ShooterParty/MiniGames/KnockbackArena/Portraits/`.
 5. Look at each image. The eyes must be visible, nothing may be cut off, and the background must be transparent.
 
 ## 3. Shot: `Shot.fbx`
 
 1. UV sphere, Ø 0.28 m, 24 segments × 16 rings, Shade Smooth, origin at the centre.
 2. Give it a glossy material (same settings as the body) using a placeholder colour; Unity sets the real colour.
-3. Export to `Assets/Ezel/KnockbackArena/Models/Shot.fbx` with the same FBX settings as step 2f (no armature).
+3. Export to `Assets/ShooterParty/MiniGames/KnockbackArena/Models/Shot.fbx` with the same FBX settings as step 2f (no armature).
 
 ## 4. Arena kit (no walls, no cover, open edges)
 
@@ -170,10 +170,10 @@ Build these separate objects, each with its origin at the **top-surface centre**
 Materials and textures:
 
 1. Use Blender MCP Poly Haven tools to search for and download a seamless ice or snow texture set (albedo, normal, roughness) at 2K. Tint it pale blue `#CFE9FB` if needed.
-2. Save the textures to `Assets/Ezel/KnockbackArena/Textures/Ice_*.png`.
-3. Download a bright daytime sky HDRI with soft clouds at 2K. Save it as `Assets/Ezel/KnockbackArena/Textures/Sky_Day.hdr`.
+2. Save the textures to `Assets/ShooterParty/MiniGames/KnockbackArena/Textures/Ice_*.png`.
+3. Download a bright daytime sky HDRI with soft clouds at 2K. Save it as `Assets/ShooterParty/MiniGames/KnockbackArena/Textures/Sky_Day.hdr`.
 
-Export each object as its own FBX into `Assets/Ezel/KnockbackArena/Models/Arena/`. Use the step 2f settings, but with no armature and no animation.
+Export each object as its own FBX into `Assets/ShooterParty/MiniGames/KnockbackArena/Models/Arena/`. Use the step 2f settings, but with no armature and no animation.
 
 **Check C.** Snap 4 × 4 `Ice_Top_4x4` + edges + corners into a 16 × 16 m arena in Blender. The tiles must snap edge-to-edge with no visible gaps, and the top must be one flat surface. Screenshot it.
 
@@ -359,7 +359,7 @@ higgsfield generate create gpt_image_2_5 --prompt "<PROMPT>" --aspect_ratio 1:1 
 Download each result:
 1. Check that it really has a transparent background.
 2. Downscale to 256×256 (sheets: 1024 wide).
-3. Save it to `Assets/Ezel/KnockbackArena/Sprites/`.
+3. Save it to `Assets/ShooterParty/MiniGames/KnockbackArena/Sprites/`.
 4. Import it as Sprite (2D and UI), Alpha Is Transparency on.
 
 Every prompt starts with this shared prefix: *"Game VFX sprite, single isolated element centred on a fully transparent background, pure white with soft grey shading so it can be tinted in-engine, clean stylised cartoon style, no text, no border, no shadow on background."*
