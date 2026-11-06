@@ -70,34 +70,85 @@ namespace IceLoop.EditorTools
 
             // the critter sits up on the car's seat
             var anim = inst.GetComponentInChildren<CritterAnimator>();
-            if (anim) { var t = anim.transform; while (t.parent && t.parent != inst.transform) t = t.parent; t.localPosition += Vector3.up * 0.32f; }
+            if (anim) { var t = anim.transform; while (t.parent && t.parent != inst.transform) t = t.parent; t.localPosition += Vector3.up * 0.5f; }
 
             var body = Mat("M_IceLoop_CarBody", Color.white, 0.35f);
             var rubber = Mat("M_IceLoop_CarRubber", Hex("#1B1F2A"), 0.15f);
             var chrome = Mat("M_IceLoop_CarChrome", Hex("#B8C2CC"), 0.55f);
             chrome.SetFloat("_Metallic", 0.3f);
             var lamp = Mat("M_IceLoop_CarLamp", Hex("#FFF1B8"), 0.3f);
+            var tail = Mat("M_IceLoop_CarTail", Hex("#FF3B3B"), 0.3f);
+            Emissive(tail, Hex("#FF2020"), 0.3f);
             Emissive(lamp, Hex("#FFE27A"), 0.25f);
 
             var car = new GameObject("Car").transform;
             car.SetParent(inst.transform, false);
-            Prim("Bumper", PrimitiveType.Cylinder, car, Vector3.zero, new Vector3(2.15f, 0.08f, 2.15f), rubber).transform.localPosition = new Vector3(0f, 0.17f, 0f);
-            var shell = Prim("Shell", PrimitiveType.Cylinder, car, Vector3.zero, new Vector3(1.85f, 0.11f, 1.85f), body);
-            shell.transform.localPosition = new Vector3(0f, 0.34f, 0f);
-            Prim("Rim", PrimitiveType.Cylinder, car, Vector3.zero, new Vector3(1.25f, 0.06f, 1.25f), chrome).transform.localPosition = new Vector3(0f, 0.5f, 0f);
-            Prim("Pole", PrimitiveType.Cylinder, car, Vector3.zero, new Vector3(0.07f, 0.8f, 0.07f), chrome).transform.localPosition = new Vector3(0f, 1.1f, -0.7f);
-            var beacon = Prim("Beacon", PrimitiveType.Sphere, car, Vector3.zero, new Vector3(0.22f, 0.22f, 0.22f), lamp);
-            beacon.transform.localPosition = new Vector3(0f, 1.95f, -0.7f);
-            foreach (var x in new[] { -0.5f, 0.5f })
-                Prim("Headlight", PrimitiveType.Sphere, car, Vector3.zero, new Vector3(0.24f, 0.18f, 0.12f), lamp).transform.localPosition = new Vector3(x, 0.34f, 0.93f);
+            var shell = new GameObject("Body", typeof(MeshFilter), typeof(MeshRenderer));
+            shell.transform.SetParent(car, false);
+            shell.GetComponent<MeshFilter>().sharedMesh = SaveMesh(IceCarMesh.Body(), "Mesh_IceCar_Body");
+            shell.GetComponent<MeshRenderer>().sharedMaterial = body;
+            var Q = Quaternion.Euler(0f, 0f, 90f);   // cylinders and capsules lie along y; the wheels and bumpers need x
+            // fenders: a soft bumper bar front and back, the thing the cars actually hit each other with
+            foreach (var z in new[] { 1.12f, -1.17f })
+                Prim("Bumper", PrimitiveType.Capsule, car, new Vector3(0f, 0.26f, z), new Vector3(0.2f, 0.62f, 0.2f), rubber, Q);
+            // wheels on pivots so IceCar can roll them; chrome hubs on the outside
+            var wheels = new System.Collections.Generic.List<Transform>();
+            var trails = new System.Collections.Generic.List<TrailRenderer>();
+            foreach (var wz in new[] { 0.72f, -0.74f })
+                foreach (var wx in new[] { -1f, 1f })
+                {
+                    var pivot = new GameObject("Wheel").transform;
+                    pivot.SetParent(car, false); pivot.localPosition = new Vector3(wx * 0.72f, 0.3f, wz);
+                    Prim("Tyre", PrimitiveType.Cylinder, pivot, Vector3.zero, new Vector3(0.6f, 0.14f, 0.6f), rubber, Q).transform.localPosition = Vector3.zero;
+                    Prim("Hub", PrimitiveType.Cylinder, pivot, Vector3.zero, new Vector3(0.28f, 0.16f, 0.28f), chrome, Q).transform.localPosition = new Vector3(wx * 0.02f, 0f, 0f);
+                    wheels.Add(pivot);
+                    if (wz < 0f) trails.Add(Trail(pivot));
+                }
+            // rear wing, nose and tail lamps
+            foreach (var x in new[] { -0.45f, 0.45f })
+                Prim("WingPost", PrimitiveType.Cube, car, new Vector3(x, 0.78f, -0.95f), new Vector3(0.07f, 0.3f, 0.07f), rubber);
+            Prim("Wing", PrimitiveType.Cube, car, new Vector3(0f, 0.96f, -0.98f), new Vector3(1.25f, 0.05f, 0.34f), rubber, Quaternion.Euler(-8f, 0f, 0f));
+            foreach (var x in new[] { -0.36f, 0.36f })
+            {
+                Prim("Headlight", PrimitiveType.Sphere, car, new Vector3(x, 0.36f, 1.04f), new Vector3(0.22f, 0.14f, 0.1f), lamp);
+                Prim("Taillight", PrimitiveType.Sphere, car, new Vector3(x, 0.45f, -1.1f), new Vector3(0.2f, 0.1f, 0.08f), tail);
+            }
             foreach (var r in car.GetComponentsInChildren<Renderer>()) { r.shadowCastingMode = ShadowCastingMode.On; }
             var ic = car.gameObject.AddComponent<IceCar>();
             ic.tinted = new[] { shell.GetComponent<Renderer>() };
-            ic.beacon = beacon.transform;
+            ic.wheels = wheels.ToArray();
+            ic.trails = trails.ToArray();
 
             var p = PrefabUtility.SaveAsPrefabAsset(inst, Root + "/Prefabs/CubeCritter_Ice.prefab");
             Object.DestroyImmediate(inst);
             return p.GetComponent<NetworkObject>();
+        }
+
+        static Mesh SaveMesh(Mesh m, string name)
+        {
+            var path = $"{Root}/Prefabs/{name}.asset";
+            AssetDatabase.DeleteAsset(path); AssetDatabase.CreateAsset(m, path);
+            return m;
+        }
+
+        // pale ice spray behind a rear wheel: a short fading ribbon, emitted by IceCar while the car is moving on the ground
+        static TrailRenderer Trail(Transform wheel)
+        {
+            var go = new GameObject("Spray");
+            go.transform.SetParent(wheel.parent, false);
+            go.transform.localPosition = wheel.localPosition + new Vector3(0f, -0.2f, -0.1f);
+            var t = go.AddComponent<TrailRenderer>();
+            t.time = 0.6f; t.startWidth = 0.28f; t.endWidth = 0f; t.minVertexDistance = 0.15f;
+            t.alignment = LineAlignment.View; t.shadowCastingMode = ShadowCastingMode.Off;
+            var sprayPath = Root + "/Prefabs/M_IceLoop_Spray.mat";   // Sprites/Default reads the trail's vertex colour (URP Unlit does not)
+            var spray = Load<Material>(sprayPath);
+            if (!spray) { spray = new Material(Shader.Find("Sprites/Default")); AssetDatabase.CreateAsset(spray, sprayPath); }
+            t.sharedMaterial = spray;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Hex("#BFE0FF"), 1f) },
+                      new[] { new GradientAlphaKey(0.55f, 0f), new GradientAlphaKey(0f, 1f) });
+            t.colorGradient = g;
+            return t;
         }
 
         static void Emissive(Material m, Color c, float intensity)
@@ -228,6 +279,42 @@ namespace IceLoop.EditorTools
             return m;
         }
 
+        // URP Unlit switched to alpha blending (the spray ribbon and the boost strips fade out)
+        static Material Transparent(Material m)
+        {
+            m.SetFloat("_Surface", 1f); m.SetFloat("_Blend", 0f);
+            m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha); m.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)RenderQueue.Transparent;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        // cyan chevrons pointing up the texture on a clear background
+        static Material PadMaterial()
+        {
+            var texPath = Root + "/Prefabs/T_BoostPad.png";
+            var tex = new Texture2D(64, 64);
+            for (int x = 0; x < 64; x++)
+                for (int y = 0; y < 64; y++)
+                {
+                    float u = Mathf.Abs(x / 63f - 0.5f), v = y / 63f;
+                    bool edge = u > 0.44f;
+                    bool chevron = Mathf.Repeat((v + u * 0.9f) * 2.2f, 1f) < 0.45f && u < 0.42f;
+                    tex.SetPixel(x, y, edge || chevron ? new Color(0.36f, 0.88f, 1f, 0.95f) : new Color(0.2f, 0.6f, 0.95f, 0.28f));
+                }
+            File.WriteAllBytes(texPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(texPath, ImportAssetOptions.ForceUpdate);
+            var ti = (TextureImporter)AssetImporter.GetAtPath(texPath);
+            ti.mipmapEnabled = false; ti.wrapMode = TextureWrapMode.Clamp; ti.alphaIsTransparency = true; ti.SaveAndReimport();
+            var m = Transparent(Mat("M_IceLoop_BoostPad", Color.white, 0f, true));
+            m.SetTexture("_BaseMap", Load<Texture2D>(texPath));
+            return m;
+        }
+
         static Material Checker()
         {
             var texPath = Root + "/Prefabs/T_Checker.png";
@@ -346,6 +433,37 @@ namespace IceLoop.EditorTools
                 if (g == 0)
                     Prim("Line", PrimitiveType.Quad, root, pose.position + Vector3.up * 0.03f, new Vector3(HalfWidth * 2f, 1.2f, 1f), checker, pose.rotation * Quaternion.Euler(90f, 0f, 0f));
             }
+
+            // speed strips (the server grants the boost, see IceLoopGame.Pads)
+            var pads = new GameObject("BoostPads").transform;
+            var padMat = PadMaterial();
+            for (int pd = 0; pd < track.PadCount; pd++)
+            {
+                int si = track.PadSample(pd);
+                var fwd3 = (track.Point(si + 1) - track.Point(si - 1)).normalized;
+                Prim("Pad_" + pd, PrimitiveType.Quad, pads, track.PadPoint(pd) + Vector3.up * 0.04f, new Vector3(2.8f, 4.2f, 1f), padMat,
+                     Quaternion.LookRotation(fwd3, Vector3.up) * Quaternion.Euler(90f, 0f, 0f)).GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+            }
+
+            // red and white stakes along both rims (a speed reference), and orange chevron boards on the outside of bends
+            var dress = new GameObject("RoadDressing").transform;
+            var red = Mat("M_IceLoop_StakeRed", Hex("#E8344A"), 0.3f);
+            var white = Mat("M_IceLoop_StakeWhite", Hex("#F4F8FF"), 0.3f);
+            var orange = Mat("M_IceLoop_Board", Hex("#FF8A1F"), 0.3f);
+            for (int i = 0; i < track.Count; i += 4)
+                foreach (var sign in new[] { -1f, 1f })
+                {
+                    var q = track.Lane(i, sign * (HalfWidth - 0.3f)) + Vector3.up * 0.45f;
+                    Prim("Stake", PrimitiveType.Cylinder, dress, q, new Vector3(0.16f, 0.45f, 0.16f), (i / 4) % 2 == 0 ? red : white);
+                }
+            for (int i = 0; i < track.Count; i += 4)
+            {
+                float turn = Vector3.SignedAngle(track.Forward(i), track.Forward(i + 6), Vector3.up);
+                if (Mathf.Abs(turn) < 24f) continue;
+                var q = track.Lane(i + 3, -Mathf.Sign(turn) * (HalfWidth + 0.2f)) + Vector3.up * 1.1f;   // outside of the bend
+                Prim("Board", PrimitiveType.Cube, dress, q, new Vector3(1.8f, 1f, 0.12f), orange, Quaternion.LookRotation(-track.Forward(i + 3)));
+            }
+            foreach (var t in new[] { pads, dress }) foreach (var r in t.GetComponentsInChildren<Transform>()) GameObjectUtility.SetStaticEditorFlags(r.gameObject, StaticEditorFlags.BatchingStatic);
 
             // floes and crystals round the lake from the shared kit (fixed seed, never closer than 14 m to the road)
             var bergs = new GameObject("Floes").transform;

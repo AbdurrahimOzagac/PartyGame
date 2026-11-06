@@ -1,3 +1,4 @@
+using System.Linq;
 using ShooterParty;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ namespace IceLoop
 
         CritterMotor motor;
         CritterSpit spit;
-        float lane, spitAt, dashAt, laneChangeAt;
+        float lane, spitAt, dashAt, laneChangeAt, gap, gapAt;   // gap: checkpoints ahead of the best human (negative = behind)
 
         void Awake()
         {
@@ -39,13 +40,22 @@ namespace IceLoop
             int ahead = here + Mathf.RoundToInt(Mathf.Lerp(5f, 9f, speed / 9f));
             if (Time.time > laneChangeAt) { lane = Random.Range(-track.halfWidth * 0.45f, track.halfWidth * 0.45f); laneChangeAt = Time.time + Random.Range(3f, 6f); }
 
+            // a speed strip within ~14 m ahead: aim for it
+            for (int pad = 0; pad < track.PadCount; pad++)
+            {
+                int d = (track.PadSample(pad) - here + track.Count) % track.Count;
+                if (d > 1 && d < 7) { lane = Vector3.Dot(track.PadPoint(pad) - track.Point(track.PadSample(pad)), track.Right(track.PadSample(pad))); laneChangeAt = Time.time + 1.5f; }
+            }
             var aim = track.Lane(ahead, lane) - pos; aim.y = 0f;
             var dir = aim.normalized;
 
             // bends: the sharpest turn over the next ~18 m sets a top speed the ice can still hold (v = sqrt(grip / curvature))
             float turn = Mathf.Max(Vector3.Angle(track.Forward(here), track.Forward(here + 9)), Vector3.Angle(track.Forward(here + 4), track.Forward(here + 13)));
             float curvature = Mathf.Max(turn * Mathf.Deg2Rad / 18f, 1e-3f);
-            float throttle = Mathf.Clamp(Mathf.Sqrt(gripAccel / curvature) / motor.moveSpeed, 0.45f, 1f);
+            // catch-up: a bot far ahead of the humans eases off, one far behind dares a little more in the bends
+            if (Time.time > gapAt) { gapAt = Time.time + 0.5f; gap = GapToHumans(); }
+            float dare = 1f + Mathf.Clamp(-gap, 0f, 5f) * 0.04f, ease = Mathf.Clamp(1f - 0.03f * (gap - 2f), 0.85f, 1f);
+            float throttle = Mathf.Clamp(Mathf.Sqrt(gripAccel * dare / curvature) / motor.moveSpeed, 0.45f, 1f) * ease;
             // the edge: hug the middle when the road's rim is close or the bot is sliding sideways
             float side = Vector3.Dot(pos - track.Point(here), track.Right(here));
             float rim = Mathf.InverseLerp(track.halfWidth - 2.2f, track.halfWidth - 0.6f, Mathf.Abs(side));
@@ -55,6 +65,21 @@ namespace IceLoop
 
             if (turn < 10f && rim <= 0f && Time.time > dashAt && motor.Dash()) dashAt = Time.time + Random.Range(2.5f, 5f);
             if (Time.time > spitAt) TrySpit(track, here);
+        }
+
+        float GapToHumans()
+        {
+            var session = SessionManager.Instance;
+            var me = GetComponent<NetworkCritter>();
+            if (!session || !me) return 0f;
+            int mine = 0, best = 0;
+            for (int i = 0; i < session.Players.Count; i++)
+            {
+                var p = session.Players[i];
+                if (p.slot == me.Slot.Value) mine = p.roundScore;
+                else if (!NetworkCritter.All.Any(c => c && c.Slot.Value == p.slot && c.IsBot.Value)) best = Mathf.Max(best, p.roundScore);
+            }
+            return mine - best;
         }
 
         void TrySpit(IceTrack track, int here)

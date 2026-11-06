@@ -25,6 +25,12 @@ namespace IceLoop
         public Vector3 Right(int i) { var f = Forward(i); return new Vector3(f.z, 0f, -f.x); }
         public Vector3 Lane(int i, float offset) => Point(i) + Right(i) * offset;
 
+        // Speed strips: one on every fourth gate's straight, alternating sides. Derived, so the server, the bots and the
+        // scene builder agree without any baked data.
+        public int PadCount => GateCount / 4;
+        public int PadSample(int pad) => Wrap((pad * 4 + 3) * gateStride + gateStride / 2);
+        public Vector3 PadPoint(int pad) => Lane(PadSample(pad), (pad % 2 == 0 ? -1f : 1f) * halfWidth * 0.4f);
+
         public Pose GatePose(int gate)
         {
             int i = Wrap(gate * gateStride);

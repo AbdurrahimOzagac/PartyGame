@@ -15,7 +15,8 @@ namespace IceLoop
     //   ranking most checkpoints; a tie goes to whoever got there first
     public class IceLoopGame : MiniGameController
     {
-        public float bumpRadius = 2.1f, bumpCooldown = 0.5f;   // two cars touch when their centres are closer than this
+        public float bumpRadius = 2.1f, bumpCooldown = 0.5f;
+        public float padRadius = 2f, padBoost = 7f, padCooldown = 2.5f;   // a speed strip adds padBoost m/s along the road   // two cars touch when their centres are closer than this
         public ParticleSystem fallPoof;
 
         IceTrack track;
@@ -24,6 +25,7 @@ namespace IceLoop
         readonly Dictionary<int, int> lastGate = new Dictionary<int, int>();     // gate index of the last checkpoint, -1 = grid
         readonly Dictionary<int, float> lastSide = new Dictionary<int, float>();   // signed distance past the next gate, last tick
         readonly Dictionary<int, float> bumpedAt = new Dictionary<int, float>();   // per pair of seats
+        readonly Dictionary<int, float> boostedAt = new Dictionary<int, float>();   // per seat and strip
         readonly Dictionary<int, int> falls = new Dictionary<int, int>();
         readonly Dictionary<int, float> fellAt = new Dictionary<int, float>();   // the teleport reaches a remote owner a round trip later
 
@@ -34,7 +36,7 @@ namespace IceLoop
         protected override void OnSetup(IReadOnlyList<int> slots)
         {
             track = IceTrack.Instance ? IceTrack.Instance : FindAnyObjectByType<IceTrack>();
-            passed.Clear(); reachedAt.Clear(); lastGate.Clear(); falls.Clear(); fellAt.Clear(); lastSide.Clear(); bumpedAt.Clear();
+            passed.Clear(); reachedAt.Clear(); lastGate.Clear(); falls.Clear(); fellAt.Clear(); lastSide.Clear(); bumpedAt.Clear(); boostedAt.Clear();
             foreach (var s in slots) { passed[s] = 0; lastGate[s] = -1; }
             // the core spawns critters facing the origin; line them up on the start grid facing down the road
             if (track) foreach (var s in slots) RespawnAt(s, track.GridPose(s));
@@ -60,8 +62,26 @@ namespace IceLoop
                     AddScore(slot, 1);
                 }
                 else lastSide[slot] = side;
+                Pads(slot, p);
             }
             Bumps();
+        }
+
+        // Speed strips: like a bump, the boost is a server-decided shove delivered to the car's owner.
+        void Pads(int slot, Vector3 p)
+        {
+            for (int pad = 0; pad < track.PadCount; pad++)
+            {
+                var d = track.PadPoint(pad) - p;
+                if (Mathf.Abs(d.y) > 1.5f) continue;
+                d.y = 0f;
+                int key = slot * 100 + pad;
+                if (d.magnitude > padRadius || (boostedAt.TryGetValue(key, out var t) && Time.time - t < padCooldown)) continue;
+                boostedAt[key] = Time.time;
+                var c = CritterOf(slot);
+                c.ServerKnock(-1000 - slot, track.Forward(track.PadSample(pad)) * padBoost, c.Mass.Value);
+                BoostRpc(p, slot);
+            }
         }
 
         // Bumper cars. Physical collisions between critters are off in the core (one authority per body), so contact is
@@ -122,6 +142,14 @@ namespace IceLoop
             Sfx.Play("Hit", position);
             foreach (var c in NetworkCritter.All)
                 if (c && c.IsOwner && !c.IsBot.Value && (c.Slot.Value == slotA || c.Slot.Value == slotB)) CameraShake.Report(c, 0.35f);
+        }
+
+        [Rpc(SendTo.ClientsAndHost, InvokePermission = RpcInvokePermission.Server)]
+        void BoostRpc(Vector3 position, int slot)
+        {
+            Sfx.Play("Whoosh", position);
+            foreach (var c in NetworkCritter.All)
+                if (c && c.IsOwner && !c.IsBot.Value && c.Slot.Value == slot) CameraShake.Report(c, 0.2f);
         }
 
         static IEnumerator Later(float t, System.Action a) { yield return new WaitForSeconds(t); a(); }
