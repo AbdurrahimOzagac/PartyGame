@@ -1,0 +1,15 @@
+{
+    "name": "IceLoop.Editor",
+    "rootNamespace": "IceLoop.EditorTools",
+    "references": [
+        "ShooterParty.Runtime",
+        "ShooterParty.Editor",
+        "Unity.Netcode.Runtime",
+        "IceLoop.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ]
+}

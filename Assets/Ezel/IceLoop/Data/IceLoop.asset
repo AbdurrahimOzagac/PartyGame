@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5033a878fb46447c2b8510f0641d00e5, type: 3}
+  m_Name: IceLoop
+  m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.MiniGameDefinition
+  id: ice_loop
+  displayName: Ice Loop
+  tagline: Bumper cars on ice. Most checkpoints wins.
+  howToPlay:
+  - Race round the loop for 2 minutes. Every checkpoint you pass is a point, and
+    the loop repeats.
+  - 'The ice is slippery: brake early for bends. Dash (Shift) on the straights.'
+  - Bump rivals and spit at them to send them into the water. A swim restarts you
+    at your last checkpoint.
+  controlsHint: "WASD move \xB7 Mouse aim \xB7 Hold click to spit \xB7 Shift dash"
+  icon: {fileID: 21300000, guid: c281efb9c09ef4ca4b41e2b17ab23da3, type: 3}
+  sceneName: IceLoop_Course
+  controllerPrefab: {fileID: 8844507905234202586, guid: fa8623716230ffbdb91e2c7e3d52c7a8, type: 3}
+  critterPrefab: {fileID: 4499523341162802383, guid: 15d9d55609a502d698e710be29142073, type: 3}
+  minPlayers: 3
+  maxPlayers: 4
+  durationSeconds: 120
+  placementPoints: 04000000030000000200000001000000
+  supportsBots: 1
+  critter:
+    jump: 0
+    dashCharges: 3
+    shotSpeed: 14
+    shotGravity: 3
+    shotCooldown: 0.6
+    chargeTime: 0
+  shotEffect: {fileID: 11400000, guid: a75136322c3c69627807b0bd35cb8af7, type: 2}
+  hudWidget: {fileID: 1714331500536146057, guid: d758b1768e2507f6fb2610ae58f68019, type: 3}
