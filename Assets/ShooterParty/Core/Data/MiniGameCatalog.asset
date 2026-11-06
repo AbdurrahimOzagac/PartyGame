@@ -13,27 +13,28 @@ MonoBehaviour:
   m_Name: MiniGameCatalog
   m_EditorClassIdentifier: ShooterParty.Runtime::ShooterParty.MiniGameCatalog
   games:
+  - {fileID: 11400000, guid: 78daa1fa543a0fef8b7f6d4320fc9d80, type: 2}
   - {fileID: 11400000, guid: 05252792933bd47e1bff73564187180e, type: 2}
   presets:
   - name: Quick
     games:
+    - ice_loop
     - knockback_arena
-    - knockback_arena
-    - knockback_arena
+    - ice_loop
   - name: Classic
     games:
+    - ice_loop
     - knockback_arena
+    - ice_loop
     - knockback_arena
-    - knockback_arena
-    - knockback_arena
-    - knockback_arena
+    - ice_loop
   - name: Marathon
     games:
+    - ice_loop
     - knockback_arena
+    - ice_loop
     - knockback_arena
+    - ice_loop
     - knockback_arena
-    - knockback_arena
-    - knockback_arena
-    - knockback_arena
-    - knockback_arena
+    - ice_loop
     - knockback_arena

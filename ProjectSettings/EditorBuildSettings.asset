@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/ShooterParty/Core/Scenes/SP_Menu.unity
     guid: 4c527fe7dcd254a11892c30da4af1e5d
+  - enabled: 1
+    path: Assets/ShooterParty/MiniGames/IceLoop/Scenes/IceLoop_Course.unity
+    guid: 068a570bafaac34c380e4a67bf2d7957
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

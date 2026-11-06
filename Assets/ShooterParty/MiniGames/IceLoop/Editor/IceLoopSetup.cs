@@ -17,8 +17,8 @@ namespace IceLoop.EditorTools
     // The shared art kit (ice material, sky, post FX, VFX) is loaded from the Knockback Arena folder.
     public static class IceLoopSetup
     {
-        const string Root = "Assets/Ezel/IceLoop";
-        const string Art = "Assets/Ezel/KnockbackArena";
+        const string Root = "Assets/ShooterParty/MiniGames/IceLoop";
+        const string Art = "Assets/ShooterParty/MiniGames/KnockbackArena";
         public const string ScenePath = Root + "/Scenes/IceLoop_Course.unity";
         public const string DefinitionPath = Root + "/Data/IceLoop.asset";
         public const string ControllerPath = Root + "/Prefabs/Net_IceLoopGame.prefab";

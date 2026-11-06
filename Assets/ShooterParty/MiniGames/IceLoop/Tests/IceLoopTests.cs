@@ -14,7 +14,7 @@ namespace IceLoop.Tests
 {
     public class IceLoopTests
     {
-        const string ControllerPrefab = "Assets/Ezel/IceLoop/Prefabs/Net_IceLoopGame.prefab";
+        const string ControllerPrefab = "Assets/ShooterParty/MiniGames/IceLoop/Prefabs/Net_IceLoopGame.prefab";
 
         class TestSessionHost : ISessionHost
         {
