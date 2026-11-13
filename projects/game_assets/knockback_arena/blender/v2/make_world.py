@@ -1,6 +1,6 @@
 # One-command rebuild of the ice arena, background and props:
 #   Blender -b --factory-startup --python make_world.py -- [--no-export]
-# kit pieces -> default 16 m arena (tiles placed + underside + floor collider) -> backdrop ring -> podium ->
+# kit pieces -> default arena (ARENA_TILES x ARENA_TILES tiles + underside + floor collider) -> backdrop ring -> podium ->
 # crown + jump pickup -> save IceArena.blend -> FBX into Assets/ShooterParty/MiniGames/KnockbackArena/Models/{Arena,Props}.
 import bpy, os, sys, math, random
 from mathutils import Vector
@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 for f in ("arena.py", "props.py", "world.py"):
     exec(open(os.path.join(HERE, f)).read().split('if __name__ == "__main__":')[0])
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena/Models"
+UNITY = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", "..", "Assets", "ShooterParty", "MiniGames", "KnockbackArena", "Models"))
 
 for o in list(bpy.data.objects): bpy.data.objects.remove(o)
 sc = bpy.context.scene
@@ -30,15 +30,16 @@ pieces = kit_pieces()
 for o in pieces.values():
     o.data.materials.append(mat); move(o, kit)
 
-# ---- default arena: tile instances (linked meshes) parented under one root
+# ---- default arena: tile instances (linked meshes) parented under one root. The "_16" names are historical
+# (Unity prefabs, LobbyBuilder and the tests know them); the size comes from ARENA_TILES in world.py.
 root = bpy.data.objects.new("Arena_Ice_16", None); arena.objects.link(root)
-for i, (name, x, y, rot) in enumerate(layout_4x4()):
+for i, (name, x, y, rot) in enumerate(layout_grid()):
     o = bpy.data.objects.new(f"{name}_{i:02d}", pieces[name].data); arena.objects.link(o)
     o.location = (x, y, 0); o.rotation_euler = (0, 0, math.radians(rot)); o.parent = root
 us = bpy.data.objects.new("Island_Underside", pieces["Island_Underside_16"].data); arena.objects.link(us); us.parent = root
 # one floor collider for the whole layout (tiles are visual only): rounded square slab, top at z = 0
 mb = MeshBuilder()
-ring = rounded_square(8.0, 4.0, step=0.5)
+ring = rounded_square(ARENA_HALF, 4.0, step=0.5)
 top = [mb.vert((p.x, p.y, 0.0)) for p in ring]; bot = [mb.vert((p.x, p.y, -1.0)) for p in ring]
 w = (1, 1, 1, 1)
 mb.face(top, w); mb.face(bot[::-1], w)
@@ -47,7 +48,7 @@ for i in range(len(ring)):
     mb.face([bot[i], bot[j], top[j], top[i]], w)
 col = mb.build("Floor_Collider"); move(col, arena); col.parent = root
 
-# ---- backdrop ring (35-80 m out, y -15..+10; every spawn sees something on the horizon)
+# ---- backdrop ring (35-80 m beyond the default 16 m ice, pushed out with the arena; every spawn sees something)
 broot = bpy.data.objects.new("Arena_Backdrop", None); back.objects.link(broot)
 spots = [("Floe_A", 48, 20, -6, 0.0), ("Crystal_Cluster_A", 40, 75, 4, 1.0), ("Floe_B", 70, 135, -12, 0.0),
          ("Crystal_Cluster_C", 55, 190, -4, 1.0), ("Floe_C", 38, 245, 6, 0.0), ("Crystal_Cluster_B", 62, 300, -8, 1.0),
@@ -55,10 +56,10 @@ spots = [("Floe_A", 48, 20, -6, 0.0), ("Crystal_Cluster_A", 40, 75, 4, 1.0), ("F
 rnd = random.Random(5)
 for i, (name, dist, az, z, tilt) in enumerate(spots):
     o = bpy.data.objects.new(f"{name}_{i}", pieces[name].data); back.objects.link(o); o.parent = broot
-    a = math.radians(az)
+    a = math.radians(az); dist += ARENA_HALF - 8.0
     o.location = (math.cos(a) * dist, math.sin(a) * dist, z)
     o.rotation_euler = (math.radians(rnd.uniform(-6, 6)) * tilt, math.radians(rnd.uniform(-6, 6)) * tilt, rnd.uniform(0, math.tau))
-    o.scale = (1.0 + 0.3 * (dist > 60),) * 3
+    o.scale = (1.0 + 0.3 * (dist - (ARENA_HALF - 8.0) > 60),) * 3
 
 # ---- podium + props
 pod = pieces["Podium_Ice"]; move(pod, props)

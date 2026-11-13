@@ -29,12 +29,27 @@ namespace ShooterParty
             return d.normalized;
         }
 
-        // Hold-to-fire. A button already down when play took the mouse (the click that closed a menu) waits for a release.
-        public static bool HoldToFire(ref bool armed, bool captured, bool held)
+        // Fire intent for the local player: hold keeps firing every cooldown, and a tap is never lost. A press seen
+        // this frame (even one released inside the same frame, which a held check misses) or during the cooldown is
+        // remembered for FireBuffer and fires as soon as the spit is ready. Only one tap is remembered, so mashing
+        // never queues a burst. A button already down when play took the mouse (the click that closed a menu) waits
+        // for a release.
+        public const float FireBuffer = 0.35f;   // a little longer than the 10-frame cooldown: a tap right after a shot still lands
+
+        public struct FireGate
         {
-            if (!captured) armed = false;
-            else if (!held) armed = true;
-            return armed && held;
+            public bool armed, wasCaptured;
+            public float bufferedUntil;
+        }
+
+        public static bool FireIntent(ref FireGate g, bool captured, bool held, bool pressedThisFrame, float now)
+        {
+            if (!captured) { g = default; return false; }
+            bool settled = g.wasCaptured;          // the capture frame's click belongs to the menu
+            g.wasCaptured = true;
+            if (pressedThisFrame && settled) { g.armed = true; g.bufferedUntil = now + FireBuffer; }
+            else if (!held) g.armed = true;
+            return (g.armed && held) || now < g.bufferedUntil;
         }
     }
 }

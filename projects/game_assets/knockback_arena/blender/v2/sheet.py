@@ -1,5 +1,5 @@
 # Contact-sheet helper: render a list of states from a camera, tile them with ffmpeg.
-import bpy, os, subprocess
+import bpy, os, subprocess, shutil
 from mathutils import Vector
 
 def face_cam(name="Cam_Face", loc=(0.0, -2.2, 0.62), target=(0, 0, 0.52), lens=85):
@@ -34,7 +34,7 @@ def render_states(states, out_dir, cam, res=(420, 340), cols=4, apply=None, samp
     sc.camera, sc.render.resolution_x, sc.render.resolution_y, sc.render.filepath, sc.eevee.taa_render_samples = old
     # tile with labels
     n = len(paths); rows = (n + cols - 1) // cols
-    args = ["/opt/homebrew/bin/ffmpeg", "-y", "-loglevel", "error"]
+    args = [shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg", "-y", "-loglevel", "error"]
     for p, _ in paths: args += ["-i", p]
     flt = ""
     for i in range(n):

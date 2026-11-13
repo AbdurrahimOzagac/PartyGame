@@ -32,8 +32,25 @@ namespace KnockbackArena.Tests
                 yield return null;
             }
             Assert.Greater(best, 1f, "the hit pushes the host critter");
-            Assert.AreEqual(0.9f, host.Mass.Value / start, 0.001f, "10 % mass lost");
+            Assert.AreEqual(0.75f, host.Mass.Value / start, 0.001f, "25 % of the current mass lost");
             Assert.AreEqual(host.Mass.Value, host.GetComponent<Rigidbody>().mass, 1e-4f);
+            Object.Destroy(floor);
+        }
+
+        [UnityTest]
+        public IEnumerator MassKeepsFallingWithNoFloor()
+        {
+            NetTestRig.StartNetworked();
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.transform.position = new Vector3(0f, -0.5f, 0f); floor.transform.localScale = new Vector3(30f, 1f, 30f);
+            ShotSystem.Instance.Effect = ScriptableObject.CreateInstance<KnockbackShotEffect>();
+            var host = NetTestRig.Spawn(0, bot: false, pos: new Vector3(0f, 0.02f, 1.5f));
+            var bot = NetTestRig.Spawn(1, bot: true, pos: new Vector3(0f, 0.02f, -1.5f));
+            yield return new WaitForSeconds(0.2f);
+            host.Mass.Value = 0.3f * host.StartMass;     // already below the old 35 % floor
+            ShotSystem.Instance.ServerFire(bot, bot.transform.position + Vector3.up * 0.45f + Vector3.forward * 0.6f, Vector3.forward, 0);
+            for (float t = 0f; t < 1f; t += Time.deltaTime) yield return null;
+            Assert.AreEqual(0.225f, host.MassFraction, 0.001f, "a hit still takes 25 % of what is left");
             Object.Destroy(floor);
         }
     }

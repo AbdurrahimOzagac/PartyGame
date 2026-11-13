@@ -62,22 +62,27 @@ def kit_pieces():
     """Build every exportable piece (arena.py / props.py). Returns {name: object}."""
     pieces = {}
     for o in (tile_top(), tile_edge(1, "Ice_Edge_4_A"), tile_edge(2, "Ice_Edge_4_B"), tile_corner(),
-              underside("Island_Underside_16", rounded_square(8.0 * 0.93, 4.0 * 0.93), depth=11.0),
+              underside("Island_Underside_16", rounded_square(ARENA_HALF * 0.93, 4.0 * 0.93), depth=11.0 + ARENA_HALF * 0.25),
               floe("Floe_A", 3.2, 21), floe("Floe_B", 4.5, 22), floe("Floe_C", 2.4, 23),
               crystal_cluster("Crystal_Cluster_A", 31, size=1.2), crystal_cluster("Crystal_Cluster_B", 32, n=5, size=0.9),
               crystal_cluster("Crystal_Cluster_C", 33, n=8, size=1.5), podium()[0]):
         pieces[o.name] = o
     return pieces
 
-# default 16 m layout: (piece, x, y, rotation deg) in Blender coordinates; Unity mirrors this in ArenaSetup.cs
-def layout_4x4():
-    cs = [-6, -2, 2, 6]; out = []
+# default arena: n x n tiles of TILE m (12 -> 48 m ice, corner radius one tile). Unity's
+# KnockbackArenaGame.DefaultArenaHalf must equal ARENA_HALF.
+ARENA_TILES = 12
+ARENA_HALF = ARENA_TILES * 4.0 / 2
+
+# (piece, x, y, rotation deg) in Blender coordinates
+def layout_grid(n=ARENA_TILES):
+    cs = [4.0 * i - 2.0 * (n - 1) for i in range(n)]; out = []; e = n - 1
     for ix, x in enumerate(cs):
         for iy, y in enumerate(cs):
-            bx, by = ix in (0, 3), iy in (0, 3)
-            if bx and by: out.append(("Ice_Corner", x, y, {(3, 0): 0, (3, 3): 90, (0, 3): 180, (0, 0): 270}[(ix, iy)]))
+            bx, by = ix in (0, e), iy in (0, e)
+            if bx and by: out.append(("Ice_Corner", x, y, {(e, 0): 0, (e, e): 90, (0, e): 180, (0, 0): 270}[(ix, iy)]))
             elif bx or by:
-                rot = 0 if iy == 0 else 180 if iy == 3 else 90 if ix == 3 else 270
+                rot = 0 if iy == 0 else 180 if iy == e else 90 if ix == e else 270
                 out.append(("Ice_Edge_4_A" if (ix + iy) % 2 else "Ice_Edge_4_B", x, y, rot))
             else: out.append(("Ice_Top_4x4", x, y, 0))
     return out

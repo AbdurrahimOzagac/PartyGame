@@ -80,16 +80,7 @@ namespace KnockbackArena.EditorTools
             foreach (var t in new[] { "T_Ice_Mask.png", "T_Ice_Detail.png", "T_Sky_Panorama.png" })
                 AssetDatabase.ImportAsset($"{Root}/Textures/{t}", ImportAssetOptions.ForceUpdate);
             var ice = IceMaterial();
-            var arena = ModelPrefab("Arena_Ice_16", "Arena", ice, go =>
-            {
-                var col = go.GetComponentsInChildren<MeshFilter>().First(f => f.name == "Floor_Collider");
-                col.GetComponent<MeshRenderer>().enabled = false;
-                // one collider for the whole floor: per-tile colliders snag a sliding box at the seams
-                var mc = col.gameObject.AddComponent<MeshCollider>();
-                mc.sharedMesh = col.sharedMesh; mc.sharedMaterial = IcePhysics();
-                foreach (var r in go.GetComponentsInChildren<MeshRenderer>().Where(r => r.name.StartsWith("Island_Underside")))
-                    r.shadowCastingMode = ShadowCastingMode.Off;
-            });
+            var arena = BuildFloorPrefab();
             var backdrop = ModelPrefab("Arena_Backdrop", "Arena", ice, go =>
             {
                 foreach (var r in go.GetComponentsInChildren<MeshRenderer>()) { r.shadowCastingMode = ShadowCastingMode.Off; r.receiveShadows = false; }
@@ -168,6 +159,30 @@ namespace KnockbackArena.EditorTools
         }
 
         // ------------------------------------------------------------------ prefabs
+        // The round's floor: one flat box (top at y = 0, KnockbackArenaGame.DefaultArenaHalf) in a plain lit ice colour.
+        // The tiled ice kit with its underside looked richer but cost low-end PCs too much frame time at 48 m (the kit
+        // pieces are still exported as Kit_* prefabs for custom layouts). The box is also the single floor collider,
+        // and the flat top receives shadows but casts none.
+        static GameObject BuildFloorPrefab()
+        {
+            float half = KnockbackArenaGame.DefaultArenaHalf, thick = 1.4f;
+            var go = new GameObject("Arena_Ice_16");   // historical name: the scenes, UiBuilder and the tests load it by path
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.name = "Ice_Floor";
+            floor.transform.SetParent(go.transform, false);
+            floor.transform.localPosition = new Vector3(0f, -thick / 2f, 0f);
+            floor.transform.localScale = new Vector3(half * 2f, thick, half * 2f);
+            floor.GetComponent<BoxCollider>().sharedMaterial = IcePhysics();
+            var r = floor.GetComponent<MeshRenderer>();
+            r.sharedMaterial = LitMat("M_IceFloor", "Universal Render Pipeline/Simple Lit", Hex("#A9CDEE"), 0.55f);
+            r.shadowCastingMode = ShadowCastingMode.Off;
+            foreach (Transform t in go.GetComponentsInChildren<Transform>())
+                GameObjectUtility.SetStaticEditorFlags(t.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);
+            var p = PrefabUtility.SaveAsPrefabAsset(go, $"{Root}/Prefabs/Arena/Arena_Ice_16.prefab");
+            Object.DestroyImmediate(go);
+            return p;
+        }
+
         static GameObject ModelPrefab(string fbx, string folder, Material mat, System.Action<GameObject> configure)
         {
             var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{Root}/Models/{folder}/{fbx}.fbx");
@@ -293,7 +308,9 @@ namespace KnockbackArena.EditorTools
             def.minPlayers = 3; def.maxPlayers = 4; def.durationSeconds = 120f;
             def.placementPoints = new[] { 4, 3, 2, 1 };
             def.supportsBots = true;
-            def.critter = CritterConfig.Default;
+            var critter = CritterConfig.Default;
+            critter.shotGravity = 0f;   // spit flies straight and flat across the ice
+            def.critter = critter;
             def.shotEffect = effect;
             def.icon = AssetDatabase.LoadAssetAtPath<Sprite>(Root + "/UI/Sprites/UI_IconSpring.png");
             def.hudWidget = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/UI/HUD_KnockbackWidget.prefab");   // UiSetup builds it first
@@ -330,7 +347,7 @@ namespace KnockbackArena.EditorTools
             RenderSettings.ambientGroundColor = Hex("#3D6FB0");
             RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
             RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = 30f; RenderSettings.fogEndDistance = 160f; RenderSettings.fogColor = Hex("#4A92E2");
+            RenderSettings.fogStartDistance = 50f; RenderSettings.fogEndDistance = 180f; RenderSettings.fogColor = Hex("#4A92E2");
 
             PrefabUtility.InstantiatePrefab(arena);
             PrefabUtility.InstantiatePrefab(backdrop);
@@ -349,12 +366,14 @@ namespace KnockbackArena.EditorTools
             camGo.transform.SetPositionAndRotation(new Vector3(9f, 6f, -14f), Quaternion.Euler(18f, -30f, 0f));
             new GameObject("Post FX").AddComponent<Volume>().sharedProfile = PostProfile();
 
-            // spawns (ice brief 3: 4 m from two edges, 8 m to the nearest neighbours) and the two spring spots
+            // spawns on a square a third of the way out (16 m to the nearest neighbours, 16 m from two edges on the
+            // 48 m ice) and the two spring spots between them
             var markers = new GameObject("MiniGameScene").AddComponent<MiniGameScene>();
             Transform Marker(string n, Vector3 p) { var t = new GameObject(n).transform; t.position = p; t.SetParent(markers.transform, true); return t; }
-            var spots = new[] { new Vector3(-4f, 0.05f, -4f), new Vector3(4f, 0.05f, 4f), new Vector3(4f, 0.05f, -4f), new Vector3(-4f, 0.05f, 4f) };
+            float s = KnockbackArenaGame.DefaultArenaHalf / 3f;
+            var spots = new[] { new Vector3(-s, 0.05f, -s), new Vector3(s, 0.05f, s), new Vector3(s, 0.05f, -s), new Vector3(-s, 0.05f, s) };
             markers.spawnPoints = spots.Select((p, i) => Marker("Spawn_" + i, p)).ToArray();
-            markers.pickupSpots = new[] { Marker("Pickup_0", new Vector3(-4f, 0f, 0f)), Marker("Pickup_1", new Vector3(4f, 0f, 0f)) };
+            markers.pickupSpots = new[] { Marker("Pickup_0", new Vector3(-s, 0f, 0f)), Marker("Pickup_1", new Vector3(s, 0f, 0f)) };
             markers.pickupPrefab = pickup.GetComponent<NetworkObject>();
 
             // nothing is baked (realtime only), but generating once stores the ambient/reflection data with the scene

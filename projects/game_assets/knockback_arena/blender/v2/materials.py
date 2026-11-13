@@ -2,7 +2,7 @@
 import bpy, os, math
 import numpy as np
 
-TEX = "/Users/ezelbayraktar/Documents/Development/PartyGame/projects/game_assets/knockback_arena/blender/v2/textures"
+TEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "textures")
 
 # Colour-blind-checked player palette (see DESIGN notes); emblem = body lightened 40%.
 PLAYERS = {"Tomato": "#FF4F2E", "Teal": "#00B3A4", "Chartreuse": "#D4F21C", "Violet": "#7B2FD0"}
@@ -117,6 +117,7 @@ def build_materials():
         "Tongue": simple("M_CC_Tongue", "#FF7A8A", 0.35, coat=0.5),
         "Blush": textured("M_CC_Blush", blush, "#FF5A78", rough=0.5, coat=0.0, alpha_mult=0.9),
         "Feet": simple("M_CC_Feet", "#3B2A24", 0.32, coat=0.6),
+        "Beak": simple("M_CC_Beak", "#FFA51F", 0.22, coat=1.0),
     }
     per_player = {}
     for pname, hexcol in PLAYERS.items():

@@ -63,8 +63,9 @@ namespace ShooterParty
         }
 
         // ------------------------------------------------------------------ firing
-        // Owner-side entry, called by CritterSpit at the release frame.
-        public void Fire(NetworkCritter shooter, Vector3 origin, Vector3 dir)
+        // Owner-side entry, called by CritterSpit at the release frame. clientTime: the owner's LocalTime at the press
+        // (CritterSpit.TryFire), which the server's cooldown check compares; NaN = now.
+        public void Fire(NetworkCritter shooter, Vector3 origin, Vector3 dir, double clientTime = double.NaN)
         {
             if (Effect) Effect.OnFireLocal(shooter);
             if (IsServer) { ServerFire(shooter, origin, dir, NetworkManager.ServerTime.Time); return; }
@@ -72,7 +73,7 @@ namespace ShooterParty
             int slot = shooter.Slot.Value;
             if (!pendingLocal.TryGetValue(slot, out var q)) pendingLocal[slot] = q = new Queue<(SpitBlob, float)>();
             q.Enqueue((blob, Time.time));
-            shooter.FireRpc(origin, dir, NetworkManager.LocalTime.Time);
+            shooter.FireRpc(origin, dir, double.IsNaN(clientTime) ? NetworkManager.LocalTime.Time : clientTime);
         }
 
         // Server: FireRpc lands here. Timestamps are the client's, so a TCP stall does not trip the cooldown.
@@ -89,7 +90,7 @@ namespace ShooterParty
             fireState[shooter] = st;
             if (!ok || !Finite(dir) || dir.sqrMagnitude < 1e-4f) return;
             // origin must be near where the server sees the shooter; otherwise use the server's own muzzle point
-            var serverMuzzle = shooter.transform.position + Vector3.up * 0.45f;
+            var serverMuzzle = shooter.transform.position + Vector3.up * CritterSpit.SpawnHeight;
             float lag = NetworkManager.NetworkConfig.NetworkTransport.GetCurrentRtt(shooter.OwnerClientId) / 1000f + 0.15f;
             float tolerance = shooter.Motor.HorizontalVelocity.magnitude * lag + 1.2f;
             if (!Finite(origin) || (origin - serverMuzzle).magnitude > tolerance) origin = serverMuzzle + shooter.transform.forward * 0.6f;
@@ -117,7 +118,7 @@ namespace ShooterParty
         static Vector3 Velocity(NetworkCritter c, Vector3 dir)
         {
             dir.y = 0f;
-            return dir.normalized * c.GetComponent<CritterSpit>().speed + Vector3.up * 0.8f;
+            return c.GetComponent<CritterSpit>().LaunchVelocity(dir);
         }
 
         static SpitBlob Launch(NetworkCritter shooter, Vector3 origin, Vector3 v0, bool cosmeticBlob)

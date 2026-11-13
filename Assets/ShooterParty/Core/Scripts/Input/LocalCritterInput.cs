@@ -7,6 +7,7 @@ namespace ShooterParty
     //   WASD / left stick       move, relative to the camera
     //   mouse / right stick     look (OverShoulderCamera)
     //   hold left click / RT    spit at the crosshair, every cooldown; it faces the crosshair while held
+    //                           (a tap during the cooldown is remembered and fires when ready: ControlRules.FireIntent)
     //   Shift / B / LB          dash (move direction, or facing when idle)
     //   Space / A               jump (needs a charge)
     // Runs only while the camera holds the mouse (play, no menu, focused) and the round is live (ControlRules).
@@ -19,7 +20,7 @@ namespace ShooterParty
         CritterMotor motor;
         CritterSpit spit;
         CritterAnimator anim;
-        bool fireArmed;
+        ControlRules.FireGate fireGate;
         readonly RaycastHit[] hits = new RaycastHit[16];
 
         void Awake()
@@ -35,8 +36,10 @@ namespace ShooterParty
             var mouse = Mouse.current;
             var pad = Gamepad.current;
             bool captured = cam && cam.Captured;
-            bool fire = ControlRules.HoldToFire(ref fireArmed, captured,
-                (mouse != null && mouse.leftButton.isPressed) || (pad != null && pad.rightTrigger.isPressed));
+            bool fire = ControlRules.FireIntent(ref fireGate, captured,
+                (mouse != null && mouse.leftButton.isPressed) || (pad != null && pad.rightTrigger.isPressed),
+                (mouse != null && mouse.leftButton.wasPressedThisFrame) || (pad != null && pad.rightTrigger.wasPressedThisFrame),
+                Time.time);
             var game = MiniGameController.Current;   // frozen through the intro and countdown
             if (!captured || (game && game.IsSpawned && !game.Live.Value)) { motor.Move(Vector3.zero); return; }
 
@@ -48,7 +51,7 @@ namespace ShooterParty
             {
                 var aim = Aim();
                 motor.FaceTowards(aim, false);   // after Move: while firing it faces the crosshair, not its movement
-                spit.TryFire(aim);
+                if (spit.TryFire(aim)) fireGate.bufferedUntil = 0f;   // the remembered tap is spent
             }
             if ((kb != null && kb.spaceKey.wasPressedThisFrame) || (pad != null && pad.buttonSouth.wasPressedThisFrame)) motor.Jump();
             if ((kb != null && (kb.leftShiftKey.wasPressedThisFrame || kb.rightShiftKey.wasPressedThisFrame))
