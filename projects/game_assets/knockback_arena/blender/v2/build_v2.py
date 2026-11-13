@@ -11,9 +11,12 @@ P = dict(
     p=3.8,                # superellipsoid exponent (2 = ellipsoid, inf = box)
     taper=0.05,           # bottom slightly wider than top
     # face sits low (baby schema): heights from body bottom as fractions of H
-    eye_x=0.195, eye_z=0.10 + 0.46 * 0.94, eye_a=0.062, eye_b=0.104, eye_h=0.024,
+    # pill eyes (tall rounded rectangles), raised a little so the beak snout has room below
+    eye_x=0.17, eye_z=0.10 + 0.50 * 0.94, eye_a=0.042, eye_b=0.085, eye_h=0.016, eye_p=3.2,
     mouth_z=0.10 + 0.29 * 0.94, mouth_w=0.058,
-    cheek_x=0.265, cheek_z=0.10 + 0.31 * 0.94, cheek_r=0.125,
+    cheek_x=0.275, cheek_z=0.10 + 0.385 * 0.94, cheek_r=0.125,
+    # beak snout: a straight round tube with a crisp cut tip (spit comes out of it)
+    beak_r=0.095, beak_len=0.24, beak_edge=0.010, beak_bore=0.55, beak_tilt=4,
     eps=0.0015,           # gap between face islands and the body surface
     # limbs and hooks
     arm_z=0.10 + 0.47 * 0.94, arm_y=0.02, arm_len=0.29, arm_r=0.088, arm_splay=24,
@@ -22,7 +25,7 @@ P = dict(
     emblem_z=0.10 + 0.55 * 0.94, emblem_size=0.40,
 )
 
-MATS = ["Body", "Eye", "EyeShine", "Mouth", "Tongue", "Blush", "Feet", "Emblem"]
+MATS = ["Body", "Eye", "EyeShine", "Mouth", "Tongue", "Blush", "Feet", "Emblem", "Beak"]
 M = {n: i for i, n in enumerate(MATS)}
 
 # ---------------------------------------------------------------- body
@@ -87,12 +90,21 @@ def band(path, half_w, H, cap=6):
         return x + nx * w * t, z + nz * w * t, H * math.sqrt(max(0.0, 1 - t * t))
     return f
 
+def pill(cx, cz, a, b, H, p):
+    """Superellipse dome: a tall rounded rectangle for p ~ 3, flat-topped so it reads as a decal-like pill."""
+    def f(s, t):
+        r = max(abs(s), abs(t))
+        n = (abs(s) ** p + abs(t) ** p) ** (1 / p) or 1.0
+        u, v = s * r / n, t * r / n
+        return cx + a * u, cz + b * v, H * max(0.0, 1 - r ** 6) ** 0.5
+    return f
+
 def collapsed(cx, cz):
     return lambda s, t: (cx, cz, -0.012)          # hidden just inside the body
 
 def eye_shapes(side):
     cx, cz, a, b, H = side * P["eye_x"], P["eye_z"], P["eye_a"], P["eye_b"], P["eye_h"]
-    base = disc(cx, cz, a, b, H)
+    base = pill(cx, cz, a, b, H, P["eye_p"])
     def blink(s, t):   # soft U-shaped closed lid line
         return band(lambda q: (cx + 1.15 * a * q, cz - 0.30 * b - 0.020 * (1 - q * q)), 0.0105, 0.006)(s, t)
     def happy(s, t):   # ^ arc
@@ -112,7 +124,7 @@ def eye_shapes(side):
 def shine_shapes(side, which):
     """Catchlights sit on the eye dome and follow the eye's keys; they shrink into the closed-eye stroke."""
     cx, cz, a, b, H = side * P["eye_x"], P["eye_z"], P["eye_a"], P["eye_b"], P["eye_h"]
-    ox, oz, r = (0.38 * a, 0.40 * b, 0.30 * a) if which == 0 else (-0.30 * a, -0.40 * b, 0.13 * a)
+    ox, oz, r = (-0.25 * a, 0.55 * b, 0.36 * a) if which == 0 else (0.28 * a, -0.55 * b, 0.15 * a)   # dot near the pill top
     def on_eye(sx=1.0, sz=1.0, sh=1.0, dz=0.0):
         def f(s, t):
             x, z, _ = disc(cx + ox, cz + oz + dz, r, r * 1.15, 0)(s, t)
@@ -163,7 +175,7 @@ def tongue_shapes():
 
 def blush_shapes(side):
     cx, cz, r = side * P["cheek_x"], P["cheek_z"], P["cheek_r"]
-    base = disc(cx, cz, 0.080, 0.040, 0.0025)
+    base = disc(cx, cz, 0.066, 0.033, 0.0025)
     def big(s, t):
         x, z, h = base(s, t); return cx + (x - cx) * 1.15, cz + (z - cz) * 1.15, h
     return dict(Basis=base, CheekPuff=big)
@@ -274,7 +286,68 @@ def curl_point():
         return base + tilt @ q
     return f, base
 
-PARTS = {"Body": 0, "Face": 1, "Emblem": 2, "Arm.L": 3, "Arm.R": 4, "Foot.L": 5, "Foot.R": 6, "Curl": 7}
+def beak_frame():
+    """Beak root on the front surface at mouth height, and its axes (forward tilted up a little)."""
+    b, c, p = P["body_d"] / 2, P["body_h"] / 2, P["p"]
+    z0 = P["mouth_z"] - c - P["body_bottom"]
+    y0 = -b * (1 - abs(z0 / c) ** p) ** (1 / p)
+    k = 1 + P["taper"] * (0.5 - (z0 + c) / (2 * c))
+    root = Vector((0, y0 * k, P["mouth_z"]))
+    tilt = math.radians(P["beak_tilt"])
+    fwd = Vector((0, -math.cos(tilt), math.sin(tilt)))
+    side = Vector((1, 0, 0))
+    up = fwd.cross(side).normalized()
+    if up.z < 0: up = -up
+    return root, fwd, side, up
+
+def beak_profile(n=8):
+    """(t along the nose, radius, material): buried root, straight tube, rounded cut edge, flat front ring, round bore."""
+    L, R, e = P["beak_len"], P["beak_r"], P["beak_edge"]
+    ri = R * P["beak_bore"]
+    pts = [(-0.05 + (L - e + 0.05) * i / n, R, "Beak") for i in range(n + 1)]
+    for i in range(1, 7):
+        a = math.pi / 2 * i / 6
+        pts.append((L - e + e * math.sin(a), R - e + e * math.cos(a), "Beak"))
+    pts.append((L, ri + e, "Beak"))
+    for i in range(1, 7):
+        a = math.pi / 2 * i / 6
+        pts.append((L - e + e * math.cos(a), ri + e - e * math.sin(a), "Mouth"))
+    pts.append((L - 0.10, ri, "Mouth"))
+    pts.append((L - 0.104, 0.0, "Mouth"))
+    return pts
+
+def add_beak(bm, uv, seg=32):
+    root, fwd, side, up = beak_frame()
+    pts = beak_profile()
+    rings = [[bm.verts.new(root + fwd * t + (side * math.cos(2 * math.pi * k / seg) + up * math.sin(2 * math.pi * k / seg)) * r)
+              for k in range(seg)] for t, r, _ in pts]
+    faces = []
+    for j in range(len(rings) - 1):
+        for k in range(seg):
+            k2 = (k + 1) % seg
+            f = bm.faces.new([rings[j][k], rings[j][k2], rings[j + 1][k2], rings[j + 1][k]])
+            f.material_index = M[pts[j + 1][2]]; f.smooth = True
+            for loop, (a, v) in zip(f.loops, [(k, j), (k + 1, j), (k + 1, j + 1), (k, j + 1)]):
+                loop[uv].uv = (a / seg, v / (len(rings) - 1))
+            faces.append(f)
+    verts = [v for r in rings for v in r]
+    bmesh.ops.remove_doubles(bm, verts=verts, dist=1e-6)       # welds the bore's closing ring
+    verts = [v for v in verts if v.is_valid]
+    bmesh.ops.recalc_face_normals(bm, faces=[f for f in faces if f.is_valid])
+    return verts
+
+def nostril_point(side_sign):
+    root, fwd, side, up = beak_frame()
+    a = math.pi / 2 + side_sign * 0.42
+    n = side * math.cos(a) + up * math.sin(a)
+    x = fwd.cross(n).normalized()
+    c = root + fwd * 0.07 + n * (P["beak_r"] + 0.002)
+    def f(u, v):
+        q = superquadric(u, v, 0.014, 0.022, 0.006, 2.2)       # flat oval lying on the tube's top
+        return c + x * q.x + fwd * q.y + n * q.z
+    return f
+
+PARTS = {"Body": 0, "Face": 1, "Emblem": 2, "Arm.L": 3, "Arm.R": 4, "Foot.L": 5, "Foot.R": 6, "Curl": 7, "Beak": 8}
 
 def add_parts(bm, uv):
     # tag verts with an int layer: bmesh reuses freed slots, so creation order != vertex order
@@ -288,6 +361,11 @@ def add_parts(bm, uv):
         track("Arm." + sfx, arm_point(side)[0], 16, 12, "Body")
         track("Foot." + sfx, foot_point(side)[0], 20, 12, "Feet")
     track("Curl", curl_point()[0], 12, 18, "Body")
+    beak = add_beak(bm, uv)
+    for s in (1, -1):
+        beak += add_grid_solid(bm, uv, nostril_point(s), 16, 8, "Mouth")
+    for v in beak: v[layer] = PARTS["Beak"]
+    ranges["Beak"] = beak
     return ranges
 
 # ---------------------------------------------------------------- assembly

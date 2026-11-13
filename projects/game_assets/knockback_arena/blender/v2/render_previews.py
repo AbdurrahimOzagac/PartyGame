@@ -6,7 +6,7 @@ from mathutils import Vector
 
 HERE = os.path.dirname(bpy.data.filepath)
 OUT = os.path.normpath(os.path.join(HERE, "..", "..", "renders", "v2"))
-FFMPEG = "/opt/homebrew/bin/ffmpeg"
+FFMPEG = shutil.which("ffmpeg") or "/opt/homebrew/bin/ffmpeg"
 for f in ("build_v2.py", "materials.py", "rig.py", "anim.py", "clips.py", "blob.py", "sheet.py"):
     exec(open(os.path.join(HERE, f)).read())
 
@@ -207,7 +207,7 @@ def main(what):
         apply({})
     if "portraits" in what:
         # HUD portraits: 512 px, transparent, one per player x expression (written straight into the Unity project)
-        pdir = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena/Portraits"
+        pdir = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", "..", "Assets", "ShooterParty", "MiniGames", "KnockbackArena", "Portraits"))
         os.makedirs(pdir, exist_ok=True)
         bpy.data.objects["Stage_Ground"].hide_render = True
         sc.render.film_transparent = True

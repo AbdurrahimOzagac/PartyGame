@@ -2,8 +2,8 @@
 # FBX_SCALE_ALL (no 100x), -Z forward / Y up (Blender -Y front -> Unity +Z), no leaf bones, all actions baked.
 import bpy, os, shutil
 
-UNITY = "/Users/ezelbayraktar/Documents/Development/PartyGame/Assets/ShooterParty/MiniGames/KnockbackArena"
-HERE = "/Users/ezelbayraktar/Documents/Development/PartyGame/projects/game_assets/knockback_arena/blender/v2"
+HERE = os.path.dirname(os.path.abspath(__file__))   # entry scripts live in this folder and exec() the others
+UNITY = os.path.normpath(os.path.join(HERE, "..", "..", "..", "..", "..", "Assets", "ShooterParty", "MiniGames", "KnockbackArena"))
 
 COMMON = dict(apply_scale_options='FBX_SCALE_ALL', axis_forward='-Z', axis_up='Y',
               use_space_transform=True, bake_space_transform=False, add_leaf_bones=False,

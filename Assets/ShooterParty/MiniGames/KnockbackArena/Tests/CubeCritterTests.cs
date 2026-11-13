@@ -97,6 +97,43 @@ namespace KnockbackArena.Tests
             Object.Destroy(critter);
         }
 
+        // Flat shots (the arena has no gravity and no lift) must never clip the floor, whatever the shooter is doing:
+        // the spit pose, a run lean, a snap turn, a dash, a jump or a knock can all dip the long snout.
+        static readonly string[] SpitPoses = { "idle", "run", "backpedal", "strafe", "turn90", "turn180", "dash", "airborne", "knocked", "light" };
+
+        [UnityTest]
+        public IEnumerator FlatSpitClearsTheFloorInEveryPose([ValueSource(nameof(SpitPoses))] string pose)
+        {
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ground.transform.position = new Vector3(0f, -0.5f, 0f);
+            ground.transform.localScale = new Vector3(80f, 1f, 80f);
+            var shooter = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Prefab), Vector3.zero, Quaternion.identity);
+            var spit = shooter.GetComponent<CritterSpit>();
+            var motor = shooter.GetComponent<CritterMotor>();
+            spit.gravity = 0f;
+            yield return new WaitForSeconds(0.4f);
+
+            var move = pose == "idle" ? Vector3.zero : pose == "backpedal" ? Vector3.back : pose == "strafe" ? Vector3.right : Vector3.forward;
+            var aim = pose == "turn90" ? Vector3.right : pose == "turn180" ? Vector3.back : Vector3.forward;
+            if (pose == "light") shooter.GetComponent<Rigidbody>().mass = 0.05f * motor.StartMass;
+            motor.Move(move);
+            yield return new WaitForSeconds(0.3f);
+            if (pose == "dash") { Assert.IsTrue(motor.Dash()); yield return new WaitForSeconds(0.05f); }
+            if (pose == "airborne") { motor.Jump(); yield return new WaitForSeconds(0.15f); }
+            if (pose == "knocked") { motor.Knockback(Vector3.back * 3.5f + Vector3.up * 0.9f); yield return new WaitForSeconds(0.05f); }
+
+            Assert.IsTrue(spit.TryFire(aim), "fired");
+            yield return new WaitForSeconds(0.2f);   // past the release on Spit frame 4
+            var blob = Object.FindAnyObjectByType<SpitBlob>();
+            Assert.IsNotNull(blob, pose + ": the blob left the snout");
+            Assert.Greater(blob.transform.position.y, 0.15f + 0.05f, pose + ": the blob's bottom is clear of the floor");
+            yield return new WaitForSeconds(0.5f);
+            Assert.IsTrue(blob && blob.transform.parent == null && blob.GetComponent<Rigidbody>().linearVelocity.magnitude > 5f,
+                pose + ": still flying (it did not touch the floor and splat)");
+            Object.Destroy(shooter); Object.Destroy(ground);
+            if (blob) Object.Destroy(blob.gameObject);
+        }
+
         [UnityTest]
         public IEnumerator SpitKnocksBackAnotherCritter()
         {

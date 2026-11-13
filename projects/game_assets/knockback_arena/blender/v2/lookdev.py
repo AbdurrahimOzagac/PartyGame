@@ -2,7 +2,7 @@
 import bpy, math, os
 from mathutils import Vector
 
-HERE = "/Users/ezelbayraktar/Documents/Development/PartyGame/projects/game_assets/knockback_arena/blender/v2"
+HERE = os.path.dirname(os.path.abspath(__file__))   # entry scripts live in this folder and exec() the others
 
 def get_coll(name):
     c = bpy.data.collections.get(name)

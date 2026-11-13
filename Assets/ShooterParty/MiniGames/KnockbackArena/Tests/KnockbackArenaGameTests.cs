@@ -161,7 +161,8 @@ namespace KnockbackArena.Tests
             var c = C(2);
             var rb = c.GetComponent<Rigidbody>();
             rb.isKinematic = true;
-            for (float t = 0f; t < 1.3f; t += Time.deltaTime) { rb.position = new Vector3(11f, 0.05f, 0f); yield return null; }
+            var outside = new Vector3(KnockbackArenaGame.DefaultArenaHalf + 3f, 0.05f, 0f);
+            for (float t = 0f; t < 1.3f; t += Time.deltaTime) { rb.position = outside; yield return null; }
             Assert.IsTrue(!c || c.Eliminated.Value, "hovering 3 m outside the ice for over a second is out");
         }
     }

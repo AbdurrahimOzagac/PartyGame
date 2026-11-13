@@ -3,7 +3,7 @@
 #   Root ─┬─ Foot.L / Foot.R          (feet never inherit body squash)
 #         └─ COG ── Body ─┬─ Top ── Curl.1 ── Curl.2
 #                         ├─ Arm.L / Arm.R
-#                         └─ Muzzle   (non-deforming socket: projectile spawn, points forward)
+#                         └─ Beak ── Muzzle   (snout tube; Muzzle = non-deforming spawn socket at its mouth)
 # Vertical bones point +Z with roll 0, so local Y = up, local X = right(+X), local Z = forward(-Y):
 #   rot X+ = lean forward, rot Z = side roll, rot Y = yaw, scale Y = squash/stretch.
 import bpy, math
@@ -51,8 +51,12 @@ def build_rig(ob):
     c0, c1 = (cb + tilt @ curl_path(s) for s in (0.12, 0.55))
     bone("Curl.1", c0, c0 + Vector((0, 0, 0.05)), "Top")
     bone("Curl.2", c1, c1 + Vector((0, 0, 0.05)), "Curl.1")
-    mz = P["mouth_z"]
-    bone("Muzzle", (0, -P["body_d"] / 2 - 0.02, mz), (0, -P["body_d"] / 2 - 0.16, mz), "Body", deform=False)
+    # Beak: the snout tube. Bone runs along the tube (local Y = forward), so scale Y = shorten/lengthen and
+    # scale X/Z = fatten. The Muzzle socket rides at the tube's mouth, so spit leaves from the tip.
+    broot, bfwd, _, _ = beak_frame()
+    bone("Beak", broot, broot + bfwd * 0.12, "Body")
+    tip = broot + bfwd * (P["beak_len"] + 0.02)
+    bone("Muzzle", tip, tip + bfwd * 0.14, "Beak", deform=False)
     # Face: control bone only. Its custom props drive the shape keys, so face animation lives in the armature
     # action and the FBX exporter bakes per-clip blendShape curves (it only swaps the armature's action per take).
     bone("Face", (0, -P["body_d"] / 2 - 0.05, P["eye_z"]), (0, -P["body_d"] / 2 - 0.05, P["eye_z"] + 0.08), "Body", deform=False)
@@ -60,7 +64,7 @@ def build_rig(ob):
     # skin
     ob.parent = rig; ob.matrix_parent_inverse.identity()
     ob.vertex_groups.clear()
-    vg = {n: ob.vertex_groups.new(name=n) for n in ("Body", "Top", "Arm.L", "Arm.R", "Foot.L", "Foot.R", "Curl.1", "Curl.2")}
+    vg = {n: ob.vertex_groups.new(name=n) for n in ("Body", "Top", "Arm.L", "Arm.R", "Foot.L", "Foot.R", "Curl.1", "Curl.2", "Beak")}
     part_of = [0] * len(ob.data.vertices)
     ob.data.attributes["part"].data.foreach_get("value", part_of)
     names = {v: k for k, v in PARTS.items()}

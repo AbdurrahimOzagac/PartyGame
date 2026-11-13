@@ -213,3 +213,8 @@ Hepsi `Assets/Abd/` altında. Örnek yapı: `Assets/Abd/KnockbackArena/{Scenes,S
 - [ ] Kontrol kilidi süresi, impulse, kütle çarpanı gibi sayısal değerler oyun içinde dengelenecek.
 - [x] ~~2. parça (online) mekanik bitince planlanacak.~~ İptal (2026-10-28): online sistemi başka bir arkadaş yaptı, oradan alınacak. `abd/knockback` branch'i online'sız olduğu gibi kalır, ayrıca main'e de merge edilir (sahneden görüntü almak ya da main'deki işe buradan feature taşımak için).
 - [ ] İlk kural listesinde boş bırakılan iki madde (Genel kurallar) istenirse sonradan doldurulacak.
+- [ ] **Online sunucu kararı (bekliyor, 2026-11-01):** şimdilik Ezel'in Raspberry Pi + Cloudflare tüneli olduğu gibi kalıyor. Seçenekler:
+  - Host + sanal LAN (Radmin/Tailscale): kod yok, mevcut "SAME WI-FI → HOST" modu yeter; host avantajlı, host çıkınca oyun biter.
+  - Host + Unity Relay: oda koduyla katılım; `PartyNet`'e iki mod + menü değişikliği, projeyi Unity Cloud'a bağlamak gerekir.
+  - VPS (Hetzner CX23 x86, ~€5.5/ay): mevcut sistem aynen çalışır; x86 `BatchLinux` build'i Windows'tan alınır, `deploy.sh` ARM64 varsayımından çıkarılmalı; tünel/alan adı Ezel'de, onunla konuşulacak.
+  - Her durumda: network prefab'larına dokunan bir değişiklik (ör. yeni karakter, arena) sunucu kullanılıyorsa yeniden deploy ister.
