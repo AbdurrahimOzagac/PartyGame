@@ -76,4 +76,7 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: 78daa1fa543a0fef8b7f6d4320fc9d80, type: 2}
   bumpRadius: 2.1
   bumpCooldown: 0.5
+  padRadius: 2
+  padBoost: 7
+  padCooldown: 2.5
   fallPoof: {fileID: 7496366612923076621, guid: ef1c9645d235143e681e5c4f14dc9aa0, type: 3}
