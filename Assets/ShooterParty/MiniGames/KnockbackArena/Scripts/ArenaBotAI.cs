@@ -10,7 +10,7 @@ namespace KnockbackArena
     [RequireComponent(typeof(CritterMotor), typeof(CritterSpit))]
     public class ArenaBotAI : MonoBehaviour
     {
-        public float arenaHalf = 8f, edgeMargin = 2.2f;
+        public float arenaHalf = KnockbackArenaGame.DefaultArenaHalf, edgeMargin = 2.2f;
         public Vector2 spitDelay = new Vector2(0.7f, 1.6f);
         public float aimError = 6f;
 

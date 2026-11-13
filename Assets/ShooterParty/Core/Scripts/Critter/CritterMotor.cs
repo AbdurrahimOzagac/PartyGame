@@ -115,6 +115,9 @@ namespace ShooterParty
 
         void FixedUpdate()
         {
+            // menu / lobby display critters are kinematic and posed by their stage: nothing to drive (and setting a
+            // kinematic body's velocity logs a warning every physics step, which stalls the editor)
+            if (rb.isKinematic) return;
             // the sphere starts inside our own collider, so the cast ignores it and only finds the ground
             Grounded = Physics.SphereCast(transform.position + Vector3.up * 0.3f, 0.25f, Vector3.down, out _, 0.17f,
                                           ~0, QueryTriggerInteraction.Ignore);

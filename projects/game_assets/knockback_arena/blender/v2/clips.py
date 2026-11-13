@@ -44,23 +44,26 @@ def run():
 
 def spit():
     # press -> visible on F0 (cheeks start, ^^ eyes), blob leaves on F4 (133 ms), cancel window from F8
+    # Beak.scale = (fat, length, fat): the snout squashes short and fat while charging, shoots long on release.
+    # The release lean is small (5-7 deg): the body pivots at the feet, so a big lean would drop the long snout's
+    # mouth (and the spawned blob) close to the ground.
     return 22, {
-        0:  {"Body.rot": (-6, 0, 0), "Body.scale": (1.0, 1.04, 1.0), "Arm.L.rot": (-20, 0, 6), "Arm.R.rot": (-20, 0, 6),
+        0:  {"Beak.scale": (1.10, 0.84, 1.10), "Body.rot": (-6, 0, 0), "Body.scale": (1.0, 1.04, 1.0), "Arm.L.rot": (-20, 0, 6), "Arm.R.rot": (-20, 0, 6),
              "sk.CheekPuff": 0.55, "sk.MouthSmallO": 0.4, "sk.EyesHappy": 1.0},
-        2:  {"Body.rot": (-10, 0, 0), "Body.scale": (1.05, 1.06, 1.05), "Arm.L.rot": (-30, 0, 10), "Arm.R.rot": (-30, 0, 10),
+        2:  {"Beak.scale": (1.24, 0.62, 1.24), "Body.rot": (-10, 0, 0), "Body.scale": (1.05, 1.06, 1.05), "Arm.L.rot": (-30, 0, 10), "Arm.R.rot": (-30, 0, 10),
              "sk.CheekPuff": 1.0, "sk.MouthSmallO": 1.0, "sk.EyesHappy": 1.0, "sk.EyesWide": 0.0, "sk.MouthO": 0.0},
-        3:  {"Body.rot": (-11, 0, 0), "Body.scale": (1.055, 1.065, 1.055), "sk.EyesHappy": 1.0, "sk.MouthSmallO": 1.0,
+        3:  {"Beak.scale": (1.28, 0.58, 1.28), "Body.rot": (-11, 0, 0), "Body.scale": (1.055, 1.065, 1.055), "sk.EyesHappy": 1.0, "sk.MouthSmallO": 1.0,
              "sk.EyesWide": 0.0, "sk.MouthO": 0.0},
-        4:  {"Body.rot": (12, 0, 0), "Body.scale": (0.945, 0.945, 1.12), "Arm.L.rot": (35, 0, 14), "Arm.R.rot": (35, 0, 14),
+        4:  {"Beak.scale": (0.86, 1.34, 0.86), "Body.rot": (5, 0, 0), "Body.scale": (0.945, 0.945, 1.12), "Arm.L.rot": (35, 0, 14), "Arm.R.rot": (35, 0, 14),
              "sk.CheekPuff": 0.25, "sk.MouthSmallO": 0.0, "sk.MouthO": 1.0, "sk.EyesHappy": 0.0, "sk.EyesWide": 0.7},
-        5:  {"Body.rot": (15, 0, 0), "Body.scale": (0.933, 0.933, 1.15), "sk.CheekPuff": 0.0, "sk.MouthO": 0.75, "sk.EyesWide": 0.5,
+        5:  {"Beak.scale": (0.90, 1.22, 0.90), "Body.rot": (7, 0, 0), "Body.scale": (0.933, 0.933, 1.15), "sk.CheekPuff": 0.0, "sk.MouthO": 0.75, "sk.EyesWide": 0.5,
              "sk.EyesHappy": 0.0, "sk.MouthW": 0.0},
-        7:  {"Body.rot": (-4, 0, 0), "Body.scale": (1.043, 0.92, 1.043), "Arm.L.rot": (10, 0, 6), "Arm.R.rot": (10, 0, 6),
+        7:  {"Beak.scale": (1.08, 0.90, 1.08), "Body.rot": (-4, 0, 0), "Body.scale": (1.043, 0.92, 1.043), "Arm.L.rot": (10, 0, 6), "Arm.R.rot": (10, 0, 6),
              "sk.MouthO": 0.0, "sk.MouthSmallO": 0.3, "sk.EyesWide": 0.1},
-        9:  {"Body.rot": (3, 0, 0), "Body.scale": (0.985, 1.03, 0.985), "Arm.L.rot": (-3, 0, 3), "Arm.R.rot": (-3, 0, 3),
+        9:  {"Beak.scale": (0.97, 1.04, 0.97), "Body.rot": (3, 0, 0), "Body.scale": (0.985, 1.03, 0.985), "Arm.L.rot": (-3, 0, 3), "Arm.R.rot": (-3, 0, 3),
              "sk.MouthSmallO": 0.0, "sk.EyesWide": 0.0, "sk.EyesHappy": 0.0, "sk.MouthW": 0.0, "sk.CheekPuff": 0.0},
         10: {"sk.EyesHappy": 1.0, "sk.MouthW": 0.8, "sk.CheekPuff": 0.15},
-        11: {"Body.rot": (-1.5, 0, 0), "Body.scale": (1.005, 0.99, 1.005)},
+        11: {"Beak.scale": (1.0, 1.0, 1.0), "Body.rot": (-1.5, 0, 0), "Body.scale": (1.005, 0.99, 1.005)},
         16: {"Body.rot": (0.5, 0, 0), "Body.scale": (0.995, 1.01, 0.995), "sk.EyesHappy": 1.0, "sk.MouthW": 0.8, "sk.CheekPuff": 0.15,
              "sk.EyesWide": 0.0},
         18: {"sk.EyesHappy": 0.0, "sk.EyesWide": 0.15},

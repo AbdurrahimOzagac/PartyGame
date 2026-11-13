@@ -54,14 +54,32 @@ namespace ShooterParty.Tests
         [Test]
         public void HoldToFireKeepsFiringButNotOnAButtonHeldWhenPlayTookTheMouse()
         {
-            bool armed = false;
-            Assert.IsFalse(ControlRules.HoldToFire(ref armed, false, true), "menu open: never fires");
-            Assert.IsFalse(ControlRules.HoldToFire(ref armed, true, true), "the click that closed the menu is still down");
-            Assert.IsFalse(ControlRules.HoldToFire(ref armed, true, false), "released");
-            Assert.IsTrue(ControlRules.HoldToFire(ref armed, true, true), "a fresh press fires");
-            Assert.IsTrue(ControlRules.HoldToFire(ref armed, true, true), "holding keeps firing");
-            Assert.IsFalse(ControlRules.HoldToFire(ref armed, false, true), "pause opens");
-            Assert.IsFalse(ControlRules.HoldToFire(ref armed, true, true), "back in play, still held: wait for a release");
+            var g = new ControlRules.FireGate();
+            Assert.IsFalse(ControlRules.FireIntent(ref g, false, true, true, 0f), "menu open: never fires");
+            Assert.IsFalse(ControlRules.FireIntent(ref g, true, true, true, 0.1f), "the click that closed the menu (capture frame)");
+            Assert.IsFalse(ControlRules.FireIntent(ref g, true, true, false, 0.2f), "... is still down");
+            Assert.IsFalse(ControlRules.FireIntent(ref g, true, false, false, 0.3f), "released");
+            Assert.IsTrue(ControlRules.FireIntent(ref g, true, true, true, 1.0f), "a fresh press fires");
+            Assert.IsTrue(ControlRules.FireIntent(ref g, true, true, false, 1.5f), "holding keeps firing");
+            Assert.IsFalse(ControlRules.FireIntent(ref g, false, true, false, 1.6f), "pause opens");
+            Assert.IsFalse(ControlRules.FireIntent(ref g, true, true, false, 1.7f), "back in play, still held: wait for a release");
+        }
+
+        [Test]
+        public void ATapIsNeverLostEvenInsideOneFrameOrDuringTheCooldown()
+        {
+            var g = new ControlRules.FireGate();
+            ControlRules.FireIntent(ref g, true, false, false, 0f);
+            Assert.IsTrue(ControlRules.FireIntent(ref g, true, false, true, 1.0f), "pressed and released within one frame still fires");
+            Assert.IsTrue(ControlRules.FireIntent(ref g, true, false, false, 1.0f + ControlRules.FireBuffer * 0.9f),
+                "a tap during the cooldown is remembered until the spit is ready");
+            Assert.IsFalse(ControlRules.FireIntent(ref g, true, false, false, 1.0f + ControlRules.FireBuffer * 1.1f), "but not forever");
+            Assert.Greater(ControlRules.FireBuffer, 10f / 30f, "a tap right after a shot outlives the 10-frame cooldown");
+
+            ControlRules.FireIntent(ref g, true, false, true, 3.0f);
+            ControlRules.FireIntent(ref g, true, false, true, 3.05f);   // mashing re-arms the one remembered tap, never a queue
+            g.bufferedUntil = 0f;                                      // what LocalCritterInput does when the shot leaves
+            Assert.IsFalse(ControlRules.FireIntent(ref g, true, false, false, 3.1f), "one shot per remembered tap");
         }
     }
 }

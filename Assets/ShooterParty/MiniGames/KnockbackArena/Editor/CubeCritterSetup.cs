@@ -176,6 +176,8 @@ namespace KnockbackArena.EditorTools
             d["Mouth"] = Mat("Mouth", "Universal Render Pipeline/Lit", Hex("#3A1020"), 0.55f);
             d["Tongue"] = Mat("Tongue", "Universal Render Pipeline/Lit", Hex("#FF7A8A"), 0.7f);
             d["Feet"] = Mat("Feet", "Universal Render Pipeline/Lit", Hex("#3B2A24"), 0.7f);
+            d["Beak"] = Mat("Beak", "Universal Render Pipeline/Complex Lit", Hex("#FFA51F"), 0.78f);
+            ClearCoat(d["Beak"], 0.93f);
             var b = Mat("Blush", "Universal Render Pipeline/Unlit", new Color(1f, 0.35f, 0.47f, 0.85f), 0f);
             b.SetTexture("_BaseMap", blush);
             Transparent(b);

@@ -34,7 +34,7 @@ MonoBehaviour:
     jump: 1
     dashCharges: 3
     shotSpeed: 12
-    shotGravity: 3
+    shotGravity: 0
     shotCooldown: 0.33333334
     chargeTime: 0
   shotEffect: {fileID: 11400000, guid: 2057509402f564775a6e6d60e132550d, type: 2}

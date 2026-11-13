@@ -15,7 +15,9 @@ namespace KnockbackArena
     {
         public float outY = -2.5f;
         public float koCreditSeconds = 4f;
-        public float arenaHalf = 8f, arenaCornerRadius = 4f, footprintMargin = 0.75f, campSeconds = 1f;
+        // 48 m square floor, one flat box (ArenaSetup.BuildFloorPrefab), so square corners
+        public const float DefaultArenaHalf = 24f;
+        public float arenaHalf = DefaultArenaHalf, arenaCornerRadius = 0f, footprintMargin = 0.75f, campSeconds = 1f;
         public ParticleSystem fallPoof;
 
         readonly Dictionary<int, (int shooter, float time)> lastHit = new Dictionary<int, (int, float)>();
@@ -23,7 +25,7 @@ namespace KnockbackArena
         readonly Dictionary<int, int> fellAtStep = new Dictionary<int, int>();
         int step;
 
-        protected override void OnBotSpawned(NetworkCritter critter) => critter.gameObject.AddComponent<ArenaBotAI>();
+        protected override void OnBotSpawned(NetworkCritter critter) => critter.gameObject.AddComponent<ArenaBotAI>().arenaHalf = arenaHalf;
 
         protected override void OnHit(in ShotHit hit)
         {
@@ -56,7 +58,7 @@ namespace KnockbackArena
             Eliminate(slot);
         }
 
-        // Signed distance from the rounded-square ice top (half size arenaHalf, corner radius) in the XZ plane.
+        // Signed distance from the (rounded-)square floor top (half size arenaHalf, corner radius) in the XZ plane.
         float FootprintDistance(Vector3 p)
         {
             float r = arenaCornerRadius, h = arenaHalf - r;

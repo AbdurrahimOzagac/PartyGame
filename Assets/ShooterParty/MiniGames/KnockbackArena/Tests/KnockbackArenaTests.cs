@@ -26,13 +26,14 @@ namespace KnockbackArena.Tests
             var cols = arena.GetComponentsInChildren<Collider>();
             Assert.AreEqual(1, cols.Length, "one floor collider (per-tile colliders snag sliding boxes at the seams)");
             Assert.AreEqual(0.3f, cols[0].sharedMaterial.dynamicFriction, 1e-3f);
-            var critter = Spawn("Prefabs/CubeCritter_Teal.prefab", new Vector3(5f, 0.3f, 5f));   // inside a corner tile
+            float h = KnockbackArenaGame.DefaultArenaHalf;
+            var critter = Spawn("Prefabs/CubeCritter_Teal.prefab", new Vector3(h - 3f, 0.3f, h - 3f));   // inside a corner tile
             yield return new WaitForSeconds(0.6f);
             Assert.IsTrue(critter.GetComponent<CritterMotor>().Grounded);
             Assert.AreEqual(0f, critter.transform.position.y, 0.05f, "walkable top is y = 0");
-            var off = Spawn("Prefabs/CubeCritter_Violet.prefab", new Vector3(7.6f, 0.3f, 7.6f));   // cut-away corner: no floor
+            var off = Spawn("Prefabs/CubeCritter_Violet.prefab", new Vector3(h + 0.6f, 0.3f, h + 0.6f));   // just past the square corner
             yield return new WaitForSeconds(0.6f);
-            Assert.Less(off.transform.position.y, -0.5f, "the rounded corners are open");
+            Assert.Less(off.transform.position.y, -0.5f, "nothing beyond the edge");
             Object.Destroy(arena); Object.Destroy(critter); Object.Destroy(off);
         }
 

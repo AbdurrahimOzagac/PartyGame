@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: ShotEffect_Knockback
   m_EditorClassIdentifier: KnockbackArena.Runtime::KnockbackArena.KnockbackShotEffect
   impulse: 3.5
-  massLossPerHit: 0.1
-  minMass: 0.35
+  massKeptPerHit: 0.75

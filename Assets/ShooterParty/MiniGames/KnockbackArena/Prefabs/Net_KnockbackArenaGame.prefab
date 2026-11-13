@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 379555490
+  GlobalObjectIdHash: 1234124071
   InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -76,8 +76,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: 05252792933bd47e1bff73564187180e, type: 2}
   outY: -2.5
   koCreditSeconds: 4
-  arenaHalf: 8
-  arenaCornerRadius: 4
+  arenaHalf: 24
+  arenaCornerRadius: 0
   footprintMargin: 0.75
   campSeconds: 1
   fallPoof: {fileID: 7496366612923076621, guid: ef1c9645d235143e681e5c4f14dc9aa0, type: 3}
